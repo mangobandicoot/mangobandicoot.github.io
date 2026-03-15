@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:#04060E;color:#E2E8F0;font-size:16px;line-height:1.45}
+input,textarea,select,button{font-family:inherit;font-size:15px}
+input,select{background:#131822;border:1px solid #64748B;border-radius:6px;color:#F9FAFB;padding:8px 11px;width:100%}
+input:focus,select:focus{outline:2px solid #D97706;outline-offset:1px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0B0F1A}::-webkit-scrollbar-thumb{background:#64748B;border-radius:3px}
+
+/* Layout */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#header{background:#080C14;border-bottom:2px solid #1E2433;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+#content{flex:1;overflow-y:auto;padding:20px;max-width:860px;margin:0 auto;width:100%}
+#tabs{display:flex;gap:4px;padding:10px 20px 0;background:#080C14;border-bottom:1px solid #1E2433;overflow-x:auto;flex-shrink:0}
+.tab{padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;font-weight:700;font-size:14px;color:#64748B;white-space:nowrap;border:none;background:none}
+.tab.active{background:#0D1117;color:#F59E0B;border-bottom:2px solid #F59E0B}
+.tab:hover:not(.active){color:#94A3B8}
+
+/* Cards */
+.card{background:#0D1117;border:1px solid #1E2433;border-radius:10px;padding:18px;margin-bottom:14px}
+.card-title{font-size:12px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.page-title{font-size:28px;font-weight:900;color:#F9FAFB;margin-bottom:4px}
+.page-sub{font-size:14px;color:#94A3B8;margin-bottom:18px}
+
+/* Buttons */
+button{border:none;border-radius:6px;cursor:pointer;font-weight:700;transition:filter 0.15s}
+button:not(:disabled):hover{filter:brightness(1.12)}
+button:disabled{opacity:0.35;cursor:not-allowed}
+.btn-primary{background:#D97706;color:#fff;padding:10px 20px}
+.btn-secondary{background:#1E2433;color:#E2E8F0;padding:10px 20px}
+.btn-success{background:#065F46;color:#6EE7B7;padding:10px 20px}
+.btn-danger{background:#7F1D1D;color:#FCA5A5;padding:10px 20px}
+.btn-ghost{background:transparent;color:#94A3B8;padding:10px 20px;border:1px solid #1E2433}
+.btn-lg{font-size:18px;padding:14px 32px}
+.btn-sm{font-size:13px;padding:6px 14px}
+.btn-xl{font-size:22px;padding:18px 48px;border-radius:10px;letter-spacing:0.05em}
+
+/* Stat bars */
+.stat-bar-wrap{margin-bottom:10px}
+.stat-bar-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+.stat-bar-track{height:8px;background:#1E2433;border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:4px;transition:width 0.4s}
+
+/* Race beat cards */
+.beat-card{background:#060A10;border:1px solid #1E2433;border-radius:10px;padding:16px;margin-bottom:12px;animation:fadeIn 0.3s ease}
+.beat-card.good{border-color:#10B98144}
+.beat-card.bad{border-color:#EF444444}
+.beat-card.neutral{border-color:#F59E0B44}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.beat-icon{font-size:28px;margin-bottom:8px}
+.beat-title{font-size:16px;font-weight:800;color:#F9FAFB;margin-bottom:4px}
+.beat-desc{font-size:14px;color:#94A3B8;line-height:1.55;margin-bottom:12px}
+.beat-choices{display:flex;gap:8px;flex-wrap:wrap}
+.choice-btn{background:#131822;border:1px solid #1E2433;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:#E2E8F0;font-family:inherit;font-weight:600;flex:1;min-width:140px;text-align:left;transition:all 0.15s}
+.choice-btn:hover{border-color:#F59E0B;color:#F59E0B;background:#131822}
+.choice-btn .choice-hint{font-size:11px;color:#64748B;margin-top:3px;font-weight:400}
+
+/* Result screen */
+.result-pos{font-size:72px;font-weight:900;line-height:1;text-align:center}
+.result-track{font-size:18px;color:#94A3B8;text-align:center;margin-bottom:20px}
+
+/* Rival card */
+.rival-card{display:flex;gap:12px;align-items:center;padding:10px;background:#060A10;border-radius:8px;border:1px solid #1E2433;margin-bottom:8px}
+.rival-avatar{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:900}
+
+/* Setup screen */
+#setup{position:fixed;inset:0;background:#04060E;display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+#setup.hidden{display:none}
+.setup-card{background:#0D1117;border:1px solid #1E2433;border-radius:14px;padding:32px;max-width:480px;width:100%}
+
+/* Upgrade card */
+.upgrade-card{background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:14px;margin-bottom:10px}
+.upgrade-pips{display:flex;gap:4px;margin-top:6px}
+.pip{width:18px;height:8px;border-radius:2px;background:#1E2433}
+.pip.filled{background:#F59E0B}
+
+/* Modal */
+#modal-overlay{position:fixed;inset:0;background:#000000bb;display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+#modal-overlay.hidden{display:none}
+#modal-box{background:#0D1117;border:1px solid #1E2433;border-radius:12px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:22px;font-weight:900;color:#F9FAFB;margin-bottom:8px}
+.modal-sub{font-size:14px;color:#94A3B8;margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+
+/* Header stats */
+.hstat{text-align:center}
+.hstat-val{font-size:18px;font-weight:900;color:#F59E0B}
+.hstat-lbl{font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:0.1em}
+
+/* Progress arc */
+.tier-badge{display:inline-flex;align-items:center;gap:6px;background:#1E2433;border-radius:20px;padding:4px 12px;font-size:13px;font-weight:700;color:#F59E0B}
+
+/* Notification toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#0D1117;border:1px solid #1E2433;border-radius:10px;padding:14px 18px;max-width:320px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* Grid helpers */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mini-stat{background:#060A10;border-radius:7px;padding:10px;border:1px solid #1E2433;text-align:center}
+.mini-stat-val{font-size:20px;font-weight:900}
+.mini-stat-lbl{font-size:11px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+
+/* Podium animation */
+@keyframes popIn{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.pop-in{animation:popIn 0.5s ease forwards}
+
+/* Position color */
+.pos-1{color:#F59E0B}.pos-2{color:#9CA3AF}.pos-3{color:#CD7F32}.pos-good{color:#10B981}.pos-bad{color:#EF4444}
+</style>
+
+</head>
+<body>
+
+<!-- Setup Screen -->
+
+<div id="setup">
+  <div class="setup-card">
+    <div style="font-size:32px;font-weight:900;color:#F59E0B;margin-bottom:4px">🏁 FULL THROTTLE</div>
+    <div style="font-size:14px;color:#64748B;margin-bottom:28px;letter-spacing:0.15em">RACING CAREER RPG</div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Driver Name</label>
+      <input id="setup-name" type="text" placeholder="e.g. Jake Thunder" maxlength="24">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Car Number</label>
+      <input id="setup-num" type="text" placeholder="e.g. 47" maxlength="3" style="width:100px">
+    </div>
+    <div style="margin-bottom:24px">
+      <label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Home State</label>
+      <select id="setup-state">
+        <option value="AL">Alabama</option><option value="AK">Alaska</option>
+        <option value="AZ">Arizona</option><option value="AR">Arkansas</option>
+        <option value="CA">California</option><option value="CO">Colorado</option>
+        <option value="CT">Connecticut</option><option value="DE">Delaware</option>
+        <option value="FL">Florida</option><option value="GA">Georgia</option>
+        <option value="HI">Hawaii</option><option value="ID">Idaho</option>
+        <option value="IL">Illinois</option><option value="IN">Indiana</option>
+        <option value="IA">Iowa</option><option value="KS">Kansas</option>
+        <option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+        <option value="ME">Maine</option><option value="MD">Maryland</option>
+        <option value="MA">Massachusetts</option><option value="MI">Michigan</option>
+        <option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+        <option value="MO">Missouri</option><option value="MT">Montana</option>
+        <option value="NE">Nebraska</option><option value="NV">Nevada</option>
+        <option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+        <option value="NM">New Mexico</option><option value="NY">New York</option>
+        <option value="NC">North Carolina</option><option value="ND">North Dakota</option>
+        <option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+        <option value="OR">Oregon</option><option value="PA">Pennsylvania</option>
+        <option value="RI">Rhode Island</option><option value="SC">South Carolina</option>
+        <option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+        <option value="TX">Texas</option><option value="UT">Utah</option>
+        <option value="VT">Vermont</option><option value="VA">Virginia</option>
+        <option value="WA">Washington</option><option value="WV">West Virginia</option>
+        <option value="WI">Wisconsin</option><option value="WY">Wyoming</option>
+        <option value="INT">International</option>
+      </select>
+    </div>
+    <button class="btn-primary btn-lg" style="width:100%" onclick="startCareer()">Start Career →</button>
+  </div>
+</div>
+
+<!-- Main App -->
+
+<div id="app" style="display:none">
+  <div id="header">
+    <div>
+      <div style="font-size:20px;font-weight:900;color:#F59E0B" id="hdr-name">—</div>
+      <div id="hdr-tier" class="tier-badge" style="margin-top:4px">Rookie</div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-money">$0</div><div class="hstat-lbl">Bank</div></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-rep">0</div><div class="hstat-lbl">Rep</div></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-wins">0</div><div class="hstat-lbl">Wins</div></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-fans">0</div><div class="hstat-lbl">Fans</div></div>
+  </div>
+  <div id="tabs">
+    <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="showTab('race')">Race</button>
+    <button class="tab" onclick="showTab('standings')">Standings</button>
+    <button class="tab" onclick="showTab('team')">Team</button>
+    <button class="tab" onclick="showTab('driver')">Driver</button>
+    <button class="tab" onclick="showTab('car')">Car</button>
+    <button class="tab" onclick="showTab('rivals')">Rivals</button>
+    <button class="tab" onclick="showTab('career')">Career</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<!-- Modal -->
+
+<div id="modal-overlay" class="hidden" onclick="closeModal(event)">
+  <div id="modal-box"></div>
+</div>
+
+<!-- Toast -->
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// FULL THROTTLE RPG — Game Engine
+// ═══════════════════════════════════════════════════════════════
+
+const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const randF = (a,b) => Math.random()*(b-a)+a;
+const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
+const pick = arr => arr[rand(0,arr.length-1)];
+const fmtMoney = n => { n=Math.round(n||0); if(n>=1000000) return `$${(n/1000000).toFixed(2)}M`; if(n>=1000) return `$${(n/1000).toFixed(1)}K`; return `$${n}`; };
+const fmtFans = n => { if(n>=1000000) return `${(n/1000000).toFixed(1)}M`; if(n>=1000) return `${(n/1000).toFixed(1)}K`; return String(n); };
+
+// ─── TIERS ──────────────────────────────────────────────────────
+const TIERS = [
+  { id:1, name:'Saturday Night Racer', short:'Saturday Night', fieldSize:8,  races:10, entryFee:80,   basePrize:200,  winPrize:800,   reqWins:0,  reqRep:0,   color:'#8B5CF6' },
+  { id:2, name:'Regional Circuit',     short:'Regional',       fieldSize:12, races:10, entryFee:200,  basePrize:600,  winPrize:2500,  reqWins:2,  reqRep:20,  color:'#3B82F6' },
+  { id:3, name:'National Series',      short:'National',       fieldSize:18, races:10, entryFee:600,  basePrize:2000, winPrize:10000, reqWins:5,  reqRep:50,  color:'#10B981' },
+  { id:4, name:'Championship Contender',short:'Championship',  fieldSize:24, races:10, entryFee:2000, basePrize:8000, winPrize:40000, reqWins:10, reqRep:100, color:'#F59E0B' },
+  { id:5, name:'The Show',             short:'The Show',       fieldSize:36, races:10, entryFee:8000, basePrize:25000,winPrize:150000,reqWins:20, reqRep:180, color:'#EC4899' },
+];
+
+// ─── TRACKS ─────────────────────────────────────────────────────
+const TRACKS = [
+  // Short tracks (tier 1-2)
+  { name:'Wiscasset Speedway',             city:'Wiscasset, ME',        type:'short',  length:0.25 },
+  { name:'South Boston Speedway',          city:'South Boston, VA',     type:'short',  length:0.4 },
+  { name:'Hickory Motor Speedway',         city:'Hickory, NC',          type:'short',  length:0.36 },
+  { name:'Caraway Speedway',               city:'Asheboro, NC',         type:'short',  length:0.4 },
+  { name:'Langley Speedway',               city:'Hampton, VA',          type:'short',  length:0.4 },
+  { name:'Thompson Speedway',              city:'Thompson, CT',         type:'short',  length:0.625 },
+  { name:'Oxford Plains Speedway',         city:'Oxford, ME',           type:'short',  length:0.33 },
+  { name:'Martinsville Speedway',          city:'Ridgeway, VA',         type:'short',  length:0.526 },
+  { name:'Bristol Motor Speedway',         city:'Bristol, TN',          type:'short',  length:0.533 },
+  { name:'North Wilkesboro Speedway',      city:'North Wilkesboro, NC', type:'short',  length:0.625 },
+  { name:'Bowman Gray Stadium',            city:'Winston-Salem, NC',    type:'short',  length:0.25 },
+  { name:'Five Flags Speedway',            city:'Pensacola, FL',        type:'short',  length:0.5 },
+  { name:'Southern National Motorsports',  city:'Kenly, NC',            type:'short',  length:0.4 },
+  { name:'Concord Speedway',               city:'Concord, NC',          type:'short',  length:0.5 },
+  { name:'Lanier National Speedway',       city:'Braselton, GA',        type:'short',  length:0.44 },
+  // Mid-size (tier 2-3)
+  { name:'Richmond Raceway',               city:'Richmond, VA',         type:'mid',    length:0.75 },
+  { name:'Iowa Speedway',                  city:'Newton, IA',           type:'mid',    length:0.894 },
+  { name:'Nashville Superspeedway',        city:'Lebanon, TN',          type:'mid',    length:1.33 },
+  { name:'New Hampshire Motor Speedway',   city:'Loudon, NH',           type:'mid',    length:1.058 },
+  { name:'Phoenix Raceway',                city:'Avondale, AZ',         type:'mid',    length:1.0 },
+  { name:'Dover Motor Speedway',           city:'Dover, DE',            type:'mid',    length:1.0 },
+  { name:'Gateway Motorsports Park',       city:'Madison, IL',          type:'mid',    length:1.25 },
+  { name:'Darlington Raceway',             city:'Darlington, SC',       type:'mid',    length:1.366 },
+  { name:'Pocono Raceway',                 city:'Long Pond, PA',        type:'mid',    length:2.5 },
+  // Superspeedways (tier 3+)
+  { name:'Charlotte Motor Speedway',       city:'Concord, NC',          type:'super',  length:1.5 },
+  { name:'Texas Motor Speedway',           city:'Fort Worth, TX',       type:'super',  length:1.5 },
+  { name:'Atlanta Motor Speedway',         city:'Hampton, GA',          type:'super',  length:1.54 },
+  { name:'Kansas Speedway',                city:'Kansas City, KS',      type:'super',  length:1.5 },
+  { name:'Las Vegas Motor Speedway',       city:'Las Vegas, NV',        type:'super',  length:1.5 },
+  { name:'Michigan International Speedway',city:'Brooklyn, MI',         type:'super',  length:2.0 },
+  { name:'Homestead-Miami Speedway',       city:'Homestead, FL',        type:'super',  length:1.5 },
+  { name:'Auto Club Speedway',             city:'Fontana, CA',          type:'super',  length:2.0 },
+  { name:'Daytona International Speedway', city:'Daytona Beach, FL',    type:'super',  length:2.5 },
+  { name:'Talladega Superspeedway',        city:'Talladega, AL',        type:'super',  length:2.66 },
+];
+
+// ─── RIVAL ARCHETYPES ───────────────────────────────────────────
+const RIVAL_ARCHETYPES = [
+  { id:'bully',    name:'The Bully',    icon:'😤', color:'#EF4444', desc:'Races dirty. Will use the bumper. Hates losing to rookies.',
+    trash: ['Watch your mirrors, kid.','That paint job won\'t stay clean.','I\'ve wrecked better drivers than you.','Move or get moved.','You got lucky. Won\'t happen again.'],
+    praise:['Fine. You can drive. A little.','Not bad... this time.'] },
+  { id:'veteran',  name:'The Veteran',  icon:'🎖️', color:'#F59E0B', desc:'Been around forever. Smooth, calculated. Punishes every mistake.',
+    trash:['Patience, rookie. You\'ll learn.','I\'ve forgotten more about this track than you know.','Speed means nothing without racecraft.','You\'re trying too hard.'],
+    praise:['Now you\'re racing. Good.','There\'s something there. Keep going.'] },
+  { id:'hotshot',  name:'The Hotshot',  icon:'⚡', color:'#3B82F6', desc:'Blazing qualifier. Can fade late. Showboats when ahead.',
+    trash:['Did you see that qualifying lap? Embarrassing.','I lapped you in my head already.','This isn\'t even my final form.','Good luck keeping up.'],
+    praise:['OK that was actually fast.','Huh. Didn\'t expect that from you.'] },
+  { id:'underdog', name:'The Underdog', icon:'🐕', color:'#10B981', desc:'Inconsistent but occasionally stunning. Feeds off being underestimated.',
+    trash:['Everyone counts me out. Including you. Mistake.','I race with nothing to lose. You should be worried.','Nobody thought I\'d make it this far either.'],
+    praise:['You get it. We both get it.','Respect. Straight up.'] },
+  { id:'rich_kid', name:'The Rich Kid', icon:'💰', color:'#8B5CF6', desc:'Best equipment. Mediocre talent. Sponsors do the talking.',
+    trash:['My car costs more than your house.','Enjoy racing in my wake.','Daddy bought me this win before the season started.','You\'re in my way. My sponsor doesn\'t like that.'],
+    praise:['Fine. You outdrove me. Don\'t expect it again.'] },
+  { id:'media',    name:'The Media Darling', icon:'📺', color:'#EC4899', desc:'Cameras follow them everywhere. The crowd loves them. They know it.',
+    trash:['The fans came to see me, not you.','I have 200,000 followers watching this race.','Finishing second is still finishing on the podium with me.'],
+    praise:['You\'re actually good for the story. I\'ll allow it.'] },
+];
+
+// ─── RACE BEAT EVENTS ───────────────────────────────────────────
+const BEAT_EVENTS = [
+  // Caution/Yellow flag
+  { id:'yellow_early', type:'caution', title:'Yellow Flag — Early Caution',
+    desc:'A car spins entering turn 3 and brings out the yellow. Everyone bunches up for a restart. Your position going into this matters.',
+    icon:'🟡', choices:[
+      { text:'Pit for tires', hint:'Risk losing track position, gain grip', stat:'racecraft', roll:0.6, effect:'pos_change', delta:[-2,1] },
+      { text:'Stay out', hint:'Keep position, tires wear later', stat:'consistency', roll:0.55, effect:'pos_hold' },
+    ]},
+  { id:'yellow_mid', type:'caution', title:'Caution — Debris on the Track',
+    desc:'Yellow comes out with 40% of the race to go. Pit road is open. Do you burn a pit stop here?',
+    icon:'🟡', choices:[
+      { text:'Pit for track position', hint:'Come out ahead of slower cars', stat:'racecraft', roll:0.6, effect:'pos_change', delta:[-2,2] },
+      { text:'Hold position', hint:'Save the stop for later',              stat:'consistency', roll:0.5, effect:'pos_hold' },
+    ]},
+  { id:'yellow_late', type:'caution', title:'Late Caution — Last 10 Laps',
+    desc:'Yellow with 10 laps to go. This is the race. Every call matters now.',
+    icon:'🟡', choices:[
+      { text:'Pit — fresh tires for the finish', hint:'Gamble on track position',  stat:'racecraft', roll:0.55, effect:'pos_change', delta:[-3,2] },
+      { text:'Stay out — protect your spot',     hint:'Hope the tires hold',        stat:'consistency', roll:0.65, effect:'pos_hold' },
+    ]},
+  // Incidents
+  { id:'incident_lap1', type:'incident', title:'Turn 1 — First Lap Chaos',
+    desc:'Cars going 3-wide into turn 1 on the opening lap. Somebody\'s going to get collected. You need to find a lane.',
+    icon:'💥', choices:[
+      { text:'Go high — take the air', hint:'More room, might lose 2-3 spots', stat:'racecraft', roll:0.6, effect:'pos_change', delta:[-2,1] },
+      { text:'Stay low — hold your ground', hint:'Risky but keeps position',    stat:'racecraft', roll:0.45, effect:'pos_change', delta:[-3,2] },
+    ]},
+  { id:'incident_rival', type:'incident', title:'Your Rival Makes a Move',
+    desc:'Your biggest rival is right behind you and trying to get under you in the corner. This is personal.',
+    icon:'😤', choices:[
+      { text:'Block the move — hold your line',   hint:'Send a message, risk contact', stat:'racecraft', roll:0.5, effect:'pos_change', delta:[-1,1] },
+      { text:'Let them go — pick your moment',    hint:'Avoid drama, hunt them down', stat:'consistency', roll:0.65, effect:'pos_hold' },
+    ]},
+  { id:'incident_contact', type:'incident', title:'Contact — Someone Hit You',
+    desc:'Took a shot from behind. Car feels a little loose. You\'re OK but this needs a decision.',
+    icon:'💢', choices:[
+      { text:'Push through — shake it off',       hint:'Fight on, risk DNF',       stat:'consistency', roll:0.55, effect:'pos_change', delta:[-1,2] },
+      { text:'Pit to check the damage',           hint:'Safe but lose positions',  stat:'racecraft',   roll:0.7,  effect:'pos_change', delta:[-3,0] },
+    ]},
+  // Rain
+  { id:'rain_start', type:'weather', title:'Rain Starts Falling',
+    desc:'Unexpected rain is coming down on the back straight. Track is getting slippery. How do you adjust?',
+    icon:'🌧️', choices:[
+      { text:'Back off — manage the conditions',  hint:'Stay on track, concede pace', stat:'consistency', roll:0.7, effect:'pos_hold' },
+      { text:'Attack — others will back off too', hint:'High risk, high reward',       stat:'speed',       roll:0.45, effect:'pos_change', delta:[-2,4] },
+    ]},
+  // Mechanical
+  { id:'engine_temp', type:'mechanical', title:'Engine Temperature Rising',
+    desc:'Your temperature gauge is creeping up. Something isn\'t right. You have a decision to make.',
+    icon:'🌡️', choices:[
+      { text:'Manage it — back off slightly',     hint:'Protect the car, lose some ground', stat:'consistency', roll:0.75, effect:'pos_change', delta:[-2,0] },
+      { text:'Keep pushing — it\'ll hold',        hint:'Gamble on finishing strong',         stat:'speed',       roll:0.4,  effect:'pos_change', delta:[-99,3] },
+    ]},
+  { id:'tire_wear', type:'mechanical', title:'Tires Going Off',
+    desc:'Your right front is done. You can feel it in every corner. The question is when to pit.',
+    icon:'🔧', choices:[
+      { text:'Pit now — fresh rubber',            hint:'Lose position, gain pace',   stat:'racecraft',   roll:0.65, effect:'pos_change', delta:[-3,1] },
+      { text:'Stretch it — pit later',            hint:'Stay out, risk blowout',     stat:'consistency', roll:0.5,  effect:'pos_change', delta:[-2,2] },
+    ]},
+  // Good moments
+  { id:'clean_air', type:'opportunity', title:'Clean Air — You\'re Out Front',
+    desc:'You\'ve found clear track and you\'re clicking off fast laps. This is your moment.',
+    icon:'💨', choices:[
+      { text:'Build a gap — push hard',           hint:'Extend the lead while you can', stat:'speed',       roll:0.65, effect:'pos_change', delta:[-1,2] },
+      { text:'Manage pace — save the car',        hint:'Protect the result',             stat:'consistency', roll:0.8,  effect:'pos_hold' },
+    ]},
+  { id:'pass_opportunity', type:'opportunity', title:'The Move is There',
+    desc:'The car ahead bobbled in the dirty air. There\'s a window on the inside of turn 4. It\'s now or never.',
+    icon:'🎯', choices:[
+      { text:'Take the move — commit to it',      hint:'You either make it or you don\'t', stat:'racecraft', roll:0.6, effect:'pos_change', delta:[-1,2] },
+      { text:'Wait for a better chance',          hint:'Patient racing, maybe miss it',    stat:'consistency', roll:0.7, effect:'pos_change', delta:[0,1] },
+    ]},
+  { id:'restart_front', type:'restart', title:'Green-White-Checkered Restart',
+    desc:'Two laps to go. You\'re in the top 5. The restart is everything. Every driver on track wants what you have.',
+    icon:'🏁', choices:[
+      { text:'Go early on the restart',           hint:'Jump the field, risk the penalty', stat:'racecraft',   roll:0.55, effect:'pos_change', delta:[-2,3] },
+      { text:'Wait for the green — clean restart',hint:'By the book, protect position',    stat:'consistency', roll:0.65, effect:'pos_hold' },
+    ]},
+  { id:'lapped_traffic', type:'strategy', title:'Lapped Traffic Ahead',
+    desc:'Slower lapped cars are between you and the leader. How you manage this could swing the race.',
+    icon:'🚗', choices:[
+      { text:'Be aggressive — get through fast',  hint:'Use them as picks, gain ground',  stat:'racecraft',   roll:0.6, effect:'pos_change', delta:[-1,3] },
+      { text:'Be patient — use them wisely',      hint:'Low risk, maybe lose a spot',     stat:'consistency', roll:0.7, effect:'pos_change', delta:[-1,1] },
+    ]},
+  // More cautions
+  { id:'yellow_crash', type:'caution', title:'Big One — Multi-Car Crash',
+    desc:'Cars ahead tangled up going into the tri-oval. Debris everywhere. Yellow flies. The field stacks up.',
+    icon:'🟡', choices:[
+      { text:'Dive to pit road immediately',      hint:'Beat the crowd in, risk getting blocked', stat:'racecraft',   roll:0.55, effect:'pos_change', delta:[-3,2] },
+      { text:'Stay out one more lap',             hint:'See what others do first',               stat:'consistency', roll:0.6,  effect:'pos_change', delta:[-2,1] },
+    ]},
+  { id:'yellow_fuel', type:'caution', title:'Caution — Fuel Strategy',
+    desc:'Yellow with 20 to go. Your crew chief is on the radio: you can make it on fuel, but it will be close.',
+    icon:'⛽', choices:[
+      { text:'Pit for a splash and go',           hint:'Short stop, lose a couple spots',  stat:'racecraft',   roll:0.65, effect:'pos_change', delta:[-2,1] },
+      { text:'Save fuel and stretch it',          hint:'High risk if the math is wrong',   stat:'consistency', roll:0.5,  effect:'pos_change', delta:[-1,3] },
+    ]},
+  // More incidents
+  { id:'door_battle', type:'incident', title:'Door-to-Door — Three Laps',
+    desc:'You and another car have been door-to-door for three laps. Nobody is giving an inch. Something has to give.',
+    icon:'🚪', choices:[
+      { text:'Take the line — make them lift',    hint:'Aggressive, might trade paint',    stat:'racecraft',   roll:0.55, effect:'pos_change', delta:[-1,2] },
+      { text:'Back out — live to fight later',    hint:'Concede now, attack on fresh tyres', stat:'consistency', roll:0.7, effect:'pos_change', delta:[-1,1] },
+    ]},
+  { id:'spin_avoid', type:'incident', title:'Car Spinning Right in Front of You',
+    desc:'The car two ahead just went sideways off the corner. Smoke everywhere. You have half a second to react.',
+    icon:'🌀', choices:[
+      { text:'Go below — take the grass',         hint:'Might lose momentum but stay clean', stat:'racecraft',   roll:0.65, effect:'pos_change', delta:[-2,1] },
+      { text:'Thread the needle — stay on track', hint:'High risk, high reward',             stat:'speed',       roll:0.45, effect:'pos_change', delta:[-3,3] },
+    ]},
+  { id:'rival_block', type:'incident', title:'Rival Parked on the Bottom',
+    desc:'Your main rival has planted their car on the bottom lane and is not moving. They are daring you to try the outside.',
+    icon:'😤', choices:[
+      { text:'Take the outside — go around',      hint:'Longer way round, more speed needed', stat:'speed',     roll:0.55, effect:'pos_change', delta:[-1,2] },
+      { text:'Get to their bumper — apply pressure', hint:'Make them nervous, wait for a mistake', stat:'racecraft', roll:0.6, effect:'pos_change', delta:[-1,1] },
+    ]},
+  // More mechanical
+  { id:'brake_fade', type:'mechanical', title:'Brakes Fading',
+    desc:'Corner entry is getting sketchy. The brakes are not what they were at the start. You can feel it.',
+    icon:'🛑', choices:[
+      { text:'Adjust your braking points — adapt', hint:'Slower entry but clean',          stat:'racecraft',   roll:0.7, effect:'pos_change', delta:[-1,1] },
+      { text:'Keep the same setup — trust it',     hint:'Might lock up late',              stat:'consistency', roll:0.5, effect:'pos_change', delta:[-2,2] },
+    ]},
+  { id:'loose_car', type:'mechanical', title:'Car Went Loose',
+    desc:'Rear stepped out of line through the center of turn 2. The car wants to go right. You need to dial it in.',
+    icon:'🐍', choices:[
+      { text:'Call for a chassis adjustment at pit stop', hint:'Fall back slightly, fix it', stat:'consistency', roll:0.65, effect:'pos_change', delta:[-2,1] },
+      { text:'Drive through it — adjust your line',       hint:'Skill check, risky',        stat:'racecraft',   roll:0.55, effect:'pos_change', delta:[-1,2] },
+    ]},
+  // More opportunities
+  { id:'pit_cycle', type:'opportunity', title:'Pit Cycle Worked Out',
+    desc:'The pit stops cycled and you came out in a better position than expected. You have clean air and fresh rubber.',
+    icon:'✨', choices:[
+      { text:'Attack hard — make positions while it lasts', hint:'Full send on fresh tyres', stat:'speed',      roll:0.65, effect:'pos_change', delta:[-3,1] },
+      { text:'Manage the gap — lock in the result',         hint:'Conservative, protect it', stat:'consistency', roll:0.8, effect:'pos_hold' },
+    ]},
+  { id:'night_race', type:'opportunity', title:'Night Race — Track Rubbers In',
+    desc:'The sun is down and the rubber is laid in perfectly. Track is gripped up. This is the fastest the car will be all night.',
+    icon:'🌙', choices:[
+      { text:'Go hunting — now is the time',      hint:'Best conditions = best opportunity', stat:'speed',       roll:0.6, effect:'pos_change', delta:[-2,2] },
+      { text:'Stay composed — protect the finish', hint:'Long race still to go',             stat:'consistency', roll:0.75, effect:'pos_hold' },
+    ]},
+  { id:'gap_to_leader', type:'opportunity', title:'Gap to Leader Is Shrinking',
+    desc:'You are running P2 and the leader gap is coming down. Ten laps to go. You might actually have this.',
+    icon:'🏆', choices:[
+      { text:'Push everything — go for the win',  hint:'This is what you came for',         stat:'speed',       roll:0.5, effect:'pos_change', delta:[-1,1] },
+      { text:'Manage the gap — take the P2',      hint:'Points matter too',                 stat:'consistency', roll:0.8, effect:'pos_hold' },
+    ]},
+  // More strategy
+  { id:'alternate_line', type:'strategy', title:'Crew Chief Suggests an Alternate Line',
+    desc:'Your spotter is calling a new line through turn 4 that nobody else is taking. Data says it could be half a second faster.',
+    icon:'📡', choices:[
+      { text:'Try the new line — trust the data',  hint:'Could be a game changer or a mistake', stat:'racecraft', roll:0.6, effect:'pos_change', delta:[-2,3] },
+      { text:'Stick to what is working',           hint:'Reliable, no upside surprise',          stat:'consistency',roll:0.7, effect:'pos_hold' },
+    ]},
+  { id:'leader_pitting', type:'strategy', title:'Race Leader Pitting — Open Track',
+    desc:'The leader just dove to pit road. You suddenly inherit the lead. Do you pit now or lead for a while?',
+    icon:'🥇', choices:[
+      { text:'Stay out and lead — enjoy it',        hint:'Exposed to undercut on next cycle',  stat:'racecraft',    roll:0.55, effect:'pos_change', delta:[-1,2] },
+      { text:'Match the stop — maintain track position', hint:'Safe and clean',               stat:'consistency',  roll:0.7,  effect:'pos_hold' },
+    ]},
+  // Restarts
+  { id:'restart_back', type:'restart', title:'Late Restart — Buried in Traffic',
+    desc:'Final restart with 5 to go and you are P8. Every car in front of you is a wall. Gaps open and close in a blink.',
+    icon:'🏁', choices:[
+      { text:'Find a gap and dive — go for it',    hint:'Chaos racing, high variance',         stat:'racecraft',   roll:0.5, effect:'pos_change', delta:[-4,2] },
+      { text:'Stay patient — pick off one at a time', hint:'Methodical but limited laps',     stat:'consistency', roll:0.65, effect:'pos_change', delta:[-2,1] },
+    ]},
+  { id:'restart_mid', type:'restart', title:'Restart Mid-Race — Track Position Fight',
+    desc:'Green flag after a mid-race yellow. You are in P4 and both the cars around you have the same idea.',
+    icon:'🟢', choices:[
+      { text:'Banzai move into turn 1 — make three',  hint:'Bold, all-or-nothing',           stat:'speed',       roll:0.5, effect:'pos_change', delta:[-3,2] },
+      { text:'Hold your line — give nothing',         hint:'Clean restart, protect the spot', stat:'racecraft',  roll:0.65, effect:'pos_hold' },
+    ]},
+];
+
+// ─── RIVAL NAME POOLS ───────────────────────────────────────────
+const RIVAL_FIRST = ['Kyle','Chase','Bubba','Ryan','Ross','Tyler','Cole','Austin','Denny','Martin','Kevin','Brad','Joey','William','Michael','Christopher','Noah','Harrison','Landon','Corey','Tanner','Zane','Dakota','Hunter','Caden'];
+const RIVAL_LAST  = ['Tremont','Holloway','Duvall','Hargrove','Stacks','Boone','Cantrell','Finch','Slade','Farber','Pruitt','Hobbs','Rideout','Voss','Bale','Sutton','Yount','Falk','Cutler','Malone','Gross','Whitfield','Hayes','McAllister','Tunnell'];
+
+// ─── UPGRADE DEFINITIONS ────────────────────────────────────────
+const UPGRADES = [
+  { id:'engine',      label:'Engine',      icon:'🔧', stat:'speed',       desc:'Raw horsepower. More speed means better qualifying and leading laps.',
+    tiers:[{cost:500,bonus:1},{cost:1200,bonus:1},{cost:3000,bonus:1},{cost:7000,bonus:1},{cost:15000,bonus:1}] },
+  { id:'suspension',  label:'Suspension',  icon:'⚙️', stat:'racecraft',   desc:'Handling and balance. Makes the car easier to drive in traffic.',
+    tiers:[{cost:400,bonus:1},{cost:1000,bonus:1},{cost:2500,bonus:1},{cost:6000,bonus:1},{cost:12000,bonus:1}] },
+  { id:'reliability', label:'Reliability', icon:'🛡️', stat:'consistency', desc:'Keeps the car together. Reduces DNF chance and late-race fade.',
+    tiers:[{cost:300,bonus:1},{cost:800,bonus:1},{cost:2000,bonus:1},{cost:5000,bonus:1},{cost:10000,bonus:1}] },
+];
+
+// ─── STORY EVENTS ───────────────────────────────────────────────
+// Fires at key career moments
+const STORY_EVENTS = [
+  { trigger:'first_win',  title:'First Win 🏆',    desc:'The checkered flag falls. Crew radio explodes. You\'ve won your first race. Everything changes from here.',            repBonus:5, fanBonus:300 },
+  { trigger:'tier2',      title:'Moving Up',        desc:'The local tracks can\'t hold you anymore. Bigger series. Bigger fields. Better money. The work is just starting.',    repBonus:8, fanBonus:500 },
+  { trigger:'tier3',      title:'Going National',   desc:'National TV. Sponsor money. Real rivalries. You made it to the national stage. Now prove you belong here.',            repBonus:12,fanBonus:1500 },
+  { trigger:'tier4',      title:'Championship Fight',desc:'You\'re in the hunt for a real championship. The media is paying attention. Your rivals respect and hate you equally.',repBonus:15,fanBonus:3000 },
+  { trigger:'tier5',      title:'The Show',         desc:'This is the biggest stage in the sport. Everything you\'ve done since that first night at a Saturday short track led here.',repBonus:25,fanBonus:10000 },
+  { trigger:'five_wins',  title:'5 Wins',           desc:'Five race wins. Not luck. Pattern. The rivals know your name now and the fans are turning up.',                        repBonus:6, fanBonus:800 },
+  { trigger:'ten_wins',   title:'10 Wins',          desc:'Double digits. You\'re not a prospect anymore. You\'re a contender. Every win from here builds a legacy.',             repBonus:10,fanBonus:2000 },
+];
+
+// ─── GAME STATE ─────────────────────────────────────────────────
+let G = null;
+
+function initGame(name, carNum, state) {
+  const rivals = generateRivals(1);
+  G = {
+    name, carNum, homeState: state,
+    tier: 1, season: 1, race: 1,
+    money: 1500, rep: 0, fans: 0,
+    wins: 0, top5s: 0, starts: 0,
+    // Driver stats: base 2/10
+    stats: { speed:2, racecraft:2, consistency:2 },
+    // Car upgrades: level 0-5 for each
+    car: { engine:0, suspension:0, reliability:0 },
+    // Season points
+    points: 0,
+    seasonResults: [],
+    rivals,
+    raceHistory: [],
+    seasonHistory: [],
+    storyTriggered: [],
+    notifications: [],
+    xp: { speed_xp:0, racecraft_xp:0, consistency_xp:0 },
+    lastTraining: 0,
+    contract: null,       // active team contract or null (indie)
+    contractOffers: [],   // pending team offers
+    currentRace: null,
+    log: [`${name} from ${state}. Car #${carNum}. First night at the track. This is where it starts.`],
+  };
+  return G;
+}
+
+function generateRivals(tier) {
+  const count = Math.min(2 + tier, 5);
+  const archetypes = [...RIVAL_ARCHETYPES];
+  const shuffled = archetypes.sort(()=>Math.random()-0.5).slice(0, count);
+  return shuffled.map(a => ({
+    ...a,
+    name: `${pick(RIVAL_FIRST)} ${pick(RIVAL_LAST)}`,
+    wins: 0, interactions: 0,
+    heat: 0, // rivalry intensity 0-10
+    defeated: 0,
+  }));
+}
+
+function getTier() { return TIERS[G.tier-1]; }
+
+function getEffectiveStat(stat) {
+  let val = G.stats[stat];
+  if (stat==='speed')       val += G.car.engine;
+  if (stat==='racecraft')   val += G.car.suspension;
+  if (stat==='consistency') val += G.car.reliability;
+  // Team car bonus — better team = better machinery
+  if (G.contract) val += G.contract.carBonus||0;
+  return clamp(val, 1, 15);
+}
+
+// Save to Electron file system if available, otherwise localStorage
+const SAVE_KEY = 'ft_rpg_save';
+function saveGame() {
+  const data = JSON.stringify(G, null, 2);
+  if (window.electronAPI && window.electronAPI.saveCareer) {
+    window.electronAPI.saveCareer(data).catch(()=>{});
+  }
+  try { localStorage.setItem(SAVE_KEY, data); } catch(e){}
+}
+async function loadGame() {
+  // Try Electron file first
+  if (window.electronAPI && window.electronAPI.loadCareer) {
+    try {
+      const data = await window.electronAPI.loadCareer();
+      if (data) { G = JSON.parse(data); return true; }
+    } catch(e){}
+  }
+  // Fall back to localStorage
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (raw) { try { G = JSON.parse(raw); return true; } catch(e){} }
+  return false;
+}
+
+// ─── RACE ENGINE ────────────────────────────────────────────────
+function generateSchedule() {
+  const tier = getTier();
+  const trackPool = TRACKS.filter(t => {
+    if (G.tier <= 2) return t.type === 'short';
+    if (G.tier === 3) return t.type === 'short' || t.type === 'mid';
+    if (G.tier === 4) return t.type !== 'super' || Math.random() < 0.3;
+    return true; // tier 5: anything goes
+  });
+  const shuffled = [...trackPool].sort(()=>Math.random()-0.5);
+  return Array.from({length:tier.races}, (_,i) => ({
+    round: i+1,
+    track: shuffled[i % shuffled.length],
+    result: null,
+  }));
+}
+
+function startSeason() {
+  G.schedule = generateSchedule();
+  G.race = 1;
+  G.points = 0;
+  G.seasonResults = [];
+  G.lastTraining = 0; // reset training cooldown for new season
+  // Generate AI field for standings
+  G.aiField = generateAIField();
+  saveGame();
+  showTab('race');
+}
+
+function generateAIField() {
+  const tier = getTier();
+  const count = tier.fieldSize - 1;
+  const field = [];
+  // Always include the named rivals first so they appear in standings
+  const rivalNames = new Set((G.rivals||[]).map(r=>r.name));
+  (G.rivals||[]).forEach(r => {
+    field.push({
+      name: r.name,
+      points: 0, wins: 0, top5s: 0, starts: 0,
+      skill: clamp(rand(4,11),1,15),
+      isRival: true, rivalId: r.id,
+    });
+  });
+  // Fill rest with generic AI drivers
+  while (field.length < count) {
+    const name = `${pick(RIVAL_FIRST)} ${pick(RIVAL_LAST)}`;
+    if (!rivalNames.has(name)) {
+      field.push({ name, points:0, wins:0, top5s:0, starts:0, skill:clamp(rand(3,12),1,15) });
+      rivalNames.add(name);
+    }
+  }
+  return field.slice(0, count);
+}
+
+function getCurrentRace() {
+  if (!G.schedule) return null;
+  return G.schedule.find(r => !r.result) || null;
+}
+
+// Generate 3-5 beat events for a race
+function generateRaceBeats() {
+  const pool = [...BEAT_EVENTS];
+  const count = rand(3, 5);
+  const shuffled = pool.sort(()=>Math.random()-0.5);
+  // Separate restart beats — these must always be last
+  const restarts  = shuffled.filter(e=>e.type==='restart');
+  const cautions  = shuffled.filter(e=>e.type==='caution');
+  const incidents = shuffled.filter(e=>e.type==='incident');
+  const others    = shuffled.filter(e=>e.type!=='caution'&&e.type!=='incident'&&e.type!=='restart');
+  // Build the sequence: caution first, incidents + others in middle, restart at end if included
+  const middle = [...incidents, ...others].sort(()=>Math.random()-0.5);
+  const selected = [pick(cautions), ...middle].filter(Boolean).slice(0, count - (restarts.length?1:0));
+  // 40% chance to include a GWC finish as the final beat
+  if (restarts.length && Math.random() < 0.4) selected.push(pick(restarts));
+  return selected;
+}
+
+// Simulate a race given accumulated beat outcomes
+function simulateFinalPosition(beatDeltas, fieldSize) {
+  const tier = getTier();
+  const spd  = getEffectiveStat('speed');
+  const rc   = getEffectiveStat('racecraft');
+  const con  = getEffectiveStat('consistency');
+  const total = spd + rc + con; // max 45
+
+  // Base position range — normalized to field
+  // At stat total 6 (min): expect ~60-80% of field
+  // At stat total 30 (max): expect top 25%
+  // Difficulty: authentic — wins should be earned, not handed out
+  // At starting stats (total ~6): expect ~65-80th percentile of field
+  // At max stats (total ~30+): expect top 15-25%
+  const statFactor = Math.pow(total / 45, 0.7); // gentler curve, harder floor
+  const noise = randF(-0.15, 0.15);
+  const basePctile = clamp(1 - (statFactor * 0.80 + noise), 0.05, 0.95);
+  let basePos = Math.round(basePctile * fieldSize);
+  basePos = clamp(basePos, 1, fieldSize);
+
+  // Apply beat deltas — but cap their influence so stats still matter
+  const totalDelta = beatDeltas.reduce((a,b)=>a+b, 0);
+  let finalPos = clamp(basePos + Math.round(totalDelta * 0.8), 1, fieldSize);
+
+  // DNF check — starts at 18% for a fresh car, drops with reliability upgrades
+  const dnfChance = Math.max(0.03, 0.18 - (con * 0.012));
+  const dnf = Math.random() < dnfChance;
+  if (dnf) finalPos = fieldSize - rand(0, Math.floor(fieldSize * 0.15));
+
+  return { pos: finalPos, dnf, fieldSize };
+}
+
+function calcPrize(pos, fieldSize) {
+  const tier = getTier();
+  const gross = pos===1 ? tier.winPrize : Math.floor(tier.basePrize * Math.max(0.05, 0.65-((pos-2)/(fieldSize-2))*0.60));
+  // Apply team prize share if under contract
+  const share = G.contract ? G.contract.prizeShare : 1.0;
+  return Math.floor(gross * share);
+}
+function calcSalary() {
+  // Team pays per-race salary on top of prize share
+  return G.contract ? G.contract.salaryPerRace : 0;
+}
+
+function calcPoints(pos, dnf) {
+  if (dnf) return 0;
+  const pts = [50,40,35,30,27,24,21,18,15,12,10,8,6,4,2,1];
+  return pts[Math.min(pos-1, pts.length-1)] || 1;
+}
+
+function processRaceResult(pos, fieldSize, dnf) {
+  const race = getCurrentRace();
+  if (!race) return;
+
+  const prize = dnf ? 0 : calcPrize(pos, fieldSize);
+  const pts   = calcPoints(pos, dnf);
+  const tier  = getTier();
+
+  // Entry fee (indie pays full, team covers it if under contract)
+  if (!G.contract) G.money -= tier.entryFee;
+  G.money += prize;
+  // Team salary bonus
+  const salary = calcSalary();
+  if (salary > 0) G.money += salary;
+  G.points += pts;
+  G.starts++;
+  if (!dnf && pos===1) G.wins++;
+  if (!dnf && pos<=5)  G.top5s++;
+
+  // Rep/fans
+  let repGain = 0, fanGain = 0;
+  if (dnf)       { repGain=-1; fanGain=-rand(10,40); }
+  else if (pos===1){ repGain=rand(4,8); fanGain=rand(150,400); }
+  else if (pos<=3) { repGain=rand(2,5); fanGain=rand(80,200); }
+  else if (pos<=5) { repGain=rand(1,3); fanGain=rand(30,100); }
+  else if (pos>Math.floor(fieldSize*0.6)){ repGain=-1; fanGain=0; }
+  G.rep   = Math.max(0, G.rep + repGain);
+  G.fans  = Math.max(0, G.fans + fanGain);
+
+  // Store result
+  race.result = { pos, fieldSize, dnf, prize, pts, repGain, fanGain };
+  G.seasonResults.push({ round:race.round, track:race.track.name, pos, fieldSize, dnf, pts });
+  G.raceHistory.push({ season:G.season, tier:G.tier, track:race.track.name, pos, fieldSize, dnf });
+  G.log.unshift(`[S${G.season} R${race.round}] ${race.track.name}: ${dnf?'DNF':`P${pos}/${fieldSize}`} | ${fmtMoney(prize)} | +${pts}pts`);
+  if (G.log.length > 100) G.log = G.log.slice(0, 100);
+
+  // Simulate AI field results for this race
+  if (G.aiField && G.aiField.length) {
+    // Assign random positions to all AI drivers (excluding player's position)
+    const availablePos = [];
+    for (let i=1; i<=fieldSize; i++) { if (i!==pos) availablePos.push(i); }
+    availablePos.sort(()=>Math.random()-0.5);
+    G.aiField.forEach((ai, idx) => {
+      const aiPos = availablePos[idx] || fieldSize;
+      const aiDnf = Math.random() < 0.12;
+      const aiPts = calcPoints(aiDnf ? fieldSize : aiPos, aiDnf);
+      ai.points += aiPts;
+      ai.starts++;
+      if (!aiDnf && aiPos === 1) ai.wins++;
+      if (!aiDnf && aiPos <= 5)  ai.top5s++;
+    });
+  }
+
+  // Rival reactions
+  updateRivalHeat(pos, fieldSize);
+
+  // Story triggers
+  checkStoryTriggers();
+
+  // Advance race counter
+  G.race++;
+
+  // Check season end
+  const remaining = G.schedule.filter(r=>!r.result).length;
+  if (remaining === 0) endSeason();
+
+  saveGame();
+}
+
+function updateRivalHeat(pos, fieldSize) {
+  G.rivals.forEach(r => {
+    r.interactions++;
+    if (pos <= 3) r.heat = Math.min(10, r.heat + 1);
+    if (pos === 1) r.defeated++;
+    // Random trash talk chance
+    if (pos <= Math.floor(fieldSize*0.4) && Math.random() < 0.35) {
+      const msg = pick(r.trash);
+      G.notifications.push({ type:'rival', rival:r.name, icon:r.icon, msg, id:uid() });
+    }
+  });
+}
+
+function checkStoryTriggers() {
+  const triggers = [
+    { id:'first_win',  cond: G.wins === 1 },
+    { id:'five_wins',  cond: G.wins === 5 },
+    { id:'ten_wins',   cond: G.wins === 10 },
+  ];
+  triggers.forEach(t => {
+    if (t.cond && !G.storyTriggered.includes(t.id)) {
+      G.storyTriggered.push(t.id);
+      const evt = STORY_EVENTS.find(e=>e.trigger===t.id);
+      if (evt) {
+        G.rep   += evt.repBonus;
+        G.fans  += evt.fanBonus;
+        G.notifications.push({ type:'story', ...evt, id:uid() });
+      }
+    }
+  });
+}
+
+// ─── TEAM CONTRACTS ─────────────────────────────────────────────
+const TEAM_NAMES = [
+  ['Pawlowski Racing','Earls Speed Shop','Backwoods Motorsports','County Line Racing','Hilltop Racing','Weekend Warriors Racing'],
+  ['Barnyard Racing','Thunder Ridge Motorsports','Rural Route Racing','Three Dog Racing','Riverside Motorsports','Valley Speed Co'],
+  ['Southern Speed Racing','Appalachian Motorsports','Piedmont Racing Co.','Blue Ridge Speed','Tri-State Racing','Summit Motorsports'],
+  ['Carolina Asphalt Racing','Ridgeline Motorsports','Summit Racing Stable','Tri-Oval Racing','Flatout Racing','Midwest Speed Group'],
+  ['Hendrick Motorsports B-team','Petty Enterprises','Richard Childress Racing Dev','Joe Gibbs Racing Dev','Front Row Motorsports','Trackhouse Development'],
+];
+
+const CONTRACT_QUALITY = ['backmarker','midfield','competitive','top-team'];
+const QUALITY_COLOR = {backmarker:'#64748B',midfield:'#3B82F6',competitive:'#10B981','top-team':'#F59E0B'};
+const QUALITY_LABEL = {backmarker:'Backmarker Team',midfield:'Midfield Team',competitive:'Competitive Team','top-team':'Top Team'};
+
+function generateContractOffers() {
+  const tier = getTier();
+  const names = TEAM_NAMES[G.tier-1] || TEAM_NAMES[0];
+  const qualities = G.rep >= 60 ? CONTRACT_QUALITY : G.rep >= 30 ? CONTRACT_QUALITY.slice(0,3) : CONTRACT_QUALITY.slice(0,2);
+  const count = rand(2,4);
+  const offers = [];
+  const usedNames = new Set();
+  for (let i=0;i<count;i++) {
+    const quality = pick(qualities);
+    const mult = {backmarker:0.6,midfield:1.0,competitive:1.4,'top-team':1.9}[quality];
+    // Pick a team name not already used in this offer pool
+    const availableNames = names.filter(n=>!usedNames.has(n));
+    const teamName = availableNames.length ? pick(availableNames) : `Team ${uid().slice(0,4)}`;
+    usedNames.add(teamName);
+    const seasons = rand(1, quality==='top-team'?3:2);
+    // Salary: team pays driver per race
+    const salaryPerRace = Math.floor(tier.basePrize * mult * 0.3 * randF(0.8,1.2));
+    // Prize share: driver keeps X% of prize money
+    const prizeShare = {backmarker:0.55,midfield:0.68,competitive:0.78,'top-team':0.88}[quality];
+    // Car bonus to stats
+    const carBonus = {backmarker:0,midfield:1,competitive:2,'top-team':3}[quality];
+    offers.push({ id:uid(), teamName, quality, seasons, salaryPerRace, prizeShare, carBonus, tier:G.tier });
+  }
+  return offers;
+}
+
+function doSignContract(offer) {
+  G.contract = { ...offer, racesCompleted:0, seasonsCompleted:0, warnings:0 };
+  G.contractOffers = [];
+  G.money += offer.salaryPerRace * 3; // signing bonus = 3 race salaries
+  addNotification({
+    type:'story',
+    title:`✍️ Signed with ${offer.teamName}`,
+    desc:`${QUALITY_LABEL[offer.quality]}. ${offer.seasons} season deal. Signing bonus paid. Let us go to work.`,
+  });
+  saveGame(); renderTab();
+}
+
+function doGoIndie() {
+  G.contract = null;
+  G.contractOffers = [];
+  addNotification({
+    type:'story',
+    title:'🔧 Running Independent',
+    desc:'No team. No salary. No obligations. You pay your own way and keep what you earn. Prove you belong.',
+  });
+  saveGame(); renderTab();
+}
+
+function addNotification(n) {
+  if (!G.notifications) G.notifications = [];
+  G.notifications.push({...n, id:uid()});
+}
+
+function endSeason() {
+  // Season standings calc
+  const pts = G.seasonResults.reduce((a,r)=>a+r.pts,0);
+  const wins = G.seasonResults.filter(r=>r.pos===1).length;
+
+  // Build final standings snapshot
+  const playerStandingRow = {
+    name: G.name, points: G.points,
+    wins, top5s: G.seasonResults.filter(r=>r.pos<=5&&!r.dnf).length,
+    starts: G.seasonResults.length, isPlayer:true,
+  };
+  const allStandings = [playerStandingRow, ...(G.aiField||[]).map(ai=>({...ai,isPlayer:false}))]
+    .sort((a,b)=>b.points-a.points||b.wins-a.wins);
+  const playerFinalPos = allStandings.findIndex(r=>r.isPlayer)+1;
+
+  G.seasonHistory.push({
+    season: G.season, tier: G.tier,
+    races: G.seasonResults.length,
+    wins, points: pts,
+    money: G.money, rep: G.rep,
+    finalPos: playerFinalPos,
+    standings: allStandings.slice(0, 10), // top 10 for display
+  });
+
+  // Merch revenue
+  const merch = Math.floor(G.fans * 0.15);
+  if (merch > 0) { G.money += merch; }
+
+  // Check tier promotion
+  checkPromotion();
+
+  // Generate fresh contract offers for new season
+  G.contractOffers = generateContractOffers();
+  // Tick contract seasons
+  if (G.contract) {
+    G.contract.seasonsCompleted = (G.contract.seasonsCompleted||0)+1;
+    if (G.contract.seasonsCompleted >= G.contract.seasons) {
+      addNotification({type:'story',title:'📋 Contract Expired',desc:`Your deal with ${G.contract.teamName} is up. Check the Team tab for new offers.`});
+      G.contract = null;
+    }
+  }
+
+  G.season++;
+  G.race = 1;
+  G.schedule = null;
+  G.seasonResults = [];
+}
+
+function checkPromotion() {
+  if (G.tier >= 5) return;
+  const next = TIERS[G.tier];
+  const wins = G.raceHistory.filter(r=>r.tier===G.tier&&r.pos===1).length;
+  if (wins >= next.reqWins && G.rep >= next.reqRep) {
+    G.tier++;
+    G.rivals = [...G.rivals.slice(-2), ...generateRivals(G.tier)].slice(0,5);
+    const tierEvt = STORY_EVENTS.find(e=>e.trigger===`tier${G.tier}`);
+    if (tierEvt && !G.storyTriggered.includes(`tier${G.tier}`)) {
+      G.storyTriggered.push(`tier${G.tier}`);
+      G.rep   += tierEvt.repBonus;
+      G.fans  += tierEvt.fanBonus;
+      G.notifications.push({ type:'story', ...tierEvt, id:uid() });
+    }
+  }
+}
+
+// ─── UI HELPERS ─────────────────────────────────────────────────
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k,v]) => {
+    if (k === 'className') el.className = v;
+    else if (k === 'style' && typeof v==='object') Object.assign(el.style, v);
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else el.setAttribute(k, v);
+  });
+  children.flat(Infinity).forEach(c => {
+    if (c == null) return;
+    el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  });
+  return el;
+}
+
+function mkBtn(text, cls, onClick, disabled=false) {
+  const b = h('button', {className:cls, onClick}, text);
+  if (disabled) b.disabled = true;
+  return b;
+}
+
+function statBar(label, val, max=10, color='#F59E0B') {
+  const pct = Math.round((val/max)*100);
+  return h('div',{className:'stat-bar-wrap'},
+    h('div',{className:'stat-bar-label'},
+      h('span',{style:{color:'#94A3B8'}},label),
+      h('span',{style:{color,fontWeight:700}},`${val}/${max}`),
+    ),
+    h('div',{className:'stat-bar-track'},
+      h('div',{className:'stat-bar-fill',style:{width:`${pct}%`,background:color}}),
+    ),
+  );
+}
+
+function pipRow(label, icon, level, maxLevel=5) {
+  const pips = Array.from({length:maxLevel},(_,i)=>
+    h('div',{className:`pip${i<level?' filled':''}`})
+  );
+  return h('div',null,
+    h('div',{style:{fontSize:'13px',color:'#94A3B8',marginBottom:'4px'}},`${icon} ${label}`),
+    h('div',{className:'upgrade-pips'},...pips),
+  );
+}
+
+function posColor(pos, fs) {
+  if (pos===1) return '#F59E0B';
+  if (pos<=3)  return '#10B981';
+  if (pos<=Math.floor(fs*0.4)) return '#3B82F6';
+  if (pos>Math.floor(fs*0.65)) return '#EF4444';
+  return '#94A3B8';
+}
+
+let modalStack = [];
+function openModal(content) {
+  const box = document.getElementById('modal-box');
+  box.innerHTML = '';
+  box.appendChild(content);
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+function showToast(msg, duration=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+function updateHeader() {
+  if (!G) return;
+  document.getElementById('hdr-name').textContent = `#${G.carNum} ${G.name}`;
+  document.getElementById('hdr-tier').textContent = getTier().short;
+  document.getElementById('hdr-tier').style.color = getTier().color;
+  document.getElementById('hdr-money').textContent = fmtMoney(G.money);
+  document.getElementById('hdr-rep').textContent = G.rep;
+  document.getElementById('hdr-wins').textContent = G.wins;
+  document.getElementById('hdr-fans').textContent = fmtFans(G.fans);
+}
+
+let activeTab = 'dashboard';
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase()===tab||t.onclick?.toString().includes(`'${tab}'`)));
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.getAttribute('onclick')?.includes(`'${tab}'`));
+  });
+  renderTab();
+}
+
+function renderTab() {
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  updateHeader();
+  const frag = {
+    dashboard: renderDashboard,
+    race:      renderRace,
+    standings:  renderStandings,
+    team:      renderTeam,
+    driver:    renderDriver,
+    car:       renderCar,
+    rivals:    renderRivals,
+    career:    renderCareer,
+  }[activeTab]?.();
+  if (frag) content.appendChild(frag);
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────────
+function renderDashboard() {
+  const f = document.createDocumentFragment();
+  const tier = getTier();
+
+  f.appendChild(h('div',{className:'page-title'},`${G.name}`));
+  f.appendChild(h('div',{className:'page-sub'},`Season ${G.season} · ${tier.name} · Car #${G.carNum} · ${G.contract ? G.contract.teamName : '🔧 Independent'}`));
+
+  // Notifications first
+  if (G.notifications && G.notifications.length) {
+    const nc = h('div',{className:'card',style:{borderColor:'#F59E0B44'}});
+    nc.appendChild(h('div',{className:'card-title'},'⚡ Notifications'));
+    G.notifications.forEach((n,i) => {
+      const row = h('div',{style:{padding:'10px 0',borderBottom:'1px solid #0D1117',display:'flex',gap:'12px',alignItems:'flex-start'}});
+      if (n.type==='rival') {
+        row.appendChild(h('div',{style:{fontSize:'22px'}},n.icon));
+        row.appendChild(h('div',null,
+          h('div',{style:{fontSize:'13px',color:'#94A3B8',marginBottom:'2px'}},n.rival),
+          h('div',{style:{fontSize:'14px',color:'#E2E8F0',fontStyle:'italic'}},`"${n.msg}"`),
+        ));
+      } else if (n.type==='story') {
+        row.appendChild(h('div',{style:{fontSize:'22px'}},'⭐'));
+        row.appendChild(h('div',null,
+          h('div',{style:{fontSize:'15px',fontWeight:800,color:'#F59E0B',marginBottom:'2px'}},n.title),
+          h('div',{style:{fontSize:'14px',color:'#94A3B8'}},n.desc),
+        ));
+      }
+      const dismissBtn = mkBtn('✕','btn-ghost btn-sm',()=>{ G.notifications.splice(i,1); saveGame(); renderTab(); });
+      dismissBtn.style.marginLeft = 'auto';
+      dismissBtn.style.flexShrink = '0';
+      row.appendChild(dismissBtn);
+      nc.appendChild(row);
+    });
+    f.appendChild(nc);
+  }
+
+  // Stats card
+  const sc = h('div',{className:'card'});
+  sc.appendChild(h('div',{className:'card-title'},'Driver Stats'));
+  sc.appendChild(statBar('Speed',      getEffectiveStat('speed'),      15, '#EF4444'));
+  sc.appendChild(statBar('Racecraft',  getEffectiveStat('racecraft'),  15, '#3B82F6'));
+  sc.appendChild(statBar('Consistency',getEffectiveStat('consistency'),15, '#10B981'));
+  sc.appendChild(h('div',{style:{fontSize:'12px',color:'#64748B',marginTop:'8px'}},
+    `Base: Speed ${G.stats.speed} · Racecraft ${G.stats.racecraft} · Consistency ${G.stats.consistency} | Car bonus included`
+  ));
+  f.appendChild(sc);
+
+  // Season progress
+  const raceCard = h('div',{className:'card'});
+  raceCard.appendChild(h('div',{className:'card-title'},'Season Progress'));
+  if (!G.schedule) {
+    raceCard.appendChild(h('div',{style:{textAlign:'center',padding:'20px'}},
+      h('div',{style:{fontSize:'16px',color:'#94A3B8',marginBottom:'14px'}},
+        G.season === 1 ? 'Ready to start your first season.' : `Season ${G.season} hasn\'t started yet.`
+      ),
+      mkBtn('Start Season →','btn-primary btn-lg',startSeason),
+    ));
+  } else {
+    const done = G.schedule.filter(r=>r.result).length;
+    const total = G.schedule.length;
+    raceCard.appendChild(h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'14px',color:'#94A3B8',marginBottom:'8px'}},
+      h('span',null,`Race ${done+1} of ${total}`),
+      h('span',null,`${G.points} pts this season`),
+    ));
+    const pct = Math.round((done/total)*100);
+    raceCard.appendChild(h('div',{className:'stat-bar-track',style:{height:'10px',marginBottom:'14px'}},
+      h('div',{className:'stat-bar-fill',style:{width:`${pct}%`,background:tier.color}}),
+    ));
+    // Last result
+    const lastR = G.seasonResults[G.seasonResults.length-1];
+    if (lastR) {
+      const col = posColor(lastR.pos, lastR.fieldSize);
+      raceCard.appendChild(h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'10px 12px',marginBottom:'12px',display:'flex',gap:'12px',alignItems:'center'}},
+        h('div',{style:{fontSize:'28px',fontWeight:900,color:col}},lastR.dnf?'DNF':`P${lastR.pos}`),
+        h('div',null,
+          h('div',{style:{fontSize:'14px',fontWeight:700,color:'#F9FAFB'}},lastR.track),
+          h('div',{style:{fontSize:'13px',color:'#94A3B8'}},`+${lastR.pts} pts`),
+        ),
+      ));
+    }
+    if (done < total) {
+      raceCard.appendChild(mkBtn('Go Racing →','btn-primary',()=>showTab('race')));
+    } else {
+      raceCard.appendChild(h('div',{style:{textAlign:'center',padding:'10px'}},
+        h('div',{style:{fontSize:'16px',color:'#F59E0B',fontWeight:800,marginBottom:'12px'}},'🏁 Season Complete!'),
+        mkBtn('Advance to Season '+(G.season+1),'btn-success btn-lg',advanceSeason),
+      ));
+    }
+  }
+  f.appendChild(raceCard);
+
+  // Career quick stats
+  f.appendChild(h('div',{className:'card'},
+    h('div',{className:'card-title'},'Career'),
+    h('div',{className:'grid-3'},
+      miniStat('Starts',  G.starts,       '#3B82F6'),
+      miniStat('Wins',    G.wins,         '#F59E0B'),
+      miniStat('Top 5s',  G.top5s,        '#10B981'),
+      miniStat('Rep',     G.rep,          '#8B5CF6'),
+      miniStat('Fans',    fmtFans(G.fans),'#EC4899'),
+      miniStat('Bank',    fmtMoney(G.money),'#10B981'),
+    ),
+  ));
+
+  return f;
+}
+
+function miniStat(label, val, color) {
+  return h('div',{className:'mini-stat'},
+    h('div',{className:'mini-stat-val',style:{color}},String(val)),
+    h('div',{className:'mini-stat-lbl'},label),
+  );
+}
+
+function advanceSeason() {
+  G.schedule = null;
+  G.season++;
+  G.race = 1;
+  G.seasonResults = [];
+  saveGame();
+  renderTab();
+  showToast(`Season ${G.season} ready. Build your car and hit the track.`);
+}
+
+// ─── RACE TAB ───────────────────────────────────────────────────
+function renderRace() {
+  const f = document.createDocumentFragment();
+
+  if (!G.schedule) {
+    f.appendChild(h('div',{className:'page-title'},'Race'));
+    f.appendChild(h('div',{className:'page-sub'},'No season active.'));
+    f.appendChild(mkBtn('Start Season →','btn-primary btn-lg',startSeason));
+    return f;
+  }
+
+  const race = getCurrentRace();
+  if (!race) {
+    f.appendChild(h('div',{className:'page-title'},'Season Complete'));
+    f.appendChild(h('div',{className:'page-sub'},'All races finished.'));
+    f.appendChild(mkBtn('Back to Dashboard','btn-primary',()=>showTab('dashboard')));
+    return f;
+  }
+
+  const tier = getTier();
+
+  // If race in progress, show beat UI
+  if (G.currentRace) {
+    return renderRaceInProgress(f, race);
+  }
+
+  // Pre-race screen
+  f.appendChild(h('div',{className:'page-title'},race.track.name));
+  f.appendChild(h('div',{className:'page-sub'},`${race.track.city} · Round ${race.round} of ${tier.races} · ${tier.name}`));
+
+  // Track info
+  f.appendChild(h('div',{className:'card'},
+    h('div',{className:'card-title'},'Race Info'),
+    h('div',{className:'grid-2'},
+      h('div',null,
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},'TRACK LENGTH'),
+        h('div',{style:{fontSize:'18px',fontWeight:800,color:'#F9FAFB'}},`${race.track.length} miles`),
+      ),
+      h('div',null,
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},'FIELD SIZE'),
+        h('div',{style:{fontSize:'18px',fontWeight:800,color:'#F9FAFB'}},`${tier.fieldSize} cars`),
+      ),
+      h('div',null,
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},'WIN PRIZE'),
+        h('div',{style:{fontSize:'18px',fontWeight:800,color:'#F59E0B'}},fmtMoney(tier.winPrize)),
+      ),
+      h('div',null,
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},'ENTRY FEE'),
+        h('div',{style:{fontSize:'18px',fontWeight:800,color:'#EF4444'}},fmtMoney(tier.entryFee)),
+      ),
+    ),
+  ));
+
+  // Driver readiness
+  f.appendChild(h('div',{className:'card'},
+    h('div',{className:'card-title'},'Your Setup'),
+    statBar('Speed',      getEffectiveStat('speed'),      15, '#EF4444'),
+    statBar('Racecraft',  getEffectiveStat('racecraft'),  15, '#3B82F6'),
+    statBar('Consistency',getEffectiveStat('consistency'),15, '#10B981'),
+  ));
+
+  // Rivals in the field
+  const rivsInField = G.rivals.slice(0, Math.min(3, G.rivals.length));
+  if (rivsInField.length) {
+    const rc = h('div',{className:'card'});
+    rc.appendChild(h('div',{className:'card-title'},'Rivals in the Field'));
+    rivsInField.forEach(r => {
+      rc.appendChild(h('div',{className:'rival-card'},
+        h('div',{className:'rival-avatar',style:{background:r.color+'22',color:r.color}},r.icon),
+        h('div',null,
+          h('div',{style:{fontSize:'15px',fontWeight:800,color:'#F9FAFB'}},r.name),
+          h('div',{style:{fontSize:'13px',color:'#94A3B8'}},r.desc),
+        ),
+        r.heat >= 5 ? h('div',{style:{marginLeft:'auto',fontSize:'12px',color:'#EF4444',fontWeight:700}},'HEATED') : null,
+      ));
+    });
+    f.appendChild(rc);
+  }
+
+  // Start race button
+  f.appendChild(h('div',{style:{textAlign:'center',padding:'20px 0'}},
+    h('div',{style:{fontSize:'14px',color:'#64748B',marginBottom:'16px'}},
+      `${G.money < tier.entryFee ? '⚠️ Warning: entry fee exceeds your bank balance.' : 'Good luck out there.'}`
+    ),
+    mkBtn('🏁 START RACE', 'btn-primary btn-xl', startRace),
+  ));
+
+  return f;
+}
+
+function startRace() {
+  const race = getCurrentRace();
+  if (!race) return;
+  const beats = generateRaceBeats();
+  G.currentRace = {
+    raceRef: race,
+    beats,
+    beatIndex: 0,
+    deltas: [],
+    resolved: [],
+  };
+  saveGame();
+  renderTab();
+}
+
+function renderRaceInProgress(f, race) {
+  const cr = G.currentRace;
+  const tier = getTier();
+
+  f.appendChild(h('div',{className:'page-title'},`🏁 ${race.track.name}`));
+  f.appendChild(h('div',{className:'page-sub'},`Round ${race.round} · ${tier.name} · ${tier.fieldSize} cars`));
+
+  // Progress bar
+  const total = cr.beats.length;
+  const done  = cr.beatIndex;
+  f.appendChild(h('div',{style:{marginBottom:'16px'}},
+    h('div',{style:{fontSize:'13px',color:'#94A3B8',marginBottom:'4px'}},`Race progress — beat ${done} of ${total}`),
+    h('div',{className:'stat-bar-track',style:{height:'6px'}},
+      h('div',{className:'stat-bar-fill',style:{width:`${Math.round((done/total)*100)}%`,background:tier.color}}),
+    ),
+  ));
+
+  // Already resolved beats
+  cr.resolved.forEach(rb => {
+    f.appendChild(h('div',{className:`beat-card ${rb.outcome}`},
+      h('div',{className:'beat-icon'},rb.icon),
+      h('div',{className:'beat-title'},rb.title),
+      h('div',{className:'beat-desc'},rb.desc),
+      h('div',{style:{fontSize:'13px',fontWeight:700,color:rb.outcome==='good'?'#10B981':rb.outcome==='bad'?'#EF4444':'#94A3B8'}},
+        rb.outcomeText
+      ),
+    ));
+  });
+
+  // Current beat
+  if (cr.beatIndex < cr.beats.length) {
+    const beat = cr.beats[cr.beatIndex];
+    const beatEl = h('div',{className:'beat-card neutral'});
+    beatEl.appendChild(h('div',{className:'beat-icon'},beat.icon));
+    beatEl.appendChild(h('div',{className:'beat-title'},beat.title));
+    beatEl.appendChild(h('div',{className:'beat-desc'},beat.desc));
+
+    const choicesDiv = h('div',{className:'beat-choices'});
+    beat.choices.forEach((choice,ci) => {
+      const btn = h('button',{className:'choice-btn'},
+        choice.text,
+        h('div',{className:'choice-hint'},choice.hint),
+      );
+      btn.addEventListener('click', () => resolveBeat(beat, choice));
+      choicesDiv.appendChild(btn);
+    });
+    beatEl.appendChild(choicesDiv);
+    f.appendChild(beatEl);
+  } else {
+    // All beats done — show finish button
+    f.appendChild(h('div',{style:{textAlign:'center',padding:'24px 0'}},
+      h('div',{style:{fontSize:'16px',color:'#94A3B8',marginBottom:'16px'}},'All race events resolved. Time to see the result.'),
+      mkBtn('See Final Result 🏁','btn-primary btn-lg',finishRace),
+    ));
+  }
+
+  return f;
+}
+
+function resolveBeat(beat, choice) {
+  const cr = G.currentRace;
+  const statVal = getEffectiveStat(choice.stat);
+  const statBonus = (statVal - 5) * 0.03; // -15% to +30% modifier
+  const success = Math.random() < (choice.roll + statBonus);
+
+  let delta = 0;
+  let outcomeText = '';
+  let outcome = 'neutral';
+
+  if (choice.effect === 'pos_hold') {
+    if (success) {
+      delta = rand(-1, 1);
+      outcomeText = '✓ Held position.';
+      outcome = 'good';
+    } else {
+      delta = rand(-2, 0);
+      outcomeText = '✗ Lost a couple spots.';
+      outcome = 'bad';
+    }
+  } else if (choice.effect === 'pos_change') {
+    const [minD, maxD] = choice.delta;
+    if (success) {
+      delta = rand(Math.max(minD, -1), Math.max(maxD, 2));
+      if (delta === -99) {
+        // Engine blown special case
+        delta = 15;
+        outcomeText = '💥 Engine let go. Headed to the garage.';
+        outcome = 'bad';
+      } else {
+        outcomeText = delta < 0 ? `⬆ Gained ${Math.abs(delta)} position${Math.abs(delta)>1?'s':''}.` : delta > 0 ? `⬇ Lost ${delta} position${delta>1?'s':''}.` : '→ Held steady.';
+        outcome = delta < 0 ? 'good' : delta > 0 ? 'bad' : 'neutral';
+      }
+    } else {
+      delta = rand(0, Math.abs(minD));
+      outcomeText = delta > 0 ? `⬇ Lost ${delta} position${delta>1?'s':''}.` : '→ Held steady.';
+      outcome = delta > 0 ? 'bad' : 'neutral';
+    }
+  }
+
+  cr.deltas.push(delta);
+  cr.resolved.push({
+    icon: beat.icon,
+    title: beat.title,
+    desc: `You chose: ${choice.text}`,
+    outcomeText,
+    outcome,
+  });
+  cr.beatIndex++;
+  saveGame();
+  renderTab();
+}
+
+function finishRace() {
+  const cr = G.currentRace;
+  const tier = getTier();
+  const { pos, dnf, fieldSize } = simulateFinalPosition(cr.deltas, tier.fieldSize);
+
+  G.currentRace = null;
+  processRaceResult(pos, fieldSize, dnf);
+
+  // Show result screen
+  showResultScreen(pos, fieldSize, dnf, cr.raceRef);
+}
+
+function showResultScreen(pos, fieldSize, dnf, race) {
+  const prize = dnf ? 0 : calcPrize(pos, fieldSize);
+  const col = dnf ? '#EF4444' : posColor(pos, fieldSize);
+  const tierInfo = getTier();
+
+  openModal(h('div',null,
+    h('div',{style:{textAlign:'center',marginBottom:'8px'}},
+      h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'8px'}},race.track.name),
+      h('div',{className:'result-pos pop-in',style:{color:col}}, dnf?'DNF':`P${pos}`),
+      h('div',{style:{fontSize:'16px',color:'#94A3B8',marginTop:'4px'}},`of ${fieldSize} cars`),
+    ),
+    h('div',{className:'grid-2',style:{margin:'20px 0'}},
+      h('div',{style:{textAlign:'center'}},
+        h('div',{style:{fontSize:'24px',fontWeight:900,color:prize>0?'#10B981':'#EF4444'}},fmtMoney(prize)),
+        h('div',{style:{fontSize:'12px',color:'#64748B'}},'PRIZE MONEY'),
+      ),
+      h('div',{style:{textAlign:'center'}},
+        h('div',{style:{fontSize:'24px',fontWeight:900,color:tierInfo.color}},`+${calcPoints(pos,dnf)}`),
+        h('div',{style:{fontSize:'12px',color:'#64748B'}},'POINTS'),
+      ),
+    ),
+    // Rival reaction
+    (() => {
+      const rival = G.rivals[rand(0, G.rivals.length-1)];
+      if (!rival) return null;
+      const msg = pos <= 3 && !dnf
+        ? pick(rival.trash)
+        : pick(rival.praise||rival.trash);
+      return h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'12px',marginBottom:'16px',borderLeft:`3px solid ${rival.color}`}},
+        h('div',{style:{fontSize:'13px',color:rival.color,fontWeight:700,marginBottom:'4px'}},`${rival.icon} ${rival.name}`),
+        h('div',{style:{fontSize:'14px',color:'#E2E8F0',fontStyle:'italic'}},`"${msg}"`),
+      );
+    })(),
+    h('div',{className:'modal-actions'},
+      mkBtn('Standings','btn-ghost',()=>{ closeModalDirect(); showTab('standings'); }),
+      mkBtn('Continue →','btn-primary btn-lg',()=>{ closeModalDirect(); showTab(getCurrentRace()?'race':'dashboard'); }),
+    ),
+  ));
+}
+
+// ─── GARAGE ─────────────────────────────────────────────────────
+function renderStandings() {
+  const f = document.createDocumentFragment();
+  const tier = getTier();
+  f.appendChild(h('div',{className:'page-title'},'Standings'));
+  f.appendChild(h('div',{className:'page-sub'},
+    G.schedule
+      ? `${tier.name} · Season ${G.season} · ${G.schedule.filter(r=>r.result).length} of ${tier.races} races run`
+      : `${tier.name} · Season ${G.season} · No season active`
+  ));
+
+  if (!G.schedule || !G.aiField) {
+    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'32px',color:'#64748B'}},
+      'Start a season to see standings.'
+    ));
+    return f;
+  }
+
+  // Build combined standings
+  const playerRow = {
+    name: `${G.name} ★`,
+    points: G.points,
+    wins: G.seasonResults.filter(r=>r.pos===1&&!r.dnf).length,
+    top5s: G.seasonResults.filter(r=>r.pos<=5&&!r.dnf).length,
+    starts: G.seasonResults.length,
+    isPlayer: true,
+  };
+  const allRows = [playerRow, ...G.aiField.map(ai=>({...ai, isPlayer:false}))]
+    .sort((a,b) => b.points - a.points || b.wins - a.wins);
+
+  const playerPos = allRows.findIndex(r=>r.isPlayer) + 1;
+  const leaderPts = allRows[0]?.points || 0;
+  const gap = leaderPts - G.points;
+
+  // Championship summary bar
+  f.appendChild(h('div',{className:'card'},
+    h('div',{style:{display:'flex',gap:'20px',flexWrap:'wrap',fontSize:'14px'}},
+      h('div',null,
+        h('div',{style:{color:'#64748B',fontSize:'12px'}},'YOUR POSITION'),
+        h('div',{style:{color: playerPos<=3?'#F59E0B':'#F9FAFB',fontWeight:900,fontSize:'24px'}},`P${playerPos}`),
+      ),
+      h('div',null,
+        h('div',{style:{color:'#64748B',fontSize:'12px'}},'POINTS'),
+        h('div',{style:{color:'#F9FAFB',fontWeight:900,fontSize:'24px'}},String(G.points)),
+      ),
+      gap > 0 ? h('div',null,
+        h('div',{style:{color:'#64748B',fontSize:'12px'}},'POINTS BACK'),
+        h('div',{style:{color:'#EF4444',fontWeight:900,fontSize:'24px'}},String(gap)),
+      ) : h('div',null,
+        h('div',{style:{color:'#64748B',fontSize:'12px'}},'LEAD'),
+        h('div',{style:{color:'#10B981',fontWeight:900,fontSize:'24px'}},'Leader'),
+      ),
+      h('div',null,
+        h('div',{style:{color:'#64748B',fontSize:'12px'}},'RACES LEFT'),
+        h('div',{style:{color:'#94A3B8',fontWeight:900,fontSize:'24px'}},String(G.schedule.filter(r=>!r.result).length)),
+      ),
+    ),
+  ));
+
+  // Standings table
+  const tableCard = h('div',{className:'card'});
+  const tbl = h('table',{style:{width:'100%',borderCollapse:'collapse',fontSize:'14px'}});
+  // Header
+  tbl.appendChild(h('tr',{style:{borderBottom:'1px solid #1E2433',color:'#64748B',fontSize:'12px',textTransform:'uppercase',letterSpacing:'0.08em'}},
+    h('th',{style:{padding:'6px 8px',textAlign:'left',width:'32px'}},'#'),
+    h('th',{style:{padding:'6px 8px',textAlign:'left'}},'Driver'),
+    h('th',{style:{padding:'6px 8px',textAlign:'right'}},'Pts'),
+    h('th',{style:{padding:'6px 8px',textAlign:'right'}},'W'),
+    h('th',{style:{padding:'6px 8px',textAlign:'right'}},'T5'),
+    h('th',{style:{padding:'6px 8px',textAlign:'right'}},'St'),
+  ));
+  allRows.forEach((row, idx) => {
+    const posNum = idx + 1;
+    const posColor = posNum===1?'#F59E0B':posNum<=3?'#10B981':posNum<=10?'#94A3B8':'#4B5563';
+    const tr = h('tr',{style:{
+      borderBottom:'1px solid #0D1117',
+      background: row.isPlayer ? '#0D1117' : 'transparent',
+    }},
+      h('td',{style:{padding:'8px',fontWeight:800,color:posColor,fontSize:'15px'}},String(posNum)),
+      h('td',{style:{padding:'8px',fontWeight:row.isPlayer?900:400,color:row.isPlayer?'#F59E0B':'#E2E8F0'}},row.name),
+      h('td',{style:{padding:'8px',textAlign:'right',fontWeight:700,color:'#F9FAFB'}},String(row.points)),
+      h('td',{style:{padding:'8px',textAlign:'right',color:'#F59E0B'}},String(row.wins||0)),
+      h('td',{style:{padding:'8px',textAlign:'right',color:'#10B981'}},String(row.top5s||0)),
+      h('td',{style:{padding:'8px',textAlign:'right',color:'#64748B'}},String(row.starts||0)),
+    );
+    tbl.appendChild(tr);
+  });
+  tableCard.appendChild(tbl);
+  f.appendChild(tableCard);
+
+  return f;
+}
+
+function renderTeam() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Team'));
+  f.appendChild(h('div',{className:'page-sub'},'Sign with a team or go independent. Your team affects your car, your salary, and your story.'));
+
+  // Current situation
+  const curCard = h('div',{className:'card'});
+  if (G.contract) {
+    const qCol = QUALITY_COLOR[G.contract.quality]||'#94A3B8';
+    const qLbl = QUALITY_LABEL[G.contract.quality]||'Team';
+    curCard.appendChild(h('div',{className:'card-title'},'Active Contract'));
+    curCard.appendChild(h('div',{style:{display:'flex',gap:'14px',alignItems:'center',marginBottom:'14px'}},
+      h('div',{style:{width:'52px',height:'52px',borderRadius:'10px',background:qCol+'22',border:`2px solid ${qCol}44`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'22px'}},'🏁'),
+      h('div',null,
+        h('div',{style:{fontSize:'18px',fontWeight:900,color:'#F9FAFB'}},G.contract.teamName),
+        h('div',{style:{fontSize:'13px',color:qCol,fontWeight:700}},qLbl),
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},`${G.contract.seasons} season deal · Season ${(G.contract.seasonsCompleted||0)+1}`),
+      ),
+    ));
+    curCard.appendChild(h('div',{className:'grid-2',style:{marginBottom:'14px'}},
+      h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'10px',border:'1px solid #1E2433',textAlign:'center'}},
+        h('div',{style:{fontSize:'20px',fontWeight:900,color:'#10B981'}},fmtMoney(G.contract.salaryPerRace)),
+        h('div',{style:{fontSize:'11px',color:'#64748B',textTransform:'uppercase',marginTop:'2px'}},'Per Race Salary'),
+      ),
+      h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'10px',border:'1px solid #1E2433',textAlign:'center'}},
+        h('div',{style:{fontSize:'20px',fontWeight:900,color:'#F59E0B'}},`${Math.round(G.contract.prizeShare*100)}%`),
+        h('div',{style:{fontSize:'11px',color:'#64748B',textTransform:'uppercase',marginTop:'2px'}},'Prize Share'),
+      ),
+      h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'10px',border:'1px solid #1E2433',textAlign:'center'}},
+        h('div',{style:{fontSize:'20px',fontWeight:900,color:'#8B5CF6'}},`+${G.contract.carBonus}`),
+        h('div',{style:{fontSize:'11px',color:'#64748B',textTransform:'uppercase',marginTop:'2px'}},'Car Stat Bonus'),
+      ),
+      h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'10px',border:'1px solid #1E2433',textAlign:'center'}},
+        h('div',{style:{fontSize:'20px',fontWeight:900,color:'#94A3B8'}},'Free'),
+        h('div',{style:{fontSize:'11px',color:'#64748B',textTransform:'uppercase',marginTop:'2px'}},'Entry Fees'),
+      ),
+    ));
+    curCard.appendChild(h('div',{style:{fontSize:'13px',color:'#64748B'}},'Team covers entry fees. You earn salary every race plus your share of prize money.'));
+  } else {
+    curCard.appendChild(h('div',{className:'card-title'},'Running Independent'));
+    curCard.appendChild(h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'14px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'15px',fontWeight:700,color:'#F9FAFB',marginBottom:'6px'}},'🔧 No Team'),
+      h('div',{style:{fontSize:'14px',color:'#94A3B8',lineHeight:1.55}},'You pay your own entry fees but keep 100% of prize money. No salary. No obligations. Sign a team deal below when you are ready.'),
+    ));
+  }
+  f.appendChild(curCard);
+
+  // Team offers
+  const offers = G.contractOffers||[];
+  const offerCard = h('div',{className:'card'});
+  offerCard.appendChild(h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}},
+    h('div',{className:'card-title',style:{margin:0}},'Team Offers'),
+    mkBtn('Refresh Offers','btn-sm btn-ghost',()=>{
+      G.contractOffers = generateContractOffers();
+      saveGame(); renderTab();
+      showToast('New offers generated.');
+    }),
+  ));
+
+  // Always show indie option
+  offerCard.appendChild(h('div',{style:{
+    background:'#060A10',border:'1px solid #1E2433',borderRadius:'10px',padding:'14px',marginBottom:'10px',
+    borderColor: !G.contract ? '#F59E0B44' : '#1E2433',
+  }},
+    h('div',{style:{display:'flex',gap:'12px',alignItems:'center',marginBottom:'10px'}},
+      h('div',{style:{fontSize:'28px'}},'🔧'),
+      h('div',null,
+        h('div',{style:{fontSize:'16px',fontWeight:900,color:'#F9FAFB'}},'Go Independent'),
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},'Pay your own way. Keep 100% of prize money. No car bonus. No salary.'),
+      ),
+      !G.contract ? h('div',{style:{marginLeft:'auto',fontSize:'12px',color:'#F59E0B',fontWeight:700}},'CURRENT') : null,
+    ),
+    h('div',{className:'grid-2',style:{marginBottom:'10px',gap:'8px'}},
+      h('div',{style:{background:'#0D1117',borderRadius:'6px',padding:'8px',textAlign:'center'}},
+        h('div',{style:{fontWeight:700,color:'#10B981'}},'100%'),
+        h('div',{style:{fontSize:'11px',color:'#64748B'}},'Prize Share'),
+      ),
+      h('div',{style:{background:'#0D1117',borderRadius:'6px',padding:'8px',textAlign:'center'}},
+        h('div',{style:{fontWeight:700,color:'#EF4444'}},'Self-pay'),
+        h('div',{style:{fontSize:'11px',color:'#64748B'}},'Entry Fees'),
+      ),
+    ),
+    G.contract ? mkBtn('Go Indie','btn-sm btn-secondary',doGoIndie) :
+                 h('div',{style:{fontSize:'13px',color:'#F59E0B',fontWeight:700}},'Currently running independent'),
+  ));
+
+  if (!offers.length) {
+    offerCard.appendChild(h('div',{style:{fontSize:'14px',color:'#64748B',padding:'10px 0'}},'No team offers right now. Win more races and build your rep to attract better teams.'));
+  }
+
+  offers.forEach(offer => {
+    const qCol = QUALITY_COLOR[offer.quality]||'#94A3B8';
+    const qLbl = QUALITY_LABEL[offer.quality]||'';
+    const isCurrent = G.contract && G.contract.teamName === offer.teamName;
+    offerCard.appendChild(h('div',{style:{
+      background:'#060A10',border:`1px solid ${qCol}33`,borderRadius:'10px',padding:'14px',marginBottom:'10px',
+    }},
+      h('div',{style:{display:'flex',gap:'12px',alignItems:'flex-start',marginBottom:'10px'}},
+        h('div',{style:{width:'44px',height:'44px',borderRadius:'8px',background:qCol+'22',border:`1px solid ${qCol}44`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px',flexShrink:0}},'🏁'),
+        h('div',{style:{flex:1}},
+          h('div',{style:{fontSize:'16px',fontWeight:900,color:'#F9FAFB'}},offer.teamName),
+          h('div',{style:{fontSize:'13px',color:qCol,fontWeight:700}},qLbl),
+          h('div',{style:{fontSize:'13px',color:'#64748B'}},`${offer.seasons} season${offer.seasons>1?'s':''} · Tier ${offer.tier}`),
+        ),
+      ),
+      h('div',{className:'grid-2',style:{gap:'8px',marginBottom:'12px'}},
+        h('div',{style:{background:'#0D1117',borderRadius:'6px',padding:'8px',textAlign:'center'}},
+          h('div',{style:{fontWeight:700,color:'#10B981',fontSize:'16px'}},fmtMoney(offer.salaryPerRace)),
+          h('div',{style:{fontSize:'11px',color:'#64748B'}},'Per Race'),
+        ),
+        h('div',{style:{background:'#0D1117',borderRadius:'6px',padding:'8px',textAlign:'center'}},
+          h('div',{style:{fontWeight:700,color:'#F59E0B',fontSize:'16px'}},`${Math.round(offer.prizeShare*100)}%`),
+          h('div',{style:{fontSize:'11px',color:'#64748B'}},'Prize Share'),
+        ),
+        h('div',{style:{background:'#0D1117',borderRadius:'6px',padding:'8px',textAlign:'center'}},
+          h('div',{style:{fontWeight:700,color:'#8B5CF6',fontSize:'16px'}},`+${offer.carBonus}`),
+          h('div',{style:{fontSize:'11px',color:'#64748B'}},'Car Bonus'),
+        ),
+        h('div',{style:{background:'#0D1117',borderRadius:'6px',padding:'8px',textAlign:'center'}},
+          h('div',{style:{fontWeight:700,color:'#3B82F6',fontSize:'16px'}},'Free'),
+          h('div',{style:{fontSize:'11px',color:'#64748B'}},'Entry Fees'),
+        ),
+      ),
+      h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'10px'}},
+        `Signing bonus: ${fmtMoney(offer.salaryPerRace * 3)} (3 race salaries up front)`
+      ),
+      isCurrent
+        ? h('div',{style:{fontSize:'13px',color:'#F59E0B',fontWeight:700}},'✓ Current Team')
+        : mkBtn(`Sign with ${offer.teamName} →`,'btn-sm btn-primary',()=>doSignContract(offer)),
+    ));
+  });
+  f.appendChild(offerCard);
+
+  return f;
+}
+
+function renderDriver() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Driver'));
+  f.appendChild(h('div',{className:'page-sub'},`${G.name} · Rep: ${G.rep} · Season ${G.season}`));
+
+  // Training actions — gym and sim
+  const trainCard = h('div',{className:'card'});
+  trainCard.appendChild(h('div',{className:'card-title'},'Training'));
+  trainCard.appendChild(h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'14px'}},
+    'One training session per week. Gym improves physical stamina (Consistency). Sim improves mental sharpness (Racecraft or Speed).'
+  ));
+  const lastTrain = G.lastTraining || 0;
+  const canTrain = G.race > lastTrain; // can train once per race; resets when race counter advances
+  const trainGrid = h('div',{className:'grid-2',style:{marginBottom:'0'}});
+  [
+    { id:'gym',      label:'🏋️ Hit the Gym',        stat:'consistency', gain:1, cost:0,   desc:'Physical conditioning. Improves stamina and late-race performance (+1 Consistency XP).' },
+    { id:'sim',      label:'🖥️ Sim Session',         stat:'racecraft',   gain:1, cost:200, desc:'Mental reps in the simulator. Sharpens racecraft and reaction (+1 Racecraft XP). Costs $200.' },
+    { id:'spd_sim',  label:'🏁 Speed Focused Sim',   stat:'speed',       gain:1, cost:300, desc:'Focus on raw lap time in the sim. Builds pace and qualifying speed (+1 Speed XP). Costs $300.' },
+    { id:'film',     label:'📺 Watch Film',           stat:'racecraft',   gain:1, cost:0,   desc:'Study competitor footage. Free, but smaller gains than active sim time (+1 Racecraft XP).' },
+  ].forEach(act => {
+    const canAfford = act.cost === 0 || G.money >= act.cost;
+    const xpKey = `${act.stat}_xp`;
+    if (!G.xp) G.xp = {};
+    const currentXP = G.xp[xpKey] || 0;
+    const xpNeeded = (G.stats[act.stat] + 1) * 5; // XP needed scales with level
+    const canLevel = currentXP >= xpNeeded && G.stats[act.stat] < 10;
+    const div = h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'12px',border:'1px solid #1E2433'}});
+    div.appendChild(h('div',{style:{fontSize:'14px',fontWeight:800,color:'#F9FAFB',marginBottom:'4px'}},act.label));
+    div.appendChild(h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},act.desc));
+    if (act.cost > 0) div.appendChild(h('div',{style:{fontSize:'12px',color:'#94A3B8',marginBottom:'6px'}},`Cost: ${fmtMoney(act.cost)}`));
+    div.appendChild(h('div',{style:{fontSize:'12px',color:'#94A3B8',marginBottom:'8px'}},`XP: ${currentXP}/${xpNeeded} → Level ${G.stats[act.stat]}`));
+    div.appendChild(mkBtn(
+      !canTrain ? 'Already trained this week' : !canAfford ? `Need ${fmtMoney(act.cost)}` : 'Train',
+      'btn-sm btn-secondary',
+      () => {
+        G.money -= act.cost;
+        if (!G.xp) G.xp = {};
+        G.xp[xpKey] = (G.xp[xpKey]||0) + act.gain;
+        G.lastTraining = G.race;
+        saveGame(); renderTab();
+        showToast(`${act.label} complete! +${act.gain} ${act.stat} XP`);
+      },
+      !canTrain || !canAfford,
+    ));
+    trainGrid.appendChild(div);
+  });
+  trainCard.appendChild(trainGrid);
+
+  // Level up buttons when XP threshold is met
+  const levelCard = h('div',{className:'card',style:{marginTop:'0'}});
+  levelCard.appendChild(h('div',{className:'card-title'},'Level Up'));
+  let hasLevelUp = false;
+  ['speed','racecraft','consistency'].forEach(stat => {
+    if (!G.xp) G.xp = {};
+    const xpKey = `${stat}_xp`;
+    const currentXP = G.xp[xpKey]||0;
+    const xpNeeded = (G.stats[stat]+1)*5;
+    const canLevel = currentXP >= xpNeeded && G.stats[stat] < 10;
+    if (canLevel) {
+      hasLevelUp = true;
+      levelCard.appendChild(h('div',{style:{display:'flex',gap:'12px',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #0D1117'}},
+        h('div',{style:{flex:1}},
+          h('div',{style:{fontSize:'14px',fontWeight:700,color:'#F9FAFB'}},stat.charAt(0).toUpperCase()+stat.slice(1)),
+          h('div',{style:{fontSize:'13px',color:'#94A3B8'}},`${currentXP}/${xpNeeded} XP · Currently ${G.stats[stat]}/10`),
+        ),
+        mkBtn(`Level Up → ${G.stats[stat]+1}`,'btn-sm btn-primary',()=>{
+          G.stats[stat]++;
+          G.xp[xpKey] = 0; // reset XP for next level
+          saveGame(); renderTab();
+          showToast(`${stat.charAt(0).toUpperCase()+stat.slice(1)} leveled up to ${G.stats[stat]}!`);
+        }),
+      ));
+    }
+  });
+  if (!hasLevelUp) levelCard.appendChild(h('div',{style:{fontSize:'14px',color:'#64748B',padding:'8px 0'}},'Keep training to earn enough XP to level up.'));
+
+  f.appendChild(trainCard);
+  f.appendChild(levelCard);
+
+  // Stat display
+  f.appendChild(h('div',{className:'card'},
+    h('div',{className:'card-title'},'Current Stats'),
+    statBar('Speed',      getEffectiveStat('speed'),      15,'#EF4444'),
+    statBar('Racecraft',  getEffectiveStat('racecraft'),  15,'#3B82F6'),
+    statBar('Consistency',getEffectiveStat('consistency'),15,'#10B981'),
+    h('div',{style:{fontSize:'12px',color:'#64748B',marginTop:'6px'}},
+      `Base: Speed ${G.stats.speed} · Racecraft ${G.stats.racecraft} · Consistency ${G.stats.consistency} (car bonus included in bars above)`
+    ),
+  ));
+
+  // Rep-based upgrades (legacy path still available)
+  const repCard = h('div',{className:'card'});
+  repCard.appendChild(h('div',{className:'card-title'},'Rep Upgrades'));
+  repCard.appendChild(h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'14px'}},'Spend reputation points for immediate stat gains — no XP grind required.'));
+  [
+    { stat:'speed',       label:'Speed',       color:'#EF4444', cost:8 },
+    { stat:'racecraft',   label:'Racecraft',   color:'#3B82F6', cost:8 },
+    { stat:'consistency', label:'Consistency', color:'#10B981', cost:8 },
+  ].forEach(s => {
+    const canUp = G.stats[s.stat] < 10 && G.rep >= s.cost;
+    repCard.appendChild(h('div',{style:{display:'flex',gap:'10px',alignItems:'center',marginBottom:'10px'}},
+      h('div',{style:{flex:1,fontSize:'14px',color:'#94A3B8'}},s.label,
+        h('span',{style:{color:s.color,fontWeight:700,marginLeft:'8px'}},`${G.stats[s.stat]}/10`),
+      ),
+      mkBtn(`${s.cost} rep`,'btn-sm btn-secondary',()=>{
+        G.stats[s.stat]++; G.rep-=s.cost; saveGame(); renderTab();
+        showToast(`${s.label} improved!`);
+      },!canUp),
+    ));
+  });
+  f.appendChild(repCard);
+
+  return f;
+}
+
+function renderCar() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Car'));
+  f.appendChild(h('div',{className:'page-sub'},`Car #${G.carNum} · Budget: ${fmtMoney(G.money)}`));
+
+  UPGRADES.forEach(upg => {
+    const currentLevel = G.car[upg.id];
+    const maxed = currentLevel >= upg.tiers.length;
+    const nextTier = maxed ? null : upg.tiers[currentLevel];
+    const canBuy = !maxed && G.money >= nextTier.cost;
+    const div = h('div',{className:'upgrade-card'});
+    div.appendChild(h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}},
+      h('div',{style:{fontSize:'15px',fontWeight:800,color:'#F9FAFB'}},`${upg.icon} ${upg.label}`),
+      maxed ? h('div',{style:{fontSize:'13px',color:'#F59E0B',fontWeight:700}},'MAX') :
+              h('div',{style:{fontSize:'13px',color:'#94A3B8'}},`Level ${currentLevel}/${upg.tiers.length}`),
+    ));
+    div.appendChild(h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},upg.desc));
+    div.appendChild(pipRow(upg.label, upg.icon, currentLevel, upg.tiers.length));
+    if (!maxed) {
+      div.appendChild(h('div',{style:{marginTop:'10px',display:'flex',gap:'10px',alignItems:'center'}},
+        h('div',{style:{fontSize:'14px',color:canBuy?'#10B981':'#EF4444',fontWeight:700}},fmtMoney(nextTier.cost)),
+        mkBtn(canBuy?'Upgrade':'Need Funds','btn-sm btn-primary',
+          ()=>{ G.money-=nextTier.cost; G.car[upg.id]++; saveGame(); renderTab(); showToast(`${upg.label} upgraded to level ${G.car[upg.id]}!`); },
+          !canBuy),
+      ));
+    }
+    f.appendChild(div);
+  });
+
+  return f;
+}
+
+// ─── RIVALS ─────────────────────────────────────────────────────
+function renderRivals() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Rivals'));
+  f.appendChild(h('div',{className:'page-sub'},'The drivers who want to see you fail.'));
+
+  G.rivals.forEach(r => {
+    const heatColor = r.heat >= 7 ? '#EF4444' : r.heat >= 4 ? '#F59E0B' : '#94A3B8';
+    const heatLabel = r.heat >= 7 ? '🔥 Heated Rivalry' : r.heat >= 4 ? '⚡ Building Tension' : '👀 Watching You';
+    const card = h('div',{className:'card'});
+    card.appendChild(h('div',{style:{display:'flex',gap:'14px',alignItems:'flex-start',marginBottom:'14px'}},
+      h('div',{className:'rival-avatar',style:{width:'56px',height:'56px',background:r.color+'22',color:r.color,fontSize:'26px',border:`2px solid ${r.color}44`,borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center'}},r.icon),
+      h('div',{style:{flex:1}},
+        h('div',{style:{fontSize:'18px',fontWeight:900,color:'#F9FAFB'}},r.name),
+        h('div',{style:{fontSize:'13px',color:r.color,fontWeight:700}},r.id.replace('_',' ').toUpperCase()),
+        h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'3px'}},r.desc),
+      ),
+    ));
+    card.appendChild(h('div',{style:{display:'flex',gap:'20px',marginBottom:'12px',fontSize:'13px'}},
+      h('div',null,h('div',{style:{color:'#64748B'}},'RIVALRY'),h('div',{style:{color:heatColor,fontWeight:700}},heatLabel)),
+      h('div',null,h('div',{style:{color:'#64748B'}},'TIMES BEATEN'),h('div',{style:{color:'#10B981',fontWeight:700}},String(r.defeated||0))),
+      h('div',null,h('div',{style:{color:'#64748B'}},'ENCOUNTERS'),h('div',{style:{color:'#F9FAFB',fontWeight:700}},String(r.interactions||0))),
+    ));
+    // Latest trash talk
+    const quote = pick(r.trash);
+    card.appendChild(h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'10px 12px',borderLeft:`3px solid ${r.color}`,fontSize:'14px',color:'#E2E8F0',fontStyle:'italic'}},
+      `"${quote}"`
+    ));
+    f.appendChild(card);
+  });
+
+  return f;
+}
+
+// ─── CAREER ─────────────────────────────────────────────────────
+function renderCareer() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Career'));
+  f.appendChild(h('div',{className:'page-sub'},`${G.name} · ${getTier().name}`));
+  // Restart button
+  f.appendChild(h('div',{style:{textAlign:'right',marginBottom:'16px'}},
+    mkBtn('🔄 Restart Career','btn-danger btn-sm',restartCareer),
+  ));
+
+  // Tier progress
+  const tierCard = h('div',{className:'card'});
+  tierCard.appendChild(h('div',{className:'card-title'},'Career Path'));
+  TIERS.forEach(t => {
+    const done   = G.tier > t.id;
+    const active = G.tier === t.id;
+    const locked = G.tier < t.id;
+    tierCard.appendChild(h('div',{style:{
+      display:'flex',gap:'12px',alignItems:'center',padding:'10px 0',
+      borderBottom:'1px solid #0D1117',opacity:locked?'0.4':'1',
+    }},
+      h('div',{style:{
+        width:'32px',height:'32px',borderRadius:'50%',flexShrink:0,
+        background:done?'#065F46':active?t.color+'33':'#1E2433',
+        border:`2px solid ${done?'#10B981':active?t.color:'#374151'}`,
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:'14px',fontWeight:900,color:done?'#10B981':active?t.color:'#64748B',
+      }},done?'✓':String(t.id)),
+      h('div',{style:{flex:1}},
+        h('div',{style:{fontSize:'15px',fontWeight:800,color:active?'#F9FAFB':'#94A3B8'}},t.name),
+        h('div',{style:{fontSize:'13px',color:'#64748B'}},
+          `${t.fieldSize} cars · ${t.races} races · Win: ${fmtMoney(t.winPrize)}`,
+          locked?` · Requires ${t.reqWins} wins + ${t.reqRep} rep`:'',
+        ),
+      ),
+      active?h('div',{style:{fontSize:'12px',color:t.color,fontWeight:700}},'CURRENT'):null,
+    ));
+  });
+  f.appendChild(tierCard);
+
+  // Season history
+  if (G.seasonHistory.length) {
+    const shCard = h('div',{className:'card'});
+    shCard.appendChild(h('div',{className:'card-title'},'Season History'));
+    [...G.seasonHistory].reverse().forEach(s => {
+      const posColor = s.finalPos===1?'#F59E0B':s.finalPos<=3?'#10B981':s.finalPos<=10?'#94A3B8':'#64748B';
+      // Season summary row
+      const row = h('div',{style:{padding:'10px 0',borderBottom:'1px solid #0D1117'}});
+      row.appendChild(h('div',{style:{display:'flex',gap:'12px',flexWrap:'wrap',marginBottom:'6px'}},
+        h('div',{style:{fontSize:'15px',fontWeight:800,color:'#F9FAFB'}},`Season ${s.season}`),
+        h('div',{style:{fontSize:'13px',color:'#94A3B8',flex:1}},TIERS[s.tier-1]?.name||''),
+        h('div',{style:{display:'flex',gap:'12px',fontSize:'13px'}},
+          s.finalPos ? h('span',{style:{color:posColor,fontWeight:900,fontSize:'16px'}},`P${s.finalPos}`) : null,
+          h('span',{style:{color:'#F59E0B',fontWeight:700}},`${s.wins}W`),
+          h('span',{style:{color:'#10B981'}},`${s.points}pts`),
+          h('span',{style:{color:'#64748B'}},`${s.races} races`),
+        ),
+      ));
+      // Mini standings if available
+      if (s.standings && s.standings.length) {
+        const mini = h('div',{style:{background:'#060A10',borderRadius:'6px',padding:'8px 10px',fontSize:'12px'}});
+        s.standings.slice(0,5).forEach((dr,idx)=>{
+          mini.appendChild(h('div',{style:{
+            display:'flex',gap:'8px',padding:'2px 0',
+            color:dr.isPlayer?'#F59E0B':'#94A3B8',
+            fontWeight:dr.isPlayer?700:400,
+          }},
+            h('span',{style:{minWidth:'20px',color:idx===0?'#F59E0B':idx<=2?'#10B981':'#64748B'}},`P${idx+1}`),
+            h('span',{style:{flex:1}},dr.name),
+            h('span',null,String(dr.points)+'pts'),
+          ));
+        });
+        row.appendChild(mini);
+      }
+      shCard.appendChild(row);
+    });
+    f.appendChild(shCard);
+  }
+
+  // Career log
+  const logCard = h('div',{className:'card'});
+  logCard.appendChild(h('div',{className:'card-title'},'Race Log'));
+  const logInner = h('div',{style:{maxHeight:'300px',overflowY:'auto'}});
+  G.log.forEach((entry,i) => {
+    logInner.appendChild(h('div',{style:{padding:'5px 0',borderBottom:'1px solid #0B0F1A',fontSize:'13px',color:i===0?'#F9FAFB':'#64748B'}},entry));
+  });
+  logCard.appendChild(logInner);
+  f.appendChild(logCard);
+
+  return f;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────
+function startCareer() {
+  const name  = document.getElementById('setup-name').value.trim();
+  const num   = document.getElementById('setup-num').value.trim() || '47';
+  const state = document.getElementById('setup-state').value;
+  if (!name) { openModal(h('div',null,
+    h('div',{className:'modal-title'},'Enter Your Name'),
+    h('div',{className:'modal-sub'},'You need a driver name to start your career.'),
+    h('div',{className:'modal-actions'},mkBtn('OK','btn-primary',closeModalDirect)),
+  )); return; }
+  initGame(name, num, state);
+  // Generate first contract offers
+  G.contractOffers = generateContractOffers();
+  saveGame();
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+  showTab('dashboard');
+}
+
+function restartCareer() {
+  openModal(h('div',null,
+    h('div',{className:'modal-title',style:{color:'#EF4444'}},'Start Over?'),
+    h('div',{className:'modal-sub'},'This will erase all progress. Your career will be gone forever.'),
+    h('div',{className:'modal-actions'},
+      mkBtn('Cancel','btn-ghost',closeModalDirect),
+      mkBtn('Yes — Start Fresh','btn-danger',()=>{
+        localStorage.removeItem('ft_rpg_save');
+        closeModalDirect();
+        document.getElementById('setup').classList.remove('hidden');
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('setup-name').value = '';
+        document.getElementById('setup-num').value = '';
+      }),
+    ),
+  ));
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const loaded = await loadGame();
+  if (loaded && G) {
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    showTab('dashboard');
+  }
+});
+</script>
+
+</body>
+</html>
