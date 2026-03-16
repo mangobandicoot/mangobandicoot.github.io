@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle Career Simulator</title>
+<style>
+body{
+  font-family: Arial, sans-serif;
+  margin:20px;
+  background:#f2f2f2;
+}
+#game{
+  max-width:600px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:5px;
+  box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+button{
+  margin:5px;
+  padding:10px 20px;
+  font-size:16px;
+  cursor:pointer;
+}
+#output{
+  white-space: pre-line;
+  margin-top:20px;
+}
+</style>
+</head>
+<body>
+<div id="game">
+<h1>Full Throttle Career Simulator</h1>
+<div id="status">
+<p id="playerStats">Loading...</p>
+</div>
+<div id="controls">
+<button id="startSeasonBtn">Start Season</button>
+<button id="nextRaceBtn" style="display:none">Run Next Race</button>
+<button id="nextEventBtn" style="display:none">Continue</button>
+</div>
+<div id="output"></div>
+</div>
+
+<script>
+// --- Data ---
+const firstNames=["Tyler","Austin","Colton","Dylan","Chase","Logan","Cody","Hunter","Blake","Tanner","Wyatt","Luke","Ryan","Brandon","Travis","Derek","Justin","Garrett","Cole","Zach","Trevor","Shane","Corey","Evan","Caleb","Jake","Noah","Aaron","Kyle","Nathan","Chris","Jesse","Brent","Kevin","Scott","Eli","Ty","Connor","Grant","Reed","Brock","Mason","Dalton","Casey","Clay","Troy","Curtis","Chad","Spencer","Mitchell","Ben","Daniel","Jackson","Isaac","Ethan","Cameron","Aiden","Griffin","Levi","Marcus"];
+const lastNames=["Anderson","Baker","Barnes","Bennett","Brooks","Bryant","Campbell","Carter","Coleman","Collins","Cook","Cooper","Cox","Davis","Diaz","Edwards","Evans","Flores","Foster","Garcia","Gonzalez","Gray","Green","Griffin","Hall","Harris","Henderson","Hill","Howard","Hughes","Jackson","James","Jenkins","Kelly","King","Lee","Lewis","Long","Martinez","Miller","Mitchell","Moore","Morgan","Morris","Murphy","Nelson","Parker","Perez","Perry","Powell","Price","Ramirez","Reed","Rivera","Ross","Russell","Sanders","Scott","Stewart","Ward"];
+const nicknames=["Bubba","Crash","Smokey","Red","Lightning","Diesel","Rocket","Wild Bill"];
+const personalities=[{type:"Clean Veteran",aggression:0.25,consistency:0.9,fanBonus:2},{type:"Young Gun",aggression:0.65,consistency:0.6,fanBonus:3},{type:"Reckless Wrecker",aggression:0.9,consistency:0.4,fanBonus:-1},{type:"Steady Grinder",aggression:0.35,consistency:0.8,fanBonus:1},{type:"Hotshot Prodigy",aggression:0.7,consistency:0.75,fanBonus:4}];
+const careerEvents=[
+{title:"Rival Confrontation",text:"A rival driver accuses you of rough driving after the race.",choices:[{text:"Apologize publicly",effect:(p)=>{p.reputation+=2}},{text:"Fire back in the media",effect:(p)=>{p.reputation-=1;p.rivalries+=1}},{text:"Ignore the situation",effect:(p)=>{}}]},
+{title:"Sponsor Offer",text:"A local sponsor offers funding if you display their logo.",choices:[{text:"Accept deal",effect:(p)=>{p.money+=5000}},{text:"Decline politely",effect:(p)=>{p.reputation+=1}}]}
+];
+const qualifyingLines=["{driver} stunned the field by grabbing pole position.","{driver} laid down a blistering lap to secure the pole.","{driver} edged out the competition in a tight qualifying session.","{driver} surprised many by taking pole today.","{driver}'s lap time proved untouchable in qualifying.","{driver} delivered a perfect lap to top the qualifying charts.","{driver} barely beat {rival} to claim pole position.","{driver} showed incredible speed during qualifying.","{driver} dominated qualifying with a commanding lap.","{driver} made a statement by locking down pole."];
+const raceVictoryLines=["{winner} dominated today's race from start to finish.","{winner} fought off relentless pressure to claim victory.","{winner} capitalized on late race chaos to take the win.","{winner} executed a perfect race to secure the victory.","{winner} stormed through the field for an impressive win.","{winner} survived a chaotic race to stand on top.","{winner} proved unstoppable today.","{winner} controlled the race and never looked back.","{winner} delivered a career-defining victory.","{winner} shocked the field with a brilliant performance."];
+const chaosLines=["A massive wreck shuffled the running order.","Late race chaos turned the race upside down.","A mechanical failure ended a contender's race.","Several drivers were caught in a late incident.","An unexpected crash shook up the field.","Pit strategy chaos created a dramatic finish.","A caution period changed everything.","A late spin created a tense final lap."];
+const playerFinishLines=["{player} finished a solid {position}.","{player} fought hard to secure {position}.","{player} battled through the field to finish {position}.","{player} survived the chaos to bring home {position}.","{player} had a challenging race but finished {position}.","{player} managed to salvage a {position} finish.","{player} showed determination finishing {position}.","{player} struggled early but recovered to {position}."];
+const seasonChampionLines=["{champion} captured the championship after a thrilling season.","{champion} proved to be the class of the field this year.","{champion} held off fierce competition to win the title.","{champion} delivered a dominant season performance.","{champion} secured the championship in dramatic fashion.","{champion} rose above the competition to claim the title.","{champion} put together an incredible championship run.","{champion} stood tall after a long and challenging season."];
+const seasonPlayerLines=["{player} finished the season {position} overall.","{player} ended the year ranked {position}.","{player} showed strong progress finishing {position}.","{player} endured ups and downs but finished {position}.","{player} wrapped up the season in {position}.","{player} built valuable experience finishing {position}.","{player} narrowly missed the top spots finishing {position}.","{player} fought hard all season to finish {position}."];
+// --- Name generation ---
+function generateDriverName(){
+let first=firstNames[Math.floor(Math.random()*firstNames.length)];
+let last=lastNames[Math.floor(Math.random()*lastNames.length)];
+let name=first+" "+last;
+if(Math.random()<0.10){let letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";name=first+" "+letters[Math.floor(Math.random()*26)]+". "+last;}
+if(Math.random()<0.08){name=first+' "'+nicknames[Math.floor(Math.random()*nicknames.length)]+'" '+last;}
+if(Math.random()<0.12){name+=" Jr.";}
+return name;
+}
+// --- Personality ---
+function generatePersonality(){return personalities[Math.floor(Math.random()*personalities.length)];}
+// --- Driver ---
+function generateDriver(){let p=generatePersonality();return{name:generateDriverName(),age:Math.floor(Math.random()*12)+20,skill:Math.random()*0.35+0.65,aggression:p.aggression,consistency:p.consistency,reliability:Math.random()*0.2+0.8,personality:p.type,retired:false};}
+function generateDriverField(count){let field=[],used=new Set();while(field.length<count){let d=generateDriver();if(!used.has(d.name)){used.add(d.name);field.push(d);}}return field;}
+// --- Race sim ---
+function driverPerformance(d){return d.skill+(Math.random()-0.5)*0.3-(1-d.consistency)*(Math.random()*0.2);}
+function checkMechanicalFailure(d){return Math.random()>d.reliability?"DNF":null;}
+function checkCrash(d){return Math.random()<d.aggression*0.05?"Crash":null;}
+function checkDQ(){return Math.random()<0.005?"DQ":null;}
+function runRace(drivers){let results=[];for(let d of drivers){let status=checkMechanicalFailure(d);if(!status)status=checkCrash(d);if(!status)status=checkDQ();if(status){results.push({name:d.name,status:status});continue;}let score=driverPerformance(d);results.push({name:d.name,score:score,status:"Finished"});}results.sort((a,b)=>b.score-a.score);return results;}
+function generateQualifyingStory(driver,rival){let line=qualifyingLines[Math.floor(Math.random()*qualifyingLines.length)];return line.replace("{driver}",driver).replace("{rival}",rival);}
+function generateRaceSummary(winner,player,position){let lead=raceVictoryLines[Math.floor(Math.random()*raceVictoryLines.length)];let chaos=chaosLines[Math.floor(Math.random()*chaosLines.length)];let playerLine=playerFinishLines[Math.floor(Math.random()*playerFinishLines.length)];lead=lead.replace("{winner}",winner);playerLine=playerLine.replace("{player}",player).replace("{position}",position);return lead+" "+chaos+" "+playerLine;}
+function generateSeasonSummary(champion,player,position){let line1=seasonChampionLines[Math.floor(Math.random()*seasonChampionLines.length)];let line2=seasonPlayerLines[Math.floor(Math.random()*seasonPlayerLines.length)];line1=line1.replace("{champion}",champion);line2=line2.replace("{player}",player).replace("{position}",position);return line1+" "+line2;}
+
+// --- Game Loop ---
+let player={name:"Player",money:15000,reputation:0,health:100,stats:{wins:0,podiums:0,dnf:0,dq:0}};
+let season={currentRace:0,races:[],drivers:[],totalRaces:5};
+const output=document.getElementById("output");
+const playerStats=document.getElementById("playerStats");
+const startBtn=document.getElementById("startSeasonBtn");
+const nextRaceBtn=document.getElementById("nextRaceBtn");
+const nextEventBtn=document.getElementById("nextEventBtn");
+
+function updateStats(){playerStats.innerText=`Money: $${player.money} | Reputation: ${player.reputation} | Health: ${player.health}%`;}
+
+startBtn.addEventListener("click",()=>{
+startBtn.style.display="none";
+season.drivers=generateDriverField(20);
+season.races=Array(season.totalRaces).fill(null);
+output.innerText="Season started! 20 drivers on the grid.";
+nextRaceBtn.style.display="inline";
+updateStats();
+});
+
+nextRaceBtn.addEventListener("click",()=>{
+if(season.currentRace>=season.totalRaces){output.innerText="Season finished! Generating season summary...";nextRaceBtn.style.display="none";generateSeasonResults();return;}
+let raceDrivers=[...season.drivers];
+let pole=raceDrivers[Math.floor(Math.random()*raceDrivers.length)].name;
+let rival=raceDrivers[Math.floor(Math.random()*raceDrivers.length)].name;
+let qualStory=generateQualifyingStory(pole,rival);
+let results=runRace(raceDrivers);
+let winner=results.find(r=>r.status==="Finished")?.name||results[0].name;
+let playerPos=Math.floor(Math.random()*results.length)+1;
+let raceStory=generateRaceSummary(winner,player.name,playerPos);
+output.innerText=`Race ${season.currentRace+1} Qualifying:\n${qualStory}\n\nRace Results:\n${raceStory}`;
+season.currentRace++;
+nextRaceBtn.style.display="none";
+nextEventBtn.style.display="inline";
+updateStats();
+});
+
+nextEventBtn.addEventListener("click",()=>{
+let event=careerEvents[Math.floor(Math.random()*careerEvents.length)];
+let text=`${event.title}\n\n${event.text}\n\nChoices:`;
+event.choices.forEach((c,i)=>{text+=`\n[${i+1}] ${c.text}`;});
+output.innerText=text;
+nextEventBtn.style.display="none";
+handleEventChoice(event);
+});
+
+function handleEventChoice(event){
+let choice=prompt(`Enter 1-${event.choices.length} to choose:`);
+let idx=parseInt(choice)-1;
+if(idx>=0 && idx<event.choices.length){event.choices[idx].effect(player);updateStats();nextRaceBtn.style.display="inline";output.innerText+=`\n\nChoice applied. Continue to next race.`;}else{output.innerText+=`\nInvalid choice. Try next race.`;nextRaceBtn.style.display="inline";}
+}
+
+function generateSeasonResults(){
+let champ=season.drivers[Math.floor(Math.random()*season.drivers.length)].name;
+let position=Math.floor(Math.random()*20)+1;
+let summary=generateSeasonSummary(champ,player.name,position);
+output.innerText=summary;
+updateStats();
+}
+</script>
+</body>
+</html>
