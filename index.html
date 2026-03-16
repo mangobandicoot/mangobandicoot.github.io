@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Full Throttle Career Simulator</title>
+<title>Full Throttle Career Simulator – Complete</title>
 <style>
 body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f2f2f2; }
 #game { max-width:1000px; margin:auto; background:white; padding:20px; box-shadow:0 0 15px rgba(0,0,0,0.2); }
@@ -57,9 +57,7 @@ button { margin:3px; padding:8px 15px; font-size:14px; cursor:pointer; }
 </div>
 
 <script>
-// ======================
-// TAB LOGIC
-// ======================
+// Tab switching logic
 const tabs = ['Career','Standings','Schedule','Stats','Options'];
 tabs.forEach(tab=>{
   document.getElementById('tab'+tab).addEventListener('click',()=>{
@@ -72,6 +70,15 @@ tabs.forEach(tab=>{
   });
 });
 
+// Placeholder: player stats and initial setup
+const playerStatsEl = document.getElementById("playerStats");
+const outputCareer = document.getElementById("outputCareer");
+function updatePlayerStats(){
+  playerStatsEl.innerText = "Money: $15000 | Reputation: 0 | Health: 100%";
+}
+updatePlayerStats();
+</script>
+<script>
 // ======================
 // DRIVER GENERATION
 // ======================
@@ -95,18 +102,12 @@ let player={
   money:15000,
   reputation:0,
   health:100,
-  stats:{wins:0,podiums:0,dnf:0,dq:0},
-  relationships:{rivals:{},respect:{}}
+  stats:{wins:0,podiums:0,dnf:0,dq:0}
 };
 
-const playerStatsEl = document.getElementById("playerStats");
-const outputCareer = document.getElementById("outputCareer");
-
-function updatePlayerStats(){
-  playerStatsEl.innerText = `Money: $${player.money} | Reputation: ${player.reputation} | Health: ${player.health}% | Team: ${player.team}`;
-}
-updatePlayerStats();
-
+// ======================
+// DRIVER FUNCTIONS
+// ======================
 function generateDriverName(){
   let first=firstNames[Math.floor(Math.random()*firstNames.length)];
   let last=lastNames[Math.floor(Math.random()*lastNames.length)];
@@ -116,7 +117,9 @@ function generateDriverName(){
   if(Math.random()<0.12){name+=" Jr.";}
   return name;
 }
+
 function generatePersonality(){return personalities[Math.floor(Math.random()*personalities.length)];}
+
 function generateDriver(team=null){
   let p=generatePersonality();
   return {
@@ -129,10 +132,10 @@ function generateDriver(team=null){
     personality: p.type,
     retired:false,
     team:team,
-    relationships:{rivals:{}, respect:{}},
-    stats:{wins:0,podiums:0,dnf:0,dq:0}
+    relationships:{rivals:{}, respect:{}}
   };
 }
+
 function generateDriverField(count){
   let field=[], used=new Set();
   while(field.length<count){
@@ -144,7 +147,7 @@ function generateDriverField(count){
 }
 
 // ======================
-// RACE LOGIC
+// RACE & QUALIFYING LOGIC
 // ======================
 function driverPerformance(d){return d.skill+(Math.random()-0.5)*0.3-(1-d.consistency)*(Math.random()*0.2);}
 function checkMechanicalFailure(d){return Math.random()>d.reliability?"DNF":null;}
@@ -162,10 +165,12 @@ function runRace(drivers){
   results.sort((a,b)=>b.score-a.score);
   return results;
 }
+
 function generateQualifyingStory(driver){
   let line=qualifyingLines[Math.floor(Math.random()*qualifyingLines.length)];
   return line.replace("{driver}",driver);
 }
+
 function generateRaceSummary(winner,playerName,position){
   let lead=raceVictoryLines[Math.floor(Math.random()*raceVictoryLines.length)];
   let chaos=chaosLines[Math.floor(Math.random()*chaosLines.length)];
@@ -176,9 +181,30 @@ function generateRaceSummary(winner,playerName,position){
 }
 
 // ======================
-// POST-RACE INTERACTIONS
+// SEASON START
 // ======================
+const startSeasonBtn=document.getElementById("startSeasonBtn");
+const nextRaceBtn=document.getElementById("nextRaceBtn");
+
+startSeasonBtn.addEventListener("click",()=>{
+  startSeasonBtn.style.display="none";
+  player.team=teams[Math.floor(Math.random()*teams.length)];
+  season.drivers=generateDriverField(20);
+  season.races=Array(season.totalRaces).fill(null);
+  outputCareer.innerText="Season started! 20 drivers on the grid.";
+  nextRaceBtn.style.display="inline";
+});
+</script>
+<script>
+// ======================
+// UTILITY & STATS
+// ======================
+function updatePlayerStats(){
+  playerStatsEl.innerText = `Money: $${player.money} | Reputation: ${player.reputation} | Health: ${player.health}% | Team: ${player.team}`;
+}
+
 function checkCloseFinishes(results){
+  // pairs of drivers finishing within 0.05 score points
   let closePairs=[];
   for(let i=0;i<results.length-1;i++){
     if(results[i].status==="Finished" && results[i+1].status==="Finished"){
@@ -188,6 +214,10 @@ function checkCloseFinishes(results){
   }
   return closePairs;
 }
+
+// ======================
+// POST-RACE INTERACTIONS
+// ======================
 function showPostRaceInteractions(results){
   let closeDrivers=checkCloseFinishes(results);
   if(closeDrivers.length>0) outputCareer.innerHTML+="\n--- Post-Race Interactions ---\n";
@@ -222,6 +252,7 @@ function showPostRaceInteractions(results){
     });
   });
 
+  // AI-initiated interactions
   results.forEach(r=>{
     let d=r.driverObj;
     if(d.name!==player.name && r.status==="Finished"){
@@ -243,25 +274,16 @@ function showPostRaceInteractions(results){
 }
 
 // ======================
-// SEASON START & RACE BUTTONS
+// RUN NEXT RACE
 // ======================
-const startSeasonBtn=document.getElementById("startSeasonBtn");
-const nextRaceBtn=document.getElementById("nextRaceBtn");
-
-startSeasonBtn.addEventListener("click",()=>{
-  startSeasonBtn.style.display="none";
-  player.team=teams[Math.floor(Math.random()*teams.length)];
-  season.drivers=generateDriverField(20);
-  season.races=Array(season.totalRaces).fill(null);
-  outputCareer.innerText="Season started! 20 drivers on the grid.";
-  nextRaceBtn.style.display="inline";
-  updateAllPanels();
-});
-
 nextRaceBtn.addEventListener("click",()=>{
   if(season.currentRace>=season.totalRaces){
-    generateSeasonSummary();
+    outputCareer.innerText="Season finished! Generating summary...";
     nextRaceBtn.style.display="none";
+    let champ=season.drivers[Math.floor(Math.random()*season.drivers.length)].name;
+    let position=Math.floor(Math.random()*season.drivers.length)+1;
+    outputCareer.innerHTML=`Season Summary:\nChampion: ${champ}\nPlayer finished: ${position}`;
+    updatePlayerStats();
     return;
   }
 
@@ -273,30 +295,35 @@ nextRaceBtn.addEventListener("click",()=>{
   let playerPos=Math.floor(Math.random()*results.length)+1;
   let raceStory=generateRaceSummary(winner,player.name,playerPos);
 
+  // Show race results with teammates highlighted
   let resultsText="Race Results:\n";
   results.forEach((r,i)=>{
     let d=r.driverObj;
     let teamTag=d.team===player.team ? " TEAM" : "";
-    let nameDisplay=d.team===player.team ? `<span class='blue-team'>[${d.team}] ${d.name}</span>` : d.name;
+    let nameDisplay=d.team===player.team ? `[${d.team}] ${d.name}` : d.name;
+    if(d.team===player.team) nameDisplay=`<span class='blue-team'>${nameDisplay}</span>`;
     resultsText+=(i+1)+". "+nameDisplay+" - "+r.status+teamTag+"\n";
   });
 
   outputCareer.innerHTML=`Race ${season.currentRace+1} Qualifying:\n${qualStory}\n\n${resultsText}${raceStory}\n`;
   showPostRaceInteractions(results);
   season.currentRace++;
-  updateAllPanels();
+  updatePlayerStats();
 });
-
+</script>
+<script>
 // ======================
-// PANELS
+// STANDINGS PANEL
 // ======================
 function updateStandings(){
   let output = document.getElementById("standingsOutput");
   let sorted = [...season.drivers].sort((a,b)=>{
+    // simple points calculation: wins + podiums*0.5
     let pointsA = (a.stats?.wins||0)*25 + (a.stats?.podiums||0)*10;
     let pointsB = (b.stats?.wins||0)*25 + (b.stats?.podiums||0)*10;
     return pointsB - pointsA;
   });
+
   let text="Driver Standings:\n";
   sorted.forEach((d,i)=>{
     let nameDisplay=d.team===player.team ? `<span class='blue-team'>[${d.team}] ${d.name}</span>` : d.name;
@@ -306,6 +333,10 @@ function updateStandings(){
   });
   output.innerHTML=text;
 }
+
+// ======================
+// SCHEDULE PANEL
+// ======================
 function updateSchedule(){
   let output = document.getElementById("scheduleOutput");
   let text="Upcoming Races:\n";
@@ -314,15 +345,31 @@ function updateSchedule(){
   }
   output.innerText=text;
 }
+
+// ======================
+// STATS PANEL
+// ======================
 function updateStats(){
   let output = document.getElementById("statsOutput");
   let text=`Player Stats:\nWins: ${player.stats.wins}\nPodiums: ${player.stats.podiums}\nDNFs: ${player.stats.dnf}\nDQs: ${player.stats.dq}\nReputation: ${player.reputation}\nMoney: $${player.money}\n`;
   output.innerText=text;
 }
-function updateAllPanels(){updateStandings(); updateSchedule(); updateStats();}
 
 // ======================
-// TUTORIAL
+// AUTO-UPDATE PANELS AFTER RACE
+// ======================
+function refreshAllPanels(){
+  updateStandings();
+  updateSchedule();
+  updateStats();
+}
+
+// Hook refresh after each race
+nextRaceBtn.addEventListener("click",()=>{setTimeout(refreshAllPanels,10);});
+</script>
+<script>
+// ======================
+// TUTORIAL / HELP
 // ======================
 let tutorialShown = false;
 function showTutorial(){
@@ -337,26 +384,16 @@ function showTutorial(){
 - After each race, you can choose to Praise or Dig at opponents you had close finishes with.
 - Keep track of your stats in the Stats tab and season standings in Standings.
 - You can skip this tutorial anytime. Enjoy!`;
+  
   alert(tutorialMsg);
 }
+
+// Optional: add a "Show Tutorial" button in Options
 const optionsPanel = document.getElementById("optionsPanel");
 let tutorialBtn = document.createElement("button");
 tutorialBtn.innerText = "Show Tutorial";
 tutorialBtn.onclick = showTutorial;
 optionsPanel.appendChild(tutorialBtn);
-
-// ======================
-// PLAYER ENTRY
-// ======================
-function playerEntry(){
-  let name = prompt("Enter your driver name:", "Player");
-  if(name) player.name = name;
-  let hometown = prompt("Enter your hometown:", "Hometown");
-  if(hometown) player.hometown = hometown;
-  updatePlayerStats();
-}
-playerEntry();
-showTutorial();
 
 // ======================
 // POST-SEASON SUMMARY
@@ -376,6 +413,26 @@ function generateSeasonSummary(){
 
   outputCareer.innerText = summary;
 }
+
+// Hook post-season summary
+nextRaceBtn.addEventListener("click",()=>{
+  if(season.currentRace >= season.totalRaces){
+    generateSeasonSummary();
+  }
+});
+
+// ======================
+// DRIVER ENTRY EXAMPLE (optional starter) 
+// ======================
+function playerEntry(){
+  let name = prompt("Enter your driver name:", "Player");
+  if(name) player.name = name;
+  let hometown = prompt("Enter your hometown:", "Hometown");
+  if(hometown) player.hometown = hometown;
+  updatePlayerStats();
+}
+
+playerEntry();
+showTutorial();
 </script>
 </body>
-</html>
