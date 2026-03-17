@@ -1,67 +1,81 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// FULL THROTTLE RPG — CORE ENGINE
+// FULL THROTTLE v3.0 — THE INTERACTIVE INTERFACE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-let G = null;
-let DATA = null;
-
-// Initialize Game
-async function loadGame() {
-  const resp = await fetch('data.json');
-  DATA = await resp.json();
-  
-  const saved = localStorage.getItem('ft_rpg_save');
-  if (saved) {
-    G = JSON.parse(saved);
-    return true;
-  }
-  return false;
+function renderDashboard(c) {
+    c.innerHTML = `
+        <div class="card">
+            <h2>Driver Career</h2>
+            <div style="display:grid; grid-template-columns:1fr 1fr;">
+                <div><small>Safety Rating</small><br><strong style="color:var(--accent); font-size:20px;">${G.sr.toFixed(2)}</strong></div>
+                <div style="text-align:right;"><small>Tier</small><br><strong>Level ${G.tier}</strong></div>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Recent Logs</h3>
+            ${G.history.slice(-3).reverse().map(h => `<p style="font-size:14px; border-bottom:1px solid var(--border); padding:5px 0;">${h}</p>`).join('') || 'No starts yet.'}
+        </div>
+    `;
 }
 
-function initGame(name, num, state) {
-  G = {
-    name, num, state,
-    bank: 5000, fans: 0, rep: 50, tier: 0,
-    stats: { speed: 10, craft: 10, consistency: 10 },
-    history: [],
-    inventory: [],
-    season: { racesDone: 0, points: 0, wins: 0, top5s: 0 },
-    currentRace: null
-  };
+function renderRaceMenu(c) {
+    c.innerHTML = '<h1>Series Schedule</h1>';
+    DATA.SERIES.forEach(s => {
+        const locked = G.tier < s.tier;
+        c.innerHTML += `
+            <div class="card" style="opacity:${locked ? 0.4 : 1}; border-left: 4px solid ${s.color}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><h3>${s.name}</h3><small>Fee: $${s.fee}</small></div>
+                    <button class="btn-primary" onclick="startRaceSession('${s.id}')" ${locked ? 'disabled' : ''}>ENTER</button>
+                </div>
+            </div>
+        `;
+    });
 }
 
-// BitLife-style Race Engine
-function startRaceSession(track) {
-  G.currentRace = {
-    track: track,
-    pos: 20 + Math.floor(Math.random() * 10),
-    beatsRemaining: 5,
-    log: []
-  };
-  renderRaceBeat();
+function renderPrepScreen() {
+    const c = document.getElementById('game-content');
+    c.innerHTML = `
+        <div class="card">
+            <h2>Track: ${G.session.track.name}</h2>
+            <p>Type: ${G.session.track.type} | Rival: ${G.session.rival.name}</p>
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+            <p>Garage Setup:</p>
+            <div style="display:grid; gap:10px; margin-bottom:20px;">
+                <label>Wing: <input type="range" min="1" max="10" value="${G.car.setup.wing}" onchange="G.car.setup.wing=parseInt(this.value)"></label>
+                <label>Springs: <input type="range" min="1" max="10" value="${G.car.setup.suspension}" onchange="G.car.setup.suspension=parseInt(this.value)"></label>
+            </div>
+            <button class="btn-primary" style="width:100%" onclick="renderRaceMoment()">GREEN FLAG</button>
+        </div>
+    `;
 }
 
-function processBeatChoice(choiceType) {
-  const event = DATA.BEAT_EVENTS[Math.floor(Math.random() * DATA.BEAT_EVENTS.length)];
-  // Your logic for stat checks and position changes goes here...
-  // (Copied directly from your HTML script)
-  G.currentRace.beatsRemaining--;
-  
-  if (G.currentRace.beatsRemaining <= 0) {
-    finishRace();
-  } else {
-    renderRaceBeat();
-  }
+function renderRaceMoment() {
+    const c = document.getElementById('game-content');
+    c.innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; font-weight:900;">
+                <span style="color:var(--accent)">LAP ${G.session.lap}/${G.session.totalLaps}</span>
+                <span>P${G.session.position}</span>
+            </div>
+            <div style="background:#161B22; height:8px; margin:15px 0; border-radius:4px;"><div style="background:var(--accent); height:100%; width:${(G.session.lap / G.session.totalLaps)*100}%;"></div></div>
+            <p style="font-size:12px; color:#94A3B8;">Rival ${G.session.rival.name} is ${G.session.rival.style}</p>
+            <div style="display:grid; gap:10px;">
+                <button class="btn-primary" onclick="processDecision('push')">PUSH (High Speed/Risk)</button>
+                <button class="btn-primary" style="background:var(--blue)" onclick="processDecision('defend')">DEFEND (Hold Position)</button>
+                <button class="btn-primary" style="background:#10B981" onclick="processDecision('save')">SAVE (Cool Down)</button>
+            </div>
+        </div>
+    `;
 }
 
-function saveGame() { localStorage.setItem('ft_rpg_save', JSON.stringify(G)); }
+function renderGarage(c) {
+    c.innerHTML = '<h1>Performance Shop</h1>';
+    DATA.UPGRADES.forEach(u => {
+        c.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><div><strong>${u.name}</strong></div><button class="btn-primary" onclick="G.stats['${u.stat}']+=1; G.money-=${u.cost}; saveGame(); switchTab('garage');">$${u.cost}</button></div>`;
+    });
+}
 
-// Call init on load
-window.addEventListener('DOMContentLoaded', async () => {
-  const hasSave = await loadGame();
-  if (hasSave) {
-    document.getElementById('setup').classList.add('hidden');
-    document.getElementById('app').style.display = 'flex';
-    showTab('dashboard');
-  }
-});
+function renderStats(c) {
+    c.innerHTML = `<div class="card"><h2>Attributes</h2><p>Speed: ${G.stats.speed}</p><p>Racecraft: ${G.stats.craft}</p></div>`;
+}
