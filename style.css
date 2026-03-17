@@ -2,68 +2,85 @@
    FULL THROTTLE v1.5.2 — OFFICIAL UI STYLES
    ═══════════════════════════════════════════════════════════════════════════════ */
 /* Core Layout & Theme */
+/* Core Theme & Typography */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 body {
-    background-color: #04060E;
+    background-color: #04060E; /* That deep dark iracing background */
     color: #e2e8f0;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Barlow Condensed', sans-serif;
     margin: 0;
+    overflow-x: hidden;
+}
+
+/* Layout IDs */
+#app {
     display: flex;
-    justify-content: center;
-}
-
-#game-container {
-    max-width: 800px;
-    width: 100%;
-    padding: 20px;
-    background: #0b0f1a;
+    flex-direction: column;
     min-height: 100vh;
-    border-left: 1px solid #1e293b;
-    border-right: 1px solid #1e293b;
 }
 
-/* UI Components */
-.card {
-    background: #161b2c;
-    border: 1px solid #2d3748;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 10px;
+#header {
+    background: #0B0F1A;
+    border-bottom: 2px solid #1E293B;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
-.btn {
-    padding: 10px 20px;
-    border-radius: 4px;
+#tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #0F172A;
+}
+
+/* UI Elements */
+.tab {
+    padding: 0.5rem 1.5rem;
     cursor: pointer;
-    font-weight: bold;
-    border: none;
-    transition: opacity 0.2s;
-}
-
-.btn-primary { background-color: #d97706; color: white; }
-.btn-secondary { background-color: #4b5563; color: white; }
-
-/* Race Simulation Visuals */
-.track-info {
-    font-size: 1.2rem;
-    color: #fbbf24;
+    color: #94A3B8;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    font-weight: 700;
 }
 
-.stat-bar {
-    height: 8px;
-    background: #1e293b;
-    border-radius: 4px;
-    overflow: hidden;
+.tab.active {
+    color: #F59E0B; /* That Amber highlight */
+    border-bottom: 2px solid #F59E0B;
 }
 
-.stat-fill {
-    height: 100%;
-    background: #10b981;
+.hdr-stats {
+    display: flex;
+    gap: 2rem;
+    font-size: 1.1rem;
 }
 
-/* Utility Classes */
-.text-gold { color: #fbbf24; }
-.text-red { color: #ef4444; }
-.hidden { display: none; }
+.hdr-stat span {
+    color: #F59E0B;
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: #F59E0B;
+    color: #000;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+}
+
+/* Components */
+#setup-screen {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.driver-name {
+    font-size: 2.5rem;
+    font-weight: 900;
+    font-style: italic;
+    line-height: 1;
+}
 }
