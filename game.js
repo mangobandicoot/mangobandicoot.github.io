@@ -61,3 +61,49 @@ function processBeatChoice(choiceIndex, event) {
   if (G.currentRace.beatsRemaining <= 0) finishRace();
   else renderRaceBeat();
 }
+function finishRace() {
+  const race = G.currentRace;
+  const pos = race.pos;
+  
+  // BitLife-style Payout Math
+  let prize = Math.max(0, (40 - pos) * 150);
+  if (pos === 1) prize += 2000;
+  if (pos <= 5) G.season.top5s++;
+  
+  G.bank += prize;
+  G.season.racesDone++;
+  
+  const logEntry = `P${pos} at ${race.track.name} (+$${prize})`;
+  G.history.push(logEntry);
+  
+  // Check for Tier Up
+  if (G.season.racesDone >= 5 && G.tier < DATA.TIERS.length - 1) {
+    G.tier++;
+    G.season.racesDone = 0;
+    alert(`Level Up! You've been promoted to ${DATA.TIERS[G.tier].name}!`);
+  }
+
+  G.currentRace = null;
+  saveGame();
+  
+  // Show Result Modal
+  openModal(h('div', null,
+    h('h2', { style: { color: '#D97706' } }, pos === 1 ? 'VICTORY!' : 'Race Finished'),
+    h('p', { style: { margin: '15px 0' } }, `You finished P${pos}. Earnings: $${prize.toLocaleString()}`),
+    mkBtn('Return to Hub', 'btn-primary', () => {
+      closeModal();
+      showTab('dashboard');
+    })
+  ));
+}
+
+// Setup handler for index.html
+function handleStart() {
+  const name = document.getElementById('setup-name').value;
+  if (!name) return alert("Enter a name!");
+  initGame(name, "00", "USA");
+  saveGame();
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+  showTab('dashboard');
+}
