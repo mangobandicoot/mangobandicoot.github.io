@@ -1,127 +1,67 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;1,900&display=swap');
+// ═══════════════════════════════════════════════════════════════════════════════
+// FULL THROTTLE RPG — CORE ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
 
-:root {
-    --bg: #030712;
-    --card: #111827;
-    --primary: #F59E0B; /* The Amber */
-    --secondary: #10B981; /* The Emerald */
-    --text: #F3F4F6;
-    --border: #374151;
+let G = null;
+let DATA = null;
+
+// Initialize Game
+async function loadGame() {
+  const resp = await fetch('data.json');
+  DATA = await resp.json();
+  
+  const saved = localStorage.getItem('ft_rpg_save');
+  if (saved) {
+    G = JSON.parse(saved);
+    return true;
+  }
+  return false;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Barlow Condensed', sans-serif; }
-
-body {
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+function initGame(name, num, state) {
+  G = {
+    name, num, state,
+    bank: 5000, fans: 0, rep: 50, tier: 0,
+    stats: { speed: 10, craft: 10, consistency: 10 },
+    history: [],
+    inventory: [],
+    season: { racesDone: 0, points: 0, wins: 0, top5s: 0 },
+    currentRace: null
+  };
 }
 
-/* THE HEADER (Fixed at top) */
-#header {
-    background: #000;
-    padding: 15px;
-    border-bottom: 2px solid var(--primary);
-    text-align: center;
+// BitLife-style Race Engine
+function startRaceSession(track) {
+  G.currentRace = {
+    track: track,
+    pos: 20 + Math.floor(Math.random() * 10),
+    beatsRemaining: 5,
+    log: []
+  };
+  renderRaceBeat();
 }
 
-#header h1 {
-    font-size: 1.8rem;
-    font-weight: 900;
-    font-style: italic;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 2px;
+function processBeatChoice(choiceType) {
+  const event = DATA.BEAT_EVENTS[Math.floor(Math.random() * DATA.BEAT_EVENTS.length)];
+  // Your logic for stat checks and position changes goes here...
+  // (Copied directly from your HTML script)
+  G.currentRace.beatsRemaining--;
+  
+  if (G.currentRace.beatsRemaining <= 0) {
+    finishRace();
+  } else {
+    renderRaceBeat();
+  }
 }
 
-/* THE CONTENT AREA (Scrolling) */
-#app {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    padding-bottom: 100px; /* Space for the nav */
-}
+function saveGame() { localStorage.setItem('ft_rpg_save', JSON.stringify(G)); }
 
-/* REGISTRATION INPUTS */
-.setup-container {
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 25px;
-    margin-top: 10px;
-}
-
-.input-label {
-    color: var(--primary);
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-    display: block;
-}
-
-input {
-    width: 100%;
-    background: #000;
-    border: 1px solid var(--border);
-    padding: 15px;
-    color: #FFF;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-}
-
-input:focus {
-    border-color: var(--primary);
-    outline: none;
-}
-
-/* THE "BIG ORANGE" BUTTON */
-.btn-primary {
-    background: var(--primary);
-    color: #000;
-    border: none;
-    padding: 20px;
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: 1.3rem;
-    width: 100%;
-    cursor: pointer;
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.3);
-}
-
-.btn-primary:active {
-    background: #FFF;
-    transform: translateY(2px);
-}
-
-/* NAVBAR (Sticky Bottom) */
-#navbar {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: #000;
-    display: flex;
-    border-top: 2px solid var(--border);
-    z-index: 100;
-}
-
-#navbar button {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: #6B7280;
-    padding: 18px 5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-}
-
-#navbar button.active {
-    color: var(--primary);
-    background: rgba(245, 158, 11, 0.1);
-}
-
-.hidden { display: none !important; }
+// Call init on load
+window.addEventListener('DOMContentLoaded', async () => {
+  const hasSave = await loadGame();
+  if (hasSave) {
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    showTab('dashboard');
+  }
+});
