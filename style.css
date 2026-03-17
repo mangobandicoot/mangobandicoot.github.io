@@ -1,123 +1,131 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;1,900&display=swap');
 
 :root {
-    --bg: #04060E;           /* Deep Racing Black */
-    --card: #0D1117;         /* Dark Slate Card */
-    --primary: #F59E0B;      /* Amber / Gold */
-    --accent: #D97706;       /* Darker Amber */
-    --text: #E2E8F0;         /* Off-White Text */
-    --border: #1E2433;       /* Steel Border */
+    --bg: #04060E;
+    --card: #0D1117;
+    --primary: #F59E0B;
+    --border: #1E2433;
+    --text: #E2E8F0;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Barlow Condensed', sans-serif; }
 
 body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Barlow Condensed', sans-serif;
-    margin: 0;
-    padding: 0;
+    overflow: hidden; /* This keeps the header fixed like your original */
     height: 100vh;
-    overflow: hidden; /* We use custom scroll on the content area */
-}
-
-#container {
-    max-width: 500px;
-    margin: 0 auto;
-    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-/* The Registration Card from your original */
-#setup {
-    padding: 30px;
-    margin-top: 50px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-top: 4px solid var(--primary);
+/* The Fixed Header from your ZIP */
+#header {
+    background: #000;
+    border-bottom: 2px solid var(--primary);
+    padding: 15px;
+    text-align: center;
+    z-index: 100;
 }
 
-h2 {
-    text-transform: uppercase;
+#header h1 {
+    font-size: 1.5rem;
     font-weight: 900;
     font-style: italic;
-    letter-spacing: 1px;
-    margin-bottom: 20px;
     color: var(--primary);
+    text-transform: uppercase;
 }
 
-input {
+/* The Scrolling Content Area */
+#app {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Your specific "Registration" inputs */
+#setup {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+#setup input {
     width: 100%;
     background: #000;
     border: 1px solid var(--border);
-    padding: 15px;
+    padding: 18px;
     color: #FFF;
-    font-family: inherit;
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    border-radius: 0; /* Original used sharp edges */
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
 }
 
-input:focus {
+#setup input:focus {
     border-color: var(--primary);
     outline: none;
 }
 
+/* The "Big Orange Button" */
 .btn-primary {
     background: var(--primary);
     color: #000;
     border: none;
-    padding: 18px;
+    padding: 20px;
     font-weight: 900;
     text-transform: uppercase;
-    font-size: 1.1rem;
-    cursor: pointer;
+    font-size: 1.2rem;
     width: 100%;
-    transition: 0.1s;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #92400E;
 }
 
 .btn-primary:active {
-    background: #FFF;
-    transform: scale(0.98);
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #92400E;
 }
 
-/* The Fixed Navigation from your ZIP */
+/* Your original Card style */
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+}
+
+.card h2 {
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+/* Navigation Bar at the Bottom (Optional based on your late-night edits) */
 #navbar {
-    display: flex;
     background: #000;
-    border-bottom: 2px solid var(--border);
+    display: flex;
+    border-top: 1px solid var(--border);
+    padding: 5px;
 }
 
 #navbar button {
     flex: 1;
-    padding: 15px 5px;
     background: transparent;
     border: none;
-    color: #64748b;
-    font-family: inherit;
+    color: #64748B;
+    padding: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    cursor: pointer;
+    font-size: 0.8rem;
 }
 
-#navbar button:hover { color: #FFF; }
-#navbar button.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-
-/* The Flexible Content Area with custom scroll */
-#main-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    padding-bottom: 80px;
+#navbar button.active {
+    color: var(--primary);
 }
 
-#main-content::-webkit-scrollbar { width: 5px; }
-#main-content::-webkit-scrollbar-thumb { background: var(--border); }
-
-.card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 15px;
-    margin-bottom: 15px;
-}
+.hidden { display: none !important; }
