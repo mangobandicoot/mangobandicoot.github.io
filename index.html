@@ -45,7 +45,19 @@
             </div>
     </div>
 
-    <script src="game.js"></script>
-    <script src="src/renderer.js"></script>
+<script src="game.js"></script>
+<script src="src/renderer.js"></script>
+<script>
+    // This starts the engine once the files are loaded
+    window.onload = async () => {
+        const hasSave = await loadGame();
+        if (hasSave) {
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('app').style.display = 'flex';
+            showTab('dashboard');
+        }
+    };
+</script>
+
 </body>
 </html>
