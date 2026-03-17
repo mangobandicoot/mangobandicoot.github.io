@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FULL THROTTLE v1.5.2 — OFFICIAL UI STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --bg-black: #05070A;
+    --bg-card: #0D1117;
+    --bg-nav: #080C14;
+    --accent: #F59E0B;
+    --blue: #3B82F6;
+    --border: #1E2433;
+    --text-white: #FFFFFF;
+    --text-gray: #94A3B8;
+}
+
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+body {
+    margin: 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    background-color: var(--bg-black);
+    color: var(--text-white);
+    overflow-x: hidden;
+    user-select: none;
+}
+
+/* --- SETUP SCREEN --- */
+#setup-screen {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #111827 0%, #05070A 100%);
+    padding: 20px;
+}
+
+.setup-card {
+    background: var(--bg-card);
+    padding: 40px 30px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* --- APP HEADER --- */
+#header {
+    background: var(--bg-nav);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* --- NAVIGATION --- */
+#tabs {
+    background: var(--bg-nav);
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    padding: 15px 5px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    width: 25%;
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom: 3px solid var(--accent);
+}
+
+/* --- CONTENT CARDS --- */
+#game-content {
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 12px;
+    border-radius: 2px;
+}
+
+.card h2 { margin-top: 0; font-size: 20px; color: var(--accent); text-transform: uppercase; }
+.card h3 { margin: 0; font-size: 18px; }
+
+/* --- INPUTS & BUTTONS --- */
+input {
+    width: 100%;
+    background: #161B22;
+    border: 1px solid var(--border);
+    padding: 15px;
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+input:focus { outline: none; border-color: var(--accent); }
+
+.btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-family: inherit;
+    font-weight: 900;
+    border: none;
+    border-radius: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+/* Scrollbar Fix for mobile */
+::-webkit-scrollbar { width: 0px; background: transparent; }
