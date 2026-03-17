@@ -1,70 +1,126 @@
-{
-  "SERIES": [
-    { "id": "mini", "name": "Mini Stock Series", "tier": 1, "fee": 50, "pay": 150, "winBonus": 500, "color": "#8B5CF6", "desc": "4-Cylinder grassroots racing on local bullrings." },
-    { "id": "street", "name": "Street Stock Series", "tier": 2, "fee": 250, "pay": 450, "winBonus": 1200, "color": "#3B82F6", "desc": "Full-bodied stock cars. Heavy, fast, and high-contact." },
-    { "id": "late_stock", "name": "Late Model Stock Tour", "tier": 3, "fee": 1200, "pay": 2200, "winBonus": 6000, "color": "#10B981", "desc": "Professional asphalt short track tour." },
-    { "id": "super_late", "name": "Super Late Model Series", "tier": 4, "fee": 5000, "pay": 9000, "winBonus": 25000, "color": "#EF4444", "desc": "The elite level of short track competition." },
-    { "id": "nascar_trucks", "name": "National Truck Series", "tier": 5, "fee": 15000, "pay": 25000, "winBonus": 80000, "color": "#F59E0B", "desc": "National touring on speedways and short tracks." },
-    { "id": "nascar_xfin", "name": "National Pro Series", "tier": 6, "fee": 30000, "pay": 60000, "winBonus": 200000, "color": "#EC4899", "desc": "The final stepping stone to the Cup." },
-    { "id": "nascar_cup", "name": "Premier Cup Series", "tier": 7, "fee": 50000, "pay": 100000, "winBonus": 500000, "color": "#FFD700", "desc": "The pinnacle of professional stock car racing." }
-  ],
-  "TRACKS": [
-    { "name": "Wiscasset Speedway", "type": "Short Track", "difficulty": 1.1, "length": "0.375m" },
-    { "name": "Five Flags Speedway", "type": "Short Track", "difficulty": 1.3, "length": "0.5m" },
-    { "name": "Bristol Motor Speedway", "type": "Half-Mile", "difficulty": 1.7, "length": "0.533m" },
-    { "name": "North Wilkesboro", "type": "Historic", "difficulty": 1.4, "length": "0.625m" },
-    { "name": "Hickory Motor Speedway", "type": "Short Track", "difficulty": 1.2, "length": "0.363m" },
-    { "name": "South Boston Speedway", "type": "Short Track", "difficulty": 1.3, "length": "0.4m" },
-    { "name": "Martinsville Speedway", "type": "Paperclip", "difficulty": 1.6, "length": "0.526m" },
-    { "name": "Stafford Motor Speedway", "type": "Half-Mile", "difficulty": 1.3, "length": "0.5m" },
-    { "name": "Thompson Speedway", "type": "High Banked", "difficulty": 1.4, "length": "0.625m" },
-    { "name": "Bowman Gray Stadium", "type": "The Madhouse", "difficulty": 2.0, "length": "0.25m" },
-    { "name": "Berlin Raceway", "type": "Crowned Short", "difficulty": 1.5, "length": "0.438m" },
-    { "name": "Irwindale Speedway", "type": "Half-Mile", "difficulty": 1.3, "length": "0.5m" },
-    { "name": "Oxford Plains Speedway", "type": "Flat Short", "difficulty": 1.2, "length": "0.375m" },
-    { "name": "Nashville Fairgrounds", "type": "Historic Short", "difficulty": 1.4, "length": "0.596m" },
-    { "name": "Talladega Superspeedway", "type": "Superspeedway", "difficulty": 1.8, "length": "2.66m" },
-    { "name": "Daytona International", "type": "Superspeedway", "difficulty": 1.9, "length": "2.5m" },
-    { "name": "Darlington Raceway", "type": "Intermediate", "difficulty": 2.0, "length": "1.366m" },
-    { "name": "Charlotte Motor Speedway", "type": "Quad-Oval", "difficulty": 1.5, "length": "1.5m" },
-    { "name": "Homestead-Miami", "type": "Intermediate", "difficulty": 1.4, "length": "1.5m" },
-    { "name": "Phoenix Raceway", "type": "Tri-Oval", "difficulty": 1.6, "length": "1.0m" },
-    { "name": "Watkins Glen", "type": "Road Course", "difficulty": 1.7, "length": "3.4m" },
-    { "name": "Sonoma Raceway", "type": "Road Course", "difficulty": 1.8, "length": "2.52m" },
-    { "name": "Knoxville Raceway", "type": "Dirt Oval", "difficulty": 1.5, "length": "0.5m" },
-    { "name": "Eldora Speedway", "type": "Dirt Oval", "difficulty": 1.6, "length": "0.5m" },
-    { "name": "Gateway (WWT)", "type": "Intermediate", "difficulty": 1.5, "length": "1.25m" },
-    { "name": "Las Vegas Motor Speedway", "type": "Intermediate", "difficulty": 1.4, "length": "1.5m" },
-    { "name": "Auto Club Speedway", "type": "2-Mile Oval", "difficulty": 1.6, "length": "2.0m" },
-    { "name": "Richmond Raceway", "type": "Short Track", "difficulty": 1.5, "length": "0.75m" },
-    { "name": "New Hampshire", "type": "1-Mile Oval", "difficulty": 1.5, "length": "1.058m" },
-    { "name": "Dover Motor Speedway", "type": "Concrete Mile", "difficulty": 1.7, "length": "1.0m" },
-    { "name": "Pocono Raceway", "type": "The Tricky Triangle", "difficulty": 1.8, "length": "2.5m" },
-    { "name": "Michigan International", "type": "2-Mile Oval", "difficulty": 1.5, "length": "2.0m" },
-    { "name": "Texas Motor Speedway", "type": "Intermediate", "difficulty": 1.6, "length": "1.5m" },
-    { "name": "Atlanta Motor Speedway", "type": "Drafting Intermediate", "difficulty": 1.7, "length": "1.54m" }
-  ],
-  "RIVALS": [
-    { "name": "Bubba 'The Wall' Jones", "style": "Aggressive", "skill": 8, "carNum": "04", "trait": "Door-slammer" },
-    { "name": "Smooth Sammy Slicks", "style": "Consistent", "skill": 12, "carNum": "18", "trait": "Clean" },
-    { "name": "Rookie 'Redline' Reed", "style": "Reckless", "skill": 10, "carNum": "77", "trait": "Fast/Crashy" },
-    { "name": "The Professional", "style": "Technical", "skill": 16, "carNum": "1", "trait": "Precision" },
-    { "name": "Cactus Jack", "style": "Intimidator", "skill": 14, "carNum": "3", "trait": "Bump-n-Run" },
-    { "name": "Silky Sullivan", "style": "Patience", "skill": 11, "carNum": "5", "trait": "Late Charger" },
-    { "name": "Killer Kowalski", "style": "Enforcer", "skill": 13, "carNum": "99", "trait": "Dirty" },
-    { "name": "Gunslinger Gary", "style": "Risk-Taker", "skill": 15, "carNum": "48", "trait": "Rim-rider" },
-    { "name": "Turbo Tom", "style": "Qualifying King", "skill": 17, "carNum": "24", "trait": "Pure Speed" },
-    { "name": "Ironhead Mike", "style": "Old School", "skill": 13, "carNum": "2", "trait": "Hard to Pass" }
-  ],
-  "UPGRADES": [
-    { "id": "eng_1", "name": "Crate Engine Tuning", "cost": 500, "stat": "speed", "boost": 1 },
-    { "id": "eng_2", "name": "Ported Heads", "cost": 2500, "stat": "speed", "boost": 2 },
-    { "id": "eng_3", "name": "High-Lift Camshaft", "cost": 8000, "stat": "speed", "boost": 4 },
-    { "id": "aer_1", "name": "Spoiler Adjustment", "cost": 400, "stat": "craft", "boost": 1 },
-    { "id": "aer_2", "name": "Wind Tunnel Time", "cost": 3500, "stat": "craft", "boost": 3 },
-    { "id": "aer_3", "name": "Underbody Diffuser", "cost": 12000, "stat": "craft", "boost": 5 },
-    { "id": "tir_1", "name": "Heat Cycles", "cost": 300, "stat": "consistency", "boost": 1 },
-    { "id": "tir_2", "name": "Nitrogen Fill System", "cost": 1500, "stat": "consistency", "boost": 2 },
-    { "id": "tir_3", "name": "Custom Tire Compounds", "cost": 6000, "stat": "consistency", "boost": 4 }
-  ]
-}
+    {
+      title: "Fuel Save Mode",
+      desc: "You're running low on fuel. If you push, you might run out before the white flag.",
+      stat: "consistency",
+      choices: [
+        { text: "Lift and Coast", threshold: 10, onSuccess: { move: 2, rep: 0 }, onFailure: { move: 5, rep: 0 } },
+        { text: "Full Rich Mixture", threshold: 17, onSuccess: { move: -4, rep: 2 }, onFailure: { move: 25, rep: -5 } }
+      ]
+    },
+    {
+      title: "The High Side",
+      desc: "The bottom lane is clogged. There's a lane open right against the wall.",
+      stat: "speed",
+      choices: [
+        { text: "Rip the Fence", threshold: 15, onSuccess: { move: -5, rep: 8 }, onFailure: { move: 6, rep: -2 } },
+        { text: "Stay Patient", threshold: 9, onSuccess: { move: 0, rep: 1 }, onFailure: { move: 2, rep: 0 } }
+      ]
+    },
+    {
+      title: "Teammate in Trouble",
+      desc: "Your teammate is sliding up the track. If you don't lift, you'll both wreck.",
+      stat: "rep",
+      choices: [
+        { text: "Lift to Save Him", threshold: 7, onSuccess: { move: 3, rep: 15 }, onFailure: { move: 5, rep: 5 } },
+        { text: "Floor It!", threshold: 14, onSuccess: { move: -2, rep: -20 }, onFailure: { move: 12, rep: -30 } }
+      ]
+    },
+    {
+      title: "Brake Fade",
+      desc: "The pedal is going to the floor into the heavy braking zone.",
+      stat: "consistency",
+      choices: [
+        { text: "Pump the Brakes", threshold: 13, onSuccess: { move: 1, rep: 0 }, onFailure: { move: 10, rep: -5 } },
+        { text: "Use the Gearbox", threshold: 11, onSuccess: { move: 3, rep: 1 }, onFailure: { move: 15, rep: -10 } }
+      ]
+    },
+    {
+      title: "Spotter Gone Silent",
+      desc: "Your radio is cutting out. You're flying blind in traffic.",
+      stat: "craft",
+      choices: [
+        { text: "Trust your mirrors", threshold: 14, onSuccess: { move: -1, rep: 5 }, onFailure: { move: 8, rep: -5 } },
+        { text: "Hold your line", threshold: 9, onSuccess: { move: 2, rep: 0 }, onFailure: { move: 4, rep: 0 } }
+      ]
+    },
+    {
+      title: "Debris on Grille",
+      desc: "A piece of paper or plastic is stuck to the front. Temps are rising!",
+      stat: "speed",
+      choices: [
+        { text: "Duck behind a car", threshold: 12, onSuccess: { move: 1, rep: 0 }, onFailure: { move: 5, rep: 0 } },
+        { text: "Hope it blows off", threshold: 18, onSuccess: { move: -1, rep: 0 }, onFailure: { move: 30, rep: -10 } }
+      ]
+    },
+    {
+      title: "Dirty Air",
+      desc: "You're tucked under the rear spoiler of a rival. The front end is washing out.",
+      stat: "craft",
+      choices: [
+        { text: "Diamond the corner", threshold: 13, onSuccess: { move: -3, rep: 2 }, onFailure: { move: 2, rep: 0 } },
+        { text: "Cross them over", threshold: 16, onSuccess: { move: -5, rep: 5 }, onFailure: { move: 3, rep: 0 } }
+      ]
+    },
+    {
+      title: "GWC Chaos",
+      desc: "Green-White-Checkered! It's a two-lap shootout for the win.",
+      stat: "speed",
+      choices: [
+        { text: "Four Wide Entry", threshold: 18, onSuccess: { move: -10, rep: 10 }, onFailure: { move: 20, rep: -10 } },
+        { text: "Follow the leader", threshold: 10, onSuccess: { move: -1, rep: 2 }, onFailure: { move: 2, rep: 0 } }
+      ]
+    },
+    {
+      title: "Loose Wheel!",
+      desc: "The vibration is violent. You have to decide: Pit or Pray.",
+      stat: "consistency",
+      choices: [
+        { text: "Bury the fear", threshold: 20, onSuccess: { move: -2, rep: 15 }, onFailure: { move: 40, rep: -20 } },
+        { text: "Safe Pit Stop", threshold: 5, onSuccess: { move: 15, rep: 0 }, onFailure: { move: 20, rep: 0 } }
+      ]
+    }
+    {
+      title: "The Chrome Horn",
+      desc: "A rival is blocking you aggressively. You can smell their exhaust.",
+      stat: "craft",
+      choices: [
+        { text: "Dump them", threshold: 14, onSuccess: { move: -2, rep: -25 }, onFailure: { move: 5, rep: -30 } },
+        { text: "Wait for a clean gap", threshold: 10, onSuccess: { move: -1, rep: 5 }, onFailure: { move: 2, rep: 0 } }
+      ]
+    },
+    {
+      title: "Sponsor at the Track",
+      desc: "The CEO of your main sponsor is watching from the pit box. Don't embarrass them.",
+      stat: "rep",
+      choices: [
+        { text: "Take big risks", threshold: 16, onSuccess: { move: -5, rep: 20 }, onFailure: { move: 10, rep: -15 } },
+        { text: "Solid, safe run", threshold: 8, onSuccess: { move: 0, rep: 5 }, onFailure: { move: 2, rep: 2 } }
+      ]
+    },
+    {
+      title: "Tire Delamination",
+      desc: "The right front is starting to vibrate. It's going to blow any second.",
+      stat: "consistency",
+      choices: [
+        { text: "Nurse it home", threshold: 12, onSuccess: { move: 4, rep: 2 }, onFailure: { move: 35, rep: -5 } },
+        { text: "Pit now", threshold: 5, onSuccess: { move: 15, rep: 0 }, onFailure: { move: 20, rep: 0 } }
+      ]
+    },
+    {
+      title: "Blue Flag Ignored",
+      desc: "A lapped car is fighting you like it's for the lead.",
+      stat: "craft",
+      choices: [
+        { text: "Aggressive crossover", threshold: 15, onSuccess: { move: -3, rep: 5 }, onFailure: { move: 2, rep: 0 } },
+        { text: "Radio the officials", threshold: 10, onSuccess: { move: 0, rep: 2 }, onFailure: { move: 1, rep: 0 } }
+      ]
+    },
+    {
+      title: "Last Lap Pass",
+      desc: "You're side-by-side coming out of the final turn!",
+      stat: "speed",
+      choices: [
+        { text: "Stay in the gas", threshold: 17, onSuccess: { move: -1, rep: 10 }, onFailure: { move: 1, rep: 0 } },
+        { text: "Side-draft them", threshold: 13, onSuccess: { move: -1, rep: 5 }, onFailure: { move: 0, rep: 0 } }
+      ]
+    }
