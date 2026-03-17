@@ -1,47 +1,110 @@
 :root {
-    --bg: #0a0a0c;          /* Deep Black/Grey */
-    --card: #16161a;        /* Engine Block Grey */
-    --primary: #fde047;     /* Racing Yellow */
-    --accent: #38bdf8;      /* Pro Blue */
-    --text: #ffffff;
-    --text-dim: #94a3b8;
-    --border: #262626;
+    --bg: #050505;           /* Asphalt Black */
+    --card: #121214;         /* Carbon Fiber Grey */
+    --primary: #facc15;      /* Caution Yellow */
+    --accent: #3b82f6;       /* Nitrous Blue */
+    --danger: #ef4444;       /* Redline */
+    --success: #22c55e;      /* Green Flag */
+    --text: #e2e8f0;
+    --border: #2d2d30;
 }
+
+* { box-sizing: border-box; font-family: 'Courier New', Courier, monospace; } /* Monospace looks like a car computer */
 
 body {
     background-color: var(--bg);
-    background-image: radial-gradient(circle at 50% 50%, #1a1a1e 0%, #0a0a0c 100%);
+    background-image: 
+        linear-gradient(rgba(250, 204, 21, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 204, 21, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px; /* Grid pattern like a blueprint */
     color: var(--text);
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 15px;
-    letter-spacing: 0.5px;
 }
 
+/* The Main Container */
+#container { max-width: 450px; margin: 0 auto; border: 2px solid var(--border); padding: 10px; background: #000; }
+
+/* Racing Cards */
 .card {
     background: var(--card);
-    padding: 20px;
-    border-radius: 4px; /* Sharper corners look more "mechanical" */
+    padding: 15px;
     margin-bottom: 15px;
-    border-left: 4px solid var(--primary); /* Racing stripe on every card */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
 }
 
+/* The "Racing Stripe" on cards */
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 4px; height: 100%;
+    background: var(--primary);
+}
+
+h2 { 
+    text-transform: uppercase; 
+    font-style: italic; 
+    border-bottom: 2px solid var(--primary);
+    display: inline-block;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+/* Professional Inputs */
+input {
+    width: 100%;
+    padding: 12px;
+    background: #1a1a1e;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* High-Contrast Buttons */
 .btn-primary {
     background: var(--primary);
     color: #000;
     border: none;
-    padding: 16px;
-    border-radius: 4px;
+    padding: 15px;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 1px;
     width: 100%;
     cursor: pointer;
-    box-shadow: 0 4px 0 #ca8a04; /* 3D Button effect */
+    clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%); /* Angled edges */
+    transition: 0.2s;
 }
 
-.btn-primary:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #ca8a04;
+.btn-primary:hover { filter: brightness(1.2); transform: scale(1.02); }
+
+/* Navigation Tabs */
+#navbar { display: flex; gap: 5px; margin-bottom: 20px; }
+#navbar button {
+    flex: 1;
+    padding: 8px;
+    background: #2d2d30;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: bold;
 }
+
+/* Dashboard Stats */
+.stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat-box {
+    border: 1px solid #334155;
+    padding: 10px;
+    background: #000;
+}
+
+.stat-box label { font-size: 10px; color: var(--primary); display: block; }
+
+.hidden { display: none !important; }
