@@ -3,61 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Full Throttle | iRacing Sim</title>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Race Sim RPG</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="container">
+        <div id="setup" class="card">
+            <h2 style="margin-bottom: 20px;">Driver Registration</h2>
+            
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="driverName" placeholder="e.g. Dale Earnhardt">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <div style="flex: 1;">
+                    <label>Car #</label>
+                    <input type="number" id="driverNum" placeholder="3">
+                </div>
+                <div style="flex: 2;">
+                    <label>Home State</label>
+                    <input type="text" id="driverState" placeholder="North Carolina">
+                </div>
+            </div>
 
-    <div id="setup-screen">
-        <div class="setup-card">
-            <h1 style="color:#F59E0B; font-size: 38px; margin:0; font-weight:900;">🏁 FULL THROTTLE</h1>
-            <p style="color:#94A3B8; letter-spacing:2px; font-size:12px; margin-bottom:30px;">iRACING CAREER SIMULATOR</p>
-            
-            <input id="player-name" type="text" placeholder="ENTER DRIVER NAME..." maxlength="20">
-            
-            <button class="btn-primary" onclick="handleStartCareer()" style="width:100%; padding:18px;">
-                START CAREER →
+            <button class="btn-primary" style="margin-top: 25px;" onclick="startGame()">
+                Begin Career
             </button>
         </div>
+
+        <div id="app" class="hidden" style="flex-direction: column; height: 100%;">
+            <nav id="navbar">
+                <button onclick="showTab('dashboard')">Dashboard</button>
+                <button onclick="showTab('race')">Next Race</button>
+                <button onclick="showTab('garage')">Garage</button>
+            </nav>
+
+            <div id="main-content"></div>
+        </div>
     </div>
 
-    <div id="game-app" style="display:none;">
-        <div id="header">
-            <div class="header-left">
-                <div id="display-name" style="font-size:22px; font-weight:900; color:#F59E0B; line-height:1;">--</div>
-                <div id="display-tier" style="color:#94A3B8; font-size:12px; margin-top:5px; font-weight:700;">TIER 1</div>
-            </div>
-            <div class="header-right" style="text-align:right;">
-                <div id="display-money" style="font-size:20px; font-weight:700; color:#FFF;">$0</div>
-                <div id="display-wins" style="color:#F59E0B; font-size:12px; font-weight:700;">0 WINS</div>
-            </div>
-        </div>
-
-        <div id="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">DASH</button>
-            <button class="tab-btn" onclick="switchTab('race')">RACE</button>
-            <button class="tab-btn" onclick="switchTab('garage')">SHOP</button>
-            <button class="tab-btn" onclick="switchTab('stats')">STATS</button>
-        </div>
-
-        <div id="game-content">
+    <div id="modal-overlay" class="hidden">
+        <div id="modal-content" class="card">
             </div>
     </div>
 
-<script src="game.js"></script>
-<script src="src/renderer.js"></script>
-<script>
-    // This starts the engine once the files are loaded
-    window.onload = async () => {
-        const hasSave = await loadGame();
-        if (hasSave) {
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('app').style.display = 'flex';
-            showTab('dashboard');
-        }
-    };
-</script>
+    <script src="game.js"></script>
+    
+    <script src="src/renderer.js"></script>
 
+    <script>
+        // When the page finishes loading, check for a save file
+        window.onload = async () => {
+            try {
+                const hasSave = await loadGame();
+                if (hasSave && G) {
+                    // If a save exists, skip registration and go to Dashboard
+                    document.getElementById('setup').classList.add('hidden');
+                    document.getElementById('app').classList.remove('hidden');
+                    document.getElementById('app').style.display = 'flex';
+                    showTab('dashboard');
+                }
+            } catch (e) {
+                console.error("Initialization failed. Check if data.json exists.", e);
+            }
+        };
+    </script>
 </body>
 </html>
