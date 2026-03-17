@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle v1.5.2-SIM — Simulated Career RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:#04060E;color:#E2E8F0;font-size:16px;line-height:1.45}
+input,textarea,select,button{font-family:inherit;font-size:15px}
+input,textarea,select{background:#131822;border:1px solid #64748B;border-radius:6px;color:#F9FAFB;padding:8px 11px}
+input:focus,textarea:focus,select:focus{outline:2px solid #D97706;outline-offset:1px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0B0F1A}
+::-webkit-scrollbar-thumb{background:#64748B;border-radius:3px}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#setup-screen{position:fixed;inset:0;background:#04060E;display:flex;align-items:center;justify-content:center;z-index:999}
+#setup-screen.hidden{display:none}
+#header{background:#080C14;border-bottom:2px solid #1E2433;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-shrink:0}
+.driver-name{font-size:22px;font-weight:900;color:#F59E0B;line-height:1}
+.driver-sub{font-size:12px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:2px}
+.hdr-stats{display:flex;gap:24px;margin-left:auto}
+.hdr-stat .val{font-size:17px;font-weight:800;color:#F9FAFB;line-height:1}
+.hdr-stat .lbl{font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
+#tabs{background:#080C14;border-bottom:2px solid #1E2433;display:flex;gap:2px;padding:6px 24px 0;flex-shrink:0;overflow-x:auto}
+.tab{background:transparent;border:none;border-bottom:3px solid transparent;color:#94A3B8;padding:7px 16px;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:color 0.15s}
+.tab:hover{color:#E2E8F0}
+.tab.active{color:#F59E0B;border-bottom-color:#F59E0B}
+.tab-badge{display:inline-block;background:#D97706;color:#000;font-size:10px;font-weight:900;padding:1px 5px;border-radius:10px;margin-left:5px;vertical-align:middle}
+#content{flex:1;overflow-y:auto;padding:24px}
+.page{max-width:980px;margin:0 auto;animation:fadeIn 0.2s ease}
+.page-title{font-size:26px;font-weight:900;margin-bottom:6px;color:#F9FAFB}
+.page-sub{font-size:15px;color:#94A3B8;margin-bottom:20px}
+.card{background:#0B0F1A;border:1px solid #1E2433;border-radius:10px;padding:18px;margin-bottom:14px}
+.card-title{font-size:14px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat-bar{margin-bottom:10px}
+.stat-bar .sb-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px}
+.stat-bar .sb-lbl{color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em}
+.stat-bar .sb-val{color:#E5E7EB;font-weight:700}
+.stat-bar .sb-track{height:5px;background:#1E2433;border-radius:3px;overflow:hidden}
+.stat-bar .sb-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+.points-pool{background:#060A10;border:1px solid #F59E0B44;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.perk-card{background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.perk-card.selected{border-color:#F59E0B;background:#1a1200}
+.perk-card.locked{opacity:0.35;cursor:not-allowed}
+.upgrade-card{background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:14px;margin-bottom:10px}
+.upgrade-tier{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.upgrade-pip{width:32px;height:32px;border-radius:5px;border:2px solid #1E2433;background:#0B0F1A;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;cursor:pointer;transition:all 0.15s}
+.upgrade-pip.owned{border-color:#10B981;background:#065F46;color:#6EE7B7}
+.upgrade-pip.available{border-color:#F59E0B;background:#78350F22;color:#F59E0B}
+.upgrade-pip.locked{opacity:0.3;cursor:not-allowed}
+.happy-wrap{width:70px}
+.happy-bar{height:5px;background:#1E2433;border-radius:3px;overflow:hidden}
+.happy-fill{height:100%;border-radius:3px;transition:width 0.4s}
+.graph-wrap{background:#060A10;border-radius:8px;padding:14px;overflow-x:auto}
+.text-gold{color:#F59E0B!important}
+.text-green{color:#10B981!important}
+.text-red{color:#EF4444!important}
+.text-purple{color:#8B5CF6!important}
+.text-muted{color:#94A3B8!important}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.flex{display:flex;align-items:center;gap:10px}
+.flex-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:#0B0F1A;border:1px solid #2D3748;border-radius:8px;padding:12px 16px;font-size:14px;font-weight:600;color:#F9FAFB;animation:slideUp 0.3s ease;max-width:320px}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="setup-screen">
+<div class="setup-box">
+<div style="font-size:11px;letter-spacing:0.35em;color:#94A3B8;text-transform:uppercase;margin-bottom:12px">Full Throttle — Simulated Branch</div>
+<div class="setup-logo">FULL<br>THROTTLE</div>
+<div class="sim-badge">&#10022; FULLY SIMULATED</div>
+<div class="setup-card">
+<form id="setup-form">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em">Your Driver Name</div>
+<input id="driver-name-input" type="text" placeholder="Enter your name..." maxlength="28" required autocomplete="off">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:0.1em">Home State</div>
+<select id="driver-state-input" style="width:100%;margin-bottom:16px;font-size:16px;font-weight:600;text-align:center"></select>
+<script>
+(function(){
+const sel=document.getElementById('driver-state-input');
+if(!sel||sel.options.length>0)return;
+const states=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC','International'];
+const names={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.',International:'International'};
+states.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=(names[s]||s);if(s==='NC')o.selected=true;sel.appendChild(o);});
+})();
+</script>
+<div class="setup-hint">No iRacing required. Qualify and race by picking narrative choices. Build your driver RPG-style, upgrade your car between races. All contracts, sponsors, rivals and series progression from the original — fully intact.</div>
+<button type="submit" class="btn btn-lg btn-primary btn-full">START CAREER &#8594;</button>
+</form>
+</div>
+<div style="font-size:13px;color:#94A3B8;margin-top:12px">
+Have a save file? <label style="color:#D97706;cursor:pointer;margin-left:4px">Import Save<input id="import-setup" type="file" accept=".json" style="display:none"></label>
+</div>
+</div>
+</div>
+<div id="app" style="display:none">
+<div id="header"></div>
+<div id="tabs"></div>
+<div id="content"></div>
+</div>
+<div id="modal-overlay" class="hidden"><div id="modal-box"></div></div>
+<div id="toast-container"></div>
+
+<script type="module">
+import { 
+  TIERS, TRACKS, NASCAR_SCHEDULES, ENDURANCE_EVENTS, 
+  RIVAL_ARCHETYPES, RIVAL_NAMES, SPONSORS, 
+  DRIVER_CALLOUTS, UPGRADES, STORY_EVENTS,
+  getRegionalName, initializeRelationships, getRelationship, updateRelationship, getRelationshipDisplay,
+  generateDriverCallout, calculateFanGains, generateSponsorOffer, checkSponsorExpectations,
+  generateRaceBeats, getRealWorldSchedule, generateEnduranceEvent,
+  rand, randF, clamp, uid, pick, fmtMoney, fmtFans, RELATIONSHIP_TYPES
+} from './src/gameData.js';
+import { 
+  startCareer, generateRivals, generateAIField, getCurrentRace, simulateRace, endRace, 
+  endSeason, startSeason, advanceSeason, calculateSalary, getEffectiveStat, getTier,
+  renderDashboard, renderRace, renderStandings, renderTeam, renderDriver, renderCar,
+  renderRivals, renderCareer, showTab, closeModal, closeModalDirect, h, mkBtn, miniStat,
+  saveGame, loadGame, updateHeader
+} from './src/gameLogic.js';
+
+// Initialize game
+let G;
+let activeTab = 'dashboard';
+
+// DOM helpers
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  if (props) Object.assign(el, props);
+  children.forEach(child => el.appendChild(child));
+  return el;
+}
+
+// Tab management
+function showTab(tabName) {
+  activeTab = tabName;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+  
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  
+  switch(tabName) {
+    case 'dashboard': content.appendChild(renderDashboard()); break;
+    case 'race': content.appendChild(renderRace()); break;
+    case 'standings': content.appendChild(renderStandings()); break;
+    case 'team': content.appendChild(renderTeam()); break;
+    case 'driver': content.appendChild(renderDriver()); break;
+    case 'car': content.appendChild(renderCar()); break;
+    case 'rivals': content.appendChild(renderRivals()); break;
+    case 'career': content.appendChild(renderCareer()); break;
+  }
+}
+
+// Start new career
+function startCareer() {
+  const name = document.getElementById('driver-name-input').value.trim();
+  const state = document.getElementById('driver-state-input').value;
+  
+  if (!name) {
+    alert('Please enter your name');
+    return;
+  }
+  
+  G = {
+    name, carNum: '47', homeState: state,
+    tier: 1, season: 1, race: 1,
+    money: 1500, rep: 0, fans: 0,
+    wins: 0, top5s: 0, starts: 0,
+    stats: { speed: 2, racecraft: 2, consistency: 2 },
+    car: { engine: 0, suspension: 0, reliability: 0 },
+    rivals: generateRivals(1),
+    relationships: initializeRelationships([
+      { name }, ...generateRivals(1).map(r => ({ name: r.name, id: uid() }))
+    ]),
+    seasonResults: [],
+    raceHistory: [],
+    storyTriggered: [],
+    notifications: [],
+    log: [`${name} from ${state}. Car #47. First night at the track. This is where it starts.`],
+  };
+  
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+  updateHeader();
+  showTab('dashboard');
+  saveGame();
+}
+
+// Auto-save
+setInterval(saveGame, 30000); // Auto-save every 30 seconds
+
+// Initial load
+window.addEventListener('DOMContentLoaded', () => {
+  loadGame();
+  if (G) {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    updateHeader();
+    showTab('dashboard');
+  }
+});
+</script>
+</body>
+</html>

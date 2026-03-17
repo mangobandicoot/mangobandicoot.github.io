@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:#04060E;color:#E2E8F0;font-size:16px;line-height:1.45}
+input,textarea,select,button{font-family:inherit;font-size:15px}
+input,select{background:#131822;border:1px solid #64748B;border-radius:6px;color:#F9FAFB;padding:8px 11px;width:100%}
+input:focus,select:focus{outline:2px solid #D97706;outline-offset:1px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0B0F1A}::-webkit-scrollbar-thumb{background:#64748B;border-radius:3px}
+
+/* Layout */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#header{background:#080C14;border-bottom:2px solid #1E2433;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+#content{flex:1;overflow-y:auto;padding:20px;max-width:860px;margin:0 auto;width:100%}
+#tabs{display:flex;gap:4px;padding:10px 20px 0;background:#080C14;border-bottom:1px solid #1E2433;overflow-x:auto;flex-shrink:0}
+.tab{padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;font-weight:700;font-size:14px;color:#64748B;white-space:nowrap;border:none;background:none}
+.tab.active{background:#0D1117;color:#F59E0B;border-bottom:2px solid #F59E0B}
+.tab:hover:not(.active){color:#94A3B8}
+
+/* Cards */
+.card{background:#0D1117;border:1px solid #1E2433;border-radius:10px;padding:18px;margin-bottom:14px}
+.card-title{font-size:12px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.page-title{font-size:28px;font-weight:900;color:#F9FAFB;margin-bottom:4px}
+.page-sub{font-size:14px;color:#94A3B8;margin-bottom:18px}
+
+/* Buttons */
+button{border:none;border-radius:6px;cursor:pointer;font-weight:700;transition:filter 0.15s}
+button:not(:disabled):hover{filter:brightness(1.12)}
+button:disabled{opacity:0.35;cursor:not-allowed}
+.btn-primary{background:#D97706;color:#fff;padding:10px 20px}
+.btn-secondary{background:#1E2433;color:#E2E8F0;padding:10px 20px}
+.btn-success{background:#065F46;color:#6EE7B7;padding:10px 20px}
+.btn-danger{background:#7F1D1D;color:#FCA5A5;padding:10px 20px}
+.btn-ghost{background:transparent;color:#94A3B8;padding:10px 20px;border:1px solid #1E2433}
+.btn-lg{font-size:18px;padding:14px 32px}
+.btn-sm{font-size:13px;padding:6px 14px}
+.btn-xl{font-size:22px;padding:18px 48px;border-radius:10px;letter-spacing:0.05em}
+
+/* Stat bars */
+.stat-bar-wrap{margin-bottom:10px}
+.stat-bar-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}
+.stat-bar-track{height:8px;background:#1E2433;border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:4px;transition:width 0.4s}
+
+/* Race beat cards */
+.beat-card{background:#060A10;border:1px solid #1E2433;border-radius:10px;padding:16px;margin-bottom:12px;animation:fadeIn 0.3s ease}
+.beat-card.good{border-color:#10B98144}
+.beat-card.bad{border-color:#EF444444}
+.beat-card.neutral{border-color:#F59E0B44}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.beat-icon{font-size:28px;margin-bottom:8px}
+.beat-title{font-size:16px;font-weight:800;color:#F9FAFB;margin-bottom:4px}
+.beat-desc{font-size:14px;color:#94A3B8;line-height:1.55;margin-bottom:12px}
+.beat-choices{display:flex;gap:8px;flex-wrap:wrap}
+.choice-btn{background:#131822;border:1px solid #1E2433;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:#E2E8F0;font-family:inherit;font-weight:600;flex:1;min-width:140px;text-align:left;transition:all 0.15s}
+.choice-btn:hover{border-color:#F59E0B;color:#F59E0B;background:#131822}
+.choice-btn .choice-hint{font-size:11px;color:#64748B;margin-top:3px;font-weight:400}
+
+/* Result screen */
+.result-pos{font-size:72px;font-weight:900;line-height:1;text-align:center}
+.result-track{font-size:18px;color:#94A3B8;text-align:center;margin-bottom:20px}
+
+/* Rival card */
+.rival-card{display:flex;gap:12px;align-items:center;padding:10px;background:#060A10;border-radius:8px;border:1px solid #1E2433;margin-bottom:8px}
+.rival-avatar{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:900}
+
+/* Setup screen */
+#setup{position:fixed;inset:0;background:#04060E;display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+#setup.hidden{display:none}
+.setup-card{background:#0D1117;border:1px solid #1E2433;border-radius:14px;padding:32px;max-width:480px;width:100%}
+
+/* Upgrade card */
+.upgrade-card{background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:14px;margin-bottom:10px}
+.upgrade-pips{display:flex;gap:4px;margin-top:6px}
+.pip{width:18px;height:8px;border-radius:2px;background:#1E2433}
+.pip.filled{background:#F59E0B}
+
+/* Modal */
+#modal-overlay{position:fixed;inset:0;background:#000000bb;display:flex;align-items:center;justify-content:center;z-index:500;padding:20px}
+#modal-overlay.hidden{display:none}
+#modal-box{background:#0D1117;border:1px solid #1E2433;border-radius:12px;padding:28px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:22px;font-weight:900;color:#F9FAFB;margin-bottom:8px}
+.modal-sub{font-size:14px;color:#94A3B8;margin-bottom:20px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+
+/* Header stats */
+.hstat{text-align:center}
+.hstat-val{font-size:18px;font-weight:900;color:#F59E0B}
+.hstat-lbl{font-size:11px;color:#64748B;text-transform:uppercase;letter-spacing:0.1em}
+
+/* Progress arc */
+.tier-badge{display:inline-flex;align-items:center;gap:6px;background:#1E2433;border-radius:20px;padding:4px 12px;font-size:13px;font-weight:700;color:#F59E0B}
+
+/* Notification toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#0D1117;border:1px solid #1E2433;border-radius:10px;padding:14px 18px;max-width:320px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+#toast.show{opacity:1}
+
+/* Grid helpers */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mini-stat{background:#060A10;border-radius:7px;padding:10px;border:1px solid #1E2433;text-align:center}
+.mini-stat-val{font-size:20px;font-weight:900}
+.mini-stat-lbl{font-size:11px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+
+/* Podium animation */
+@keyframes popIn{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.pop-in{animation:popIn 0.5s ease forwards}
+
+/* Position color */
+.pos-1{color:#F59E0B}.pos-2{color:#9CA3AF}.pos-3{color:#CD7F32}.pos-good{color:#10B981}.pos-bad{color:#EF4444}
+</style>
+</head>
+<body>
+
+<!-- Setup Screen -->
+<div id="setup">
+  <div class="setup-card">
+    <div style="font-size:32px;font-weight:900;color:#F59E0B;margin-bottom:4px">🏁 FULL THROTTLE</div>
+    <div style="font-size:14px;color:#64748B;margin-bottom:28px;letter-spacing:0.15em">RACING CAREER RPG</div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Driver Name</label>
+      <input id="setup-name" type="text" placeholder="e.g. Jake Thunder" maxlength="24">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Car Number</label>
+      <input id="setup-num" type="text" placeholder="e.g. 47" maxlength="3" style="width:100px">
+    </div>
+    <div style="margin-bottom:24px">
+      <label style="font-size:13px;color:#94A3B8;display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em">Home Region</label>
+      <select id="setup-state">
+        <optgroup label="United States">
+          <option value="AL">Alabama</option><option value="AK">Alaska</option>
+          <option value="AZ">Arizona</option><option value="AR">Arkansas</option>
+          <option value="CA">California</option><option value="CO">Colorado</option>
+          <option value="CT">Connecticut</option><option value="DE">Delaware</option>
+          <option value="FL">Florida</option><option value="GA">Georgia</option>
+          <option value="HI">Hawaii</option><option value="ID">Idaho</option>
+          <option value="IL">Illinois</option><option value="IN">Indiana</option>
+          <option value="IA">Iowa</option><option value="KS">Kansas</option>
+          <option value="KY">Kentucky</option><option value="LA">Louisiana</option>
+          <option value="ME">Maine</option><option value="MD">Maryland</option>
+          <option value="MA">Massachusetts</option><option value="MI">Michigan</option>
+          <option value="MN">Minnesota</option><option value="MS">Mississippi</option>
+          <option value="MO">Missouri</option><option value="MT">Montana</option>
+          <option value="NE">Nebraska</option><option value="NV">Nevada</option>
+          <option value="NH">New Hampshire</option><option value="NJ">New Jersey</option>
+          <option value="NM">New Mexico</option><option value="NY">New York</option>
+          <option value="NC">North Carolina</option><option value="ND">North Dakota</option>
+          <option value="OH">Ohio</option><option value="OK">Oklahoma</option>
+          <option value="OR">Oregon</option><option value="PA">Pennsylvania</option>
+          <option value="RI">Rhode Island</option><option value="SC">South Carolina</option>
+          <option value="SD">South Dakota</option><option value="TN">Tennessee</option>
+          <option value="TX">Texas</option><option value="UT">Utah</option>
+          <option value="VT">Vermont</option><option value="VA">Virginia</option>
+          <option value="WA">Washington</option><option value="WV">West Virginia</option>
+          <option value="WI">Wisconsin</option><option value="WY">Wyoming</option>
+        </optgroup>
+        <optgroup label="International">
+          <option value="EU">Europe</option>
+          <option value="AF">Africa</option>
+          <option value="AS">Asia</option>
+          <option value="SA">South America</option>
+          <option value="CA">Central America</option>
+          <option value="AU">Australia</option>
+        </optgroup>
+      </select>
+    </div>
+    <button class="btn-primary btn-lg" style="width:100%" onclick="startCareer()">Start Career →</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none">
+  <div id="header">
+    <div>
+      <div style="font-size:20px;font-weight:900;color:#F59E0B" id="hdr-name">—</div>
+      <div id="hdr-tier" class="tier-badge" style="margin-top:4px">Rookie</div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-money">$0</div><div class="hstat-lbl">Bank</div></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-rep">0</div><div class="hstat-lbl">Rep</div></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-wins">0</div><div class="hstat-lbl">Wins</div></div>
+    <div class="hstat"><div class="hstat-val" id="hdr-fans">0</div><div class="hstat-lbl">Fans</div></div>
+  </div>
+  <div id="tabs">
+    <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="showTab('race')">Race</button>
+    <button class="tab" onclick="showTab('standings')">Standings</button>
+    <button class="tab" onclick="showTab('team')">Team</button>
+    <button class="tab" onclick="showTab('driver')">Driver</button>
+    <button class="tab" onclick="showTab('car')">Car</button>
+    <button class="tab" onclick="showTab('rivals')">Rivals</button>
+    <button class="tab" onclick="showTab('career')">Career</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay" class="hidden" onclick="closeModal(event)">
+  <div id="modal-box"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script type="module">
+import { 
+  TIERS, TRACKS, NASCAR_SCHEDULES, ENDURANCE_EVENTS, 
+  RIVAL_ARCHETYPES, RIVAL_NAMES, SPONSORS, 
+  DRIVER_CALLOUTS, UPGRADES, STORY_EVENTS,
+  getRegionalName, initializeRelationships, getRelationship, updateRelationship, getRelationshipDisplay,
+  generateDriverCallout, calculateFanGains, generateSponsorOffer, checkSponsorExpectations,
+  generateRaceBeats, getRealWorldSchedule, generateEnduranceEvent,
+  rand, randF, clamp, uid, pick, fmtMoney, fmtFans, RELATIONSHIP_TYPES
+} from './src/gameData.js';
+import { 
+  startCareer, generateRivals, generateAIField, getCurrentRace, simulateRace, endRace, 
+  endSeason, startSeason, advanceSeason, calculateSalary, getEffectiveStat, getTier,
+  renderDashboard, renderRace, renderStandings, renderTeam, renderDriver, renderCar,
+  renderRivals, renderCareer, showTab, closeModal, closeModalDirect, h, mkBtn, miniStat,
+  saveGame, loadGame, updateHeader
+} from './src/gameEngine.js';
+
+// Initialize game
+let G;
+let activeTab = 'dashboard';
+
+// DOM helpers
+function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  if (props) Object.assign(el, props);
+  children.forEach(child => el.appendChild(child));
+  return el;
+}
+
+// Tab management
+function showTab(tabName) {
+  activeTab = tabName;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+  
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  
+  switch(tabName) {
+    case 'dashboard': content.appendChild(renderDashboard()); break;
+    case 'race': content.appendChild(renderRace()); break;
+    case 'standings': content.appendChild(renderStandings()); break;
+    case 'team': content.appendChild(renderTeam()); break;
+    case 'driver': content.appendChild(renderDriver()); break;
+    case 'car': content.appendChild(renderCar()); break;
+    case 'rivals': content.appendChild(renderRivals()); break;
+    case 'career': content.appendChild(renderCareer()); break;
+  }
+}
+
+// Start new career
+function startCareer() {
+  const name = document.getElementById('setup-name').value.trim();
+  const carNum = document.getElementById('setup-num').value.trim();
+  const state = document.getElementById('setup-state').value;
+  
+  if (!name || !carNum) {
+    alert('Please enter your name and car number');
+    return;
+  }
+  
+  G = {
+    name, carNum, homeState: state,
+    tier: 1, season: 1, race: 1,
+    money: 1500, rep: 0, fans: 0,
+    wins: 0, top5s: 0, starts: 0,
+    stats: { speed: 2, racecraft: 2, consistency: 2 },
+    car: { engine: 0, suspension: 0, reliability: 0 },
+    rivals: generateRivals(1),
+    relationships: initializeRelationships([
+      { name }, ...generateRivals(1).map(r => ({ name: r.name, id: uid() }))
+    ]),
+    seasonResults: [],
+    raceHistory: [],
+    storyTriggered: [],
+    notifications: [],
+    log: [`${name} from ${state}. Car #${carNum}. First night at the track. This is where it starts.`],
+  };
+  
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+  updateHeader();
+  showTab('dashboard');
+  saveGame();
+}
+
+// Auto-save
+setInterval(saveGame, 30000); // Auto-save every 30 seconds
+
+// Initial load
+window.addEventListener('DOMContentLoaded', () => {
+  loadGame();
+  if (G) {
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    updateHeader();
+    showTab('dashboard');
+  }
+});
+</script>
+</body>
+</html>
