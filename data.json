@@ -1,126 +1,475 @@
+{
+  "TIERS": [
+    { "id": 0, "name": "Discovery Series", "tracks": ["Lanier", "Thompson", "Oxford Plains", "South Boston"], "reqFans": 0 },
+    { "id": 1, "name": "Regional Pro", "tracks": ["Martinsville", "Bristol", "Stafford", "Five Flags"], "reqFans": 5000 },
+    { "id": 2, "name": "National Tour", "tracks": ["Daytona", "Talladega", "Charlotte", "Darlington"], "reqFans": 25000 },
+    { "id": 3, "name": "World Championship", "tracks": ["Monaco", "Spa", "Monza", "Le Mans"], "reqFans": 100000 }
+  ],
+  "TRACKS": [
+    { "name": "Lanier", "type": "Short Track", "difficulty": 2 },
+    { "name": "Thompson", "type": "Short Track", "difficulty": 3 },
+    { "name": "Oxford Plains", "type": "Short Track", "difficulty": 2 },
+    { "name": "South Boston", "type": "Short Track", "difficulty": 4 },
+    { "name": "Martinsville", "type": "Paperclip", "difficulty": 5 },
+    { "name": "Bristol", "type": "High Banked", "difficulty": 6 },
+    { "name": "Stafford", "type": "Half Mile", "difficulty": 4 },
+    { "name": "Five Flags", "type": "Short Track", "difficulty": 5 },
+    { "name": "Daytona", "type": "Superspeedway", "difficulty": 4 },
+    { "name": "Talladega", "type": "Superspeedway", "difficulty": 4 },
+    { "name": "Charlotte", "type": "Intermediate", "difficulty": 5 },
+    { "name": "Darlington", "type": "Egg Shaped", "difficulty": 8 },
+    { "name": "Monaco", "type": "Street Circuit", "difficulty": 9 },
+    { "name": "Spa", "type": "Road Course", "difficulty": 7 },
+    { "name": "Monza", "type": "Temple of Speed", "difficulty": 6 },
+    { "name": "Le Mans", "type": "Endurance", "difficulty": 8 }
+  ],
+  "TEAMS": [
+    { "name": "Apex Motorsports", "prestige": 80, "payout": 0.60 },
+    { "name": "Blue Ridge Racing", "prestige": 40, "payout": 0.85 },
+    { "name": "Velocity Engineering", "prestige": 95, "payout": 0.40 },
+    { "name": "Dirt-to-Daytona Inc", "prestige": 20, "payout": 0.95 }
+  ],
+  "BEAT_EVENTS": [
     {
-      title: "Fuel Save Mode",
-      desc: "You're running low on fuel. If you push, you might run out before the white flag.",
-      stat: "consistency",
-      choices: [
-        { text: "Lift and Coast", threshold: 10, onSuccess: { move: 2, rep: 0 }, onFailure: { move: 5, rep: 0 } },
-        { text: "Full Rich Mixture", threshold: 17, onSuccess: { move: -4, rep: 2 }, onFailure: { move: 25, rep: -5 } }
+      "title": "The Big One!",
+      "desc": "A massive wreck is unfolding ahead of you! Smoke and debris everywhere.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Aim for the grass", "threshold": 14, "onSuccess": { "move": -5, "rep": 2 }, "onFailure": { "move": 15, "rep": 0 } },
+        { "text": "Check up and stay high", "threshold": 10, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 8, "rep": 0 } }
       ]
     },
     {
-      title: "The High Side",
-      desc: "The bottom lane is clogged. There's a lane open right against the wall.",
-      stat: "speed",
-      choices: [
-        { text: "Rip the Fence", threshold: 15, onSuccess: { move: -5, rep: 8 }, onFailure: { move: 6, rep: -2 } },
-        { text: "Stay Patient", threshold: 9, onSuccess: { move: 0, rep: 1 }, onFailure: { move: 2, rep: 0 } }
+      "title": "Rival Door-to-Door",
+      "desc": "Your rival is on your outside. They aren't giving an inch.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Squeeze them high", "threshold": 15, "onSuccess": { "move": -2, "rep": -10 }, "onFailure": { "move": 4, "rep": -5 } },
+        { "text": "Give them room", "threshold": 8, "onSuccess": { "move": 1, "rep": 5 }, "onFailure": { "move": 2, "rep": 2 } }
       ]
     },
     {
-      title: "Teammate in Trouble",
-      desc: "Your teammate is sliding up the track. If you don't lift, you'll both wreck.",
-      stat: "rep",
-      choices: [
-        { text: "Lift to Save Him", threshold: 7, onSuccess: { move: 3, rep: 15 }, onFailure: { move: 5, rep: 5 } },
-        { text: "Floor It!", threshold: 14, onSuccess: { move: -2, rep: -20 }, onFailure: { move: 12, rep: -30 } }
+      "title": "Fuel Save Mode",
+      "desc": "You're running low on fuel. If you push, you might run out before the white flag.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Lift and Coast", "threshold": 10, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 5, "rep": 0 } },
+        { "text": "Full Rich Mixture", "threshold": 17, "onSuccess": { "move": -4, "rep": 2 }, "onFailure": { "move": 25, "rep": -5 } }
       ]
     },
     {
-      title: "Brake Fade",
-      desc: "The pedal is going to the floor into the heavy braking zone.",
-      stat: "consistency",
-      choices: [
-        { text: "Pump the Brakes", threshold: 13, onSuccess: { move: 1, rep: 0 }, onFailure: { move: 10, rep: -5 } },
-        { text: "Use the Gearbox", threshold: 11, onSuccess: { move: 3, rep: 1 }, onFailure: { move: 15, rep: -10 } }
+      "title": "The Chrome Horn",
+      "desc": "A rival is blocking you aggressively. You can smell their exhaust.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Dump them", "threshold": 14, "onSuccess": { "move": -2, "rep": -25 }, "onFailure": { "move": 5, "rep": -30 } },
+        { "text": "Wait for a clean gap", "threshold": 10, "onSuccess": { "move": -1, "rep": 5 }, "onFailure": { "move": 2, "rep": 0 } }
       ]
     },
     {
-      title: "Spotter Gone Silent",
-      desc: "Your radio is cutting out. You're flying blind in traffic.",
-      stat: "craft",
-      choices: [
-        { text: "Trust your mirrors", threshold: 14, onSuccess: { move: -1, rep: 5 }, onFailure: { move: 8, rep: -5 } },
-        { text: "Hold your line", threshold: 9, onSuccess: { move: 2, rep: 0 }, onFailure: { move: 4, rep: 0 } }
+      "title": "Sudden Rain",
+      "desc": "The clouds opened up on the backstretch. The track is getting greasy.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Stay out on slicks", "threshold": 19, "onSuccess": { "move": -12, "rep": 10 }, "onFailure": { "move": 25, "rep": -5 } },
+        { "text": "Pit for wets", "threshold": 7, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 5, "rep": 0 } }
       ]
     },
     {
-      title: "Debris on Grille",
-      desc: "A piece of paper or plastic is stuck to the front. Temps are rising!",
-      stat: "speed",
-      choices: [
-        { text: "Duck behind a car", threshold: 12, onSuccess: { move: 1, rep: 0 }, onFailure: { move: 5, rep: 0 } },
-        { text: "Hope it blows off", threshold: 18, onSuccess: { move: -1, rep: 0 }, onFailure: { move: 30, rep: -10 } }
-      ]
-    },
-    {
-      title: "Dirty Air",
-      desc: "You're tucked under the rear spoiler of a rival. The front end is washing out.",
-      stat: "craft",
-      choices: [
-        { text: "Diamond the corner", threshold: 13, onSuccess: { move: -3, rep: 2 }, onFailure: { move: 2, rep: 0 } },
-        { text: "Cross them over", threshold: 16, onSuccess: { move: -5, rep: 5 }, onFailure: { move: 3, rep: 0 } }
-      ]
-    },
-    {
-      title: "GWC Chaos",
-      desc: "Green-White-Checkered! It's a two-lap shootout for the win.",
-      stat: "speed",
-      choices: [
-        { text: "Four Wide Entry", threshold: 18, onSuccess: { move: -10, rep: 10 }, onFailure: { move: 20, rep: -10 } },
-        { text: "Follow the leader", threshold: 10, onSuccess: { move: -1, rep: 2 }, onFailure: { move: 2, rep: 0 } }
-      ]
-    },
-    {
-      title: "Loose Wheel!",
-      desc: "The vibration is violent. You have to decide: Pit or Pray.",
-      stat: "consistency",
-      choices: [
-        { text: "Bury the fear", threshold: 20, onSuccess: { move: -2, rep: 15 }, onFailure: { move: 40, rep: -20 } },
-        { text: "Safe Pit Stop", threshold: 5, onSuccess: { move: 15, rep: 0 }, onFailure: { move: 20, rep: 0 } }
+      "title": "The Slingshot",
+      "desc": "You've timed the draft perfectly. You can pull out now or wait.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Go for the pass", "threshold": 13, "onSuccess": { "move": -4, "rep": 2 }, "onFailure": { "move": 1, "rep": 0 } },
+        { "text": "Push the car ahead", "threshold": 10, "onSuccess": { "move": -2, "rep": 5 }, "onFailure": { "move": 0, "rep": 2 } }
       ]
     }
     {
-      title: "The Chrome Horn",
-      desc: "A rival is blocking you aggressively. You can smell their exhaust.",
-      stat: "craft",
-      choices: [
-        { text: "Dump them", threshold: 14, onSuccess: { move: -2, rep: -25 }, onFailure: { move: 5, rep: -30 } },
-        { text: "Wait for a clean gap", threshold: 10, onSuccess: { move: -1, rep: 5 }, onFailure: { move: 2, rep: 0 } }
+      "title": "Pit Road Mistake",
+      "desc": "Your crew dropped a lug nut! You're sitting stationary while the field flys by.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Scold the crew", "threshold": 15, "onSuccess": { "move": 2, "rep": -15 }, "onFailure": { "move": 8, "rep": -20 } },
+        { "text": "Encourage them", "threshold": 10, "onSuccess": { "move": 5, "rep": 10 }, "onFailure": { "move": 10, "rep": 5 } }
       ]
     },
     {
-      title: "Sponsor at the Track",
-      desc: "The CEO of your main sponsor is watching from the pit box. Don't embarrass them.",
-      stat: "rep",
-      choices: [
-        { text: "Take big risks", threshold: 16, onSuccess: { move: -5, rep: 20 }, onFailure: { move: 10, rep: -15 } },
-        { text: "Solid, safe run", threshold: 8, onSuccess: { move: 0, rep: 5 }, onFailure: { move: 2, rep: 2 } }
+      "title": "Lapped Traffic",
+      "desc": "A slower car is blocking the preferred groove and refusing to move over.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Bumper to the back", "threshold": 11, "onSuccess": { "move": -2, "rep": -5 }, "onFailure": { "move": 0, "rep": -10 } },
+        { "text": "Search for a gap", "threshold": 15, "onSuccess": { "move": -3, "rep": 2 }, "onFailure": { "move": 2, "rep": 0 } }
       ]
     },
     {
-      title: "Tire Delamination",
-      desc: "The right front is starting to vibrate. It's going to blow any second.",
-      stat: "consistency",
-      choices: [
-        { text: "Nurse it home", threshold: 12, onSuccess: { move: 4, rep: 2 }, onFailure: { move: 35, rep: -5 } },
-        { text: "Pit now", threshold: 5, onSuccess: { move: 15, rep: 0 }, onFailure: { move: 20, rep: 0 } }
+      "title": "Pitting Under Yellow",
+      "desc": "The caution is out. Your tires are shot, but pitting will cost you track position.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Four fresh tires", "threshold": 5, "onSuccess": { "move": 10, "rep": 0 }, "onFailure": { "move": 15, "rep": 0 } },
+        { "text": "Stay out (Gambit)", "threshold": 18, "onSuccess": { "move": -8, "rep": 5 }, "onFailure": { "move": 20, "rep": -2 } }
       ]
     },
     {
-      title: "Blue Flag Ignored",
-      desc: "A lapped car is fighting you like it's for the lead.",
-      stat: "craft",
-      choices: [
-        { text: "Aggressive crossover", threshold: 15, onSuccess: { move: -3, rep: 5 }, onFailure: { move: 2, rep: 0 } },
-        { text: "Radio the officials", threshold: 10, onSuccess: { move: 0, rep: 2 }, onFailure: { move: 1, rep: 0 } }
+      "title": "Late Restart",
+      "desc": "Green-white-checker! The field is fanning out five-wide into the tri-oval.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Dive-bomb Turn 1", "threshold": 16, "onSuccess": { "move": -6, "rep": -5 }, "onFailure": { "move": 10, "rep": -10 } },
+        { "text": "Defend your lane", "threshold": 11, "onSuccess": { "move": -1, "rep": 2 }, "onFailure": { "move": 3, "rep": 0 } }
       ]
     },
     {
-      title: "Last Lap Pass",
-      desc: "You're side-by-side coming out of the final turn!",
-      stat: "speed",
-      choices: [
-        { text: "Stay in the gas", threshold: 17, onSuccess: { move: -1, rep: 10 }, onFailure: { move: 1, rep: 0 } },
-        { text: "Side-draft them", threshold: 13, onSuccess: { move: -1, rep: 5 }, onFailure: { move: 0, rep: 0 } }
+      "title": "Oil on Track",
+      "desc": "The leader just blew an engine. There is a massive streak of oil right in your line!",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Aim for the grass", "threshold": 12, "onSuccess": { "move": 0, "rep": 1 }, "onFailure": { "move": 8, "rep": -2 } },
+        { "text": "Stay on the asphalt", "threshold": 16, "onSuccess": { "move": -2, "rep": 0 }, "onFailure": { "move": 12, "rep": -5 } }
       ]
     }
+    {
+      "title": "The High Side",
+      "desc": "The bottom lane is clogged. There's a lane open right against the outside wall.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Rip the Fence", "threshold": 15, "onSuccess": { "move": -5, "rep": 8 }, "onFailure": { "move": 6, "rep": -2 } },
+        { "text": "Stay Patient", "threshold": 9, "onSuccess": { "move": 0, "rep": 1 }, "onFailure": { "move": 2, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Teammate in Trouble",
+      "desc": "Your teammate is sliding up the track. If you don't lift, you're both going around.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Lift to Save Him", "threshold": 7, "onSuccess": { "move": 3, "rep": 15 }, "onFailure": { "move": 5, "rep": 5 } },
+        { "text": "Floor It!", "threshold": 14, "onSuccess": { "move": -2, "rep": -20 }, "onFailure": { "move": 12, "rep": -30 } }
+      ]
+    },
+    {
+      "title": "Brake Fade",
+      "desc": "The pedal is going to the floor. You're heading into a heavy braking zone at 150mph.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Pump the Brakes", "threshold": 13, "onSuccess": { "move": 1, "rep": 0 }, "onFailure": { "move": 10, "rep": -5 } },
+        { "text": "Use the Gearbox", "threshold": 11, "onSuccess": { "move": 3, "rep": 1 }, "onFailure": { "move": 15, "rep": -10 } }
+      ]
+    },
+    {
+      "title": "Spotter Gone Silent",
+      "desc": "Your radio is cutting out. You can't hear your spotter's 'Clear' or 'Inside' calls.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Trust your mirrors", "threshold": 14, "onSuccess": { "move": -1, "rep": 5 }, "onFailure": { "move": 8, "rep": -5 } },
+        { "text": "Hold your line", "threshold": 9, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 4, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Debris on Grille",
+      "desc": "A piece of plastic is stuck to the front. Water temps are skyrocketing!",
+      "stat": "speed",
+      "choices": [
+        { "text": "Duck behind a car", "threshold": 12, "onSuccess": { "move": 1, "rep": 0 }, "onFailure": { "move": 5, "rep": 0 } },
+        { "text": "Hope it blows off", "threshold": 18, "onSuccess": { "move": -1, "rep": 0 }, "onFailure": { "move": 30, "rep": -10 } }
+      ]
+    }
+    {
+      "title": "Loose Wheel!",
+      "desc": "The vibration is violent and getting worse. If the wheel comes off, you're done. Do you pit or pray?",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Bury the fear (Stay out)", "threshold": 20, "onSuccess": { "move": -2, "rep": 15 }, "onFailure": { "move": 40, "rep": -20 } },
+        { "text": "Safe Pit Stop", "threshold": 5, "onSuccess": { "move": 15, "rep": 0 }, "onFailure": { "move": 20, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Dirty Air",
+      "desc": "You're tucked under the rear spoiler of a rival. The front end is washing out in the corners.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Diamond the corner", "threshold": 13, "onSuccess": { "move": -3, "rep": 2 }, "onFailure": { "move": 2, "rep": 0 } },
+        { "text": "Cross them over", "threshold": 16, "onSuccess": { "move": -5, "rep": 5 }, "onFailure": { "move": 3, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "GWC Chaos",
+      "desc": "Green-White-Checkered! It's a two-lap shootout for the win. No one is lifting.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Four Wide Entry", "threshold": 18, "onSuccess": { "move": -10, "rep": 10 }, "onFailure": { "move": 20, "rep": -10 } },
+        { "text": "Follow the leader", "threshold": 10, "onSuccess": { "move": -1, "rep": 2 }, "onFailure": { "move": 2, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Sponsor at the Track",
+      "desc": "The CEO of your main sponsor is watching from the pit box. The pressure is on.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Take big risks", "threshold": 16, "onSuccess": { "move": -5, "rep": 20 }, "onFailure": { "move": 10, "rep": -15 } },
+        { "text": "Solid, safe run", "threshold": 8, "onSuccess": { "move": 0, "rep": 5 }, "onFailure": { "move": 2, "rep": 2 } }
+      ]
+    },
+    {
+      "title": "Tire Delamination",
+      "desc": "The right front tire is starting to vibrate. It's going to blow any second.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Nurse it home", "threshold": 12, "onSuccess": { "move": 4, "rep": 2 }, "onFailure": { "move": 35, "rep": -5 } },
+        { "text": "Pit now", "threshold": 5, "onSuccess": { "move": 15, "rep": 0 }, "onFailure": { "move": 20, "rep": 0 } }
+      ]
+    }
+    {
+      "title": "Blue Flag Ignored",
+      "desc": "A lapped car is fighting you like it's for the lead. They are making it impossible to pass.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Aggressive crossover", "threshold": 15, "onSuccess": { "move": -3, "rep": 5 }, "onFailure": { "move": 2, "rep": 0 } },
+        { "text": "Radio the officials", "threshold": 10, "onSuccess": { "move": 0, "rep": 2 }, "onFailure": { "move": 1, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Last Lap Pass",
+      "desc": "You're side-by-side coming out of the final turn! It's a drag race to the line.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Stay in the gas", "threshold": 17, "onSuccess": { "move": -1, "rep": 10 }, "onFailure": { "move": 1, "rep": 0 } },
+        { "text": "Side-draft them", "threshold": 13, "onSuccess": { "move": -1, "rep": 5 }, "onFailure": { "move": 0, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Radio Interference",
+      "desc": "Static is drowning out your crew chief. You missed the strategy call!",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Guess the strategy", "threshold": 15, "onSuccess": { "move": -2, "rep": 2 }, "onFailure": { "move": 10, "rep": 0 } },
+        { "text": "Stay the course", "threshold": 8, "onSuccess": { "move": 1, "rep": 0 }, "onFailure": { "move": 3, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Coolant Leak",
+      "desc": "Steam is coming from the hood. The engine is losing power.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Short shift to save it", "threshold": 12, "onSuccess": { "move": 2, "rep": 5 }, "onFailure": { "move": 25, "rep": 0 } },
+        { "text": "Keep pinning it", "threshold": 19, "onSuccess": { "move": -1, "rep": 2 }, "onFailure": { "move": 40, "rep": -10 } }
+      ]
+    },
+    {
+      "title": "The Restart Jump",
+      "desc": "You think the leader is going to fire early. Do you go with them?",
+      "stat": "craft",
+      "choices": [
+        { "text": "Jump the start", "threshold": 16, "onSuccess": { "move": -4, "rep": 5 }, "onFailure": { "move": 5, "rep": -15 } },
+        { "text": "Wait for the green", "threshold": 9, "onSuccess": { "move": 0, "rep": 0 }, "onFailure": { "move": 2, "rep": 0 } }
+      ]
+    }
+    {
+      "title": "Post-Race Confrontation",
+      "desc": "A rival you leaned on earlier is waiting for you at your pit stall. The cameras are rolling.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Apologize sincerely", "threshold": 10, "onSuccess": { "move": 0, "rep": 15 }, "onFailure": { "move": 0, "rep": 5 } },
+        { "text": "Double down/Argue", "threshold": 16, "onSuccess": { "move": 0, "rep": -20 }, "onFailure": { "move": 0, "rep": -40 } }
+      ]
+    },
+    {
+      "title": "Fan Meet & Greet",
+      "desc": "You're exhausted after the heat race, but a young fan wants an autograph before the main event.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Stop and sign", "threshold": 8, "onSuccess": { "move": 1, "rep": 25 }, "onFailure": { "move": 2, "rep": 10 } },
+        { "text": "Head to the trailer", "threshold": 5, "onSuccess": { "move": -1, "rep": -15 }, "onFailure": { "move": 0, "rep": -20 } }
+      ]
+    },
+    {
+      "title": "The Illegal Adjustment",
+      "desc": "Your crew chief whispers that they can 'tweak' the spoiler for more downforce, but inspection is strict.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Take the 'gray area' gain", "threshold": 18, "onSuccess": { "move": -8, "rep": 0 }, "onFailure": { "move": 25, "rep": -50 } },
+        { "text": "Play it straight", "threshold": 5, "onSuccess": { "move": 0, "rep": 10 }, "onFailure": { "move": 2, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Bumping the Leader",
+      "desc": "You're faster, but they're blocking both lanes. A 'bump and run' is the only way by.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Execute the bump", "threshold": 13, "onSuccess": { "move": -1, "rep": -10 }, "onFailure": { "move": 5, "rep": -25 } },
+        { "text": "Wait for a mistake", "threshold": 17, "onSuccess": { "move": -1, "rep": 5 }, "onFailure": { "move": 3, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Radio Meltdown",
+      "desc": "You're frustrated with the car's handling and start shouting at your team over the open radio.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Apologize mid-race", "threshold": 12, "onSuccess": { "move": 0, "rep": 5 }, "onFailure": { "move": 2, "rep": -5 } },
+        { "text": "Keep venting", "threshold": 15, "onSuccess": { "move": -1, "rep": -20 }, "onFailure": { "move": 5, "rep": -30 } }
+      ]
+    }
+    {
+      "title": "Blinding Sun",
+      "desc": "Coming off Turn 4, the setting sun is hitting your windshield perfectly. You can't see the flag stand.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Drive by memory", "threshold": 15, "onSuccess": { "move": -1, "rep": 2 }, "onFailure": { "move": 12, "rep": 0 } },
+        { "text": "Lift and play it safe", "threshold": 9, "onSuccess": { "move": 3, "rep": 0 }, "onFailure": { "move": 5, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Vibration in the Seat",
+      "desc": "Something is loose in the cockpit. It might be a lead weight or just a piece of trash.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Kick it aside", "threshold": 14, "onSuccess": { "move": 0, "rep": 0 }, "onFailure": { "move": 6, "rep": 0 } },
+        { "text": "Ignore the distraction", "threshold": 11, "onSuccess": { "move": -1, "rep": 0 }, "onFailure": { "move": 3, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "The Long Green Flag Run",
+      "desc": "No cautions for 50 laps. You're physically and mentally drained. Can you stay focused?",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Find a rhythm", "threshold": 12, "onSuccess": { "move": -2, "rep": 5 }, "onFailure": { "move": 8, "rep": 0 } },
+        { "text": "Push for every tenth", "threshold": 17, "onSuccess": { "move": -5, "rep": 2 }, "onFailure": { "move": 15, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Aggressive Side-Draft",
+      "desc": "A car pulls alongside and sucks the air off your spoiler. Your car gets light.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Turn into them slightly", "threshold": 14, "onSuccess": { "move": 0, "rep": -5 }, "onFailure": { "move": 6, "rep": -10 } },
+        { "text": "Hold steady", "threshold": 12, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 4, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "The Hero Move",
+      "desc": "The white flag is out. You're P2 and have one shot at the leader in the final corner.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Send it deep!", "threshold": 19, "onSuccess": { "move": -1, "rep": 50 }, "onFailure": { "move": 15, "rep": -20 } },
+        { "text": "Wait for a crossover", "threshold": 15, "onSuccess": { "move": -1, "rep": 30 }, "onFailure": { "move": 2, "rep": 10 } }
+      ]
+    }
+    {
+      "title": "Team Orders",
+      "desc": "The radio crackles. Your teammate is fighting for the championship and needs you to let them by.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Pull over and assist", "threshold": 5, "onSuccess": { "move": 2, "rep": 20 }, "onFailure": { "move": 4, "rep": 10 } },
+        { "text": "Race them anyway", "threshold": 16, "onSuccess": { "move": -1, "rep": -30 }, "onFailure": { "move": 5, "rep": -50 } }
+      ]
+    },
+    {
+      "title": "Sponsor Photo Op",
+      "desc": "You're in the middle of a focused practice session, but the lead sponsor wants a photo in the pits now.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Hop out and smile", "threshold": 8, "onSuccess": { "move": 2, "rep": 15 }, "onFailure": { "move": 3, "rep": 10 } },
+        { "text": "Finish the session", "threshold": 14, "onSuccess": { "move": -2, "rep": -10 }, "onFailure": { "move": 0, "rep": -20 } }
+      ]
+    },
+    {
+      "title": "Transmission Grind",
+      "desc": "Third gear is starting to slip. You have to be incredibly careful with your shifts.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Double-clutch it", "threshold": 15, "onSuccess": { "move": 1, "rep": 5 }, "onFailure": { "move": 10, "rep": 0 } },
+        { "text": "Skip third gear", "threshold": 12, "onSuccess": { "move": 4, "rep": 0 }, "onFailure": { "move": 8, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "The Big Save",
+      "desc": "The back end steps out at 140mph! You're headed for the outside wall.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Counter-steer and gas", "threshold": 17, "onSuccess": { "move": 0, "rep": 25 }, "onFailure": { "move": 20, "rep": -5 } },
+        { "text": "Lock the brakes", "threshold": 10, "onSuccess": { "move": 5, "rep": 0 }, "onFailure": { "move": 12, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Pit Road Speeding",
+      "desc": "You think you crossed the line too fast. Do you slow down and lose time or risk the penalty?",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Risk the penalty", "threshold": 18, "onSuccess": { "move": -5, "rep": 0 }, "onFailure": { "move": 30, "rep": -10 } },
+        { "text": "Drag the brakes", "threshold": 9, "onSuccess": { "move": 3, "rep": 0 }, "onFailure": { "move": 6, "rep": 0 } }
+      ]
+    }
+    {
+      "title": "Worn Steering Rack",
+      "desc": "There's a massive dead spot in the steering wheel. The car isn't responding to small inputs.",
+      "stat": "craft",
+      "choices": [
+        { "text": "Manhandle the wheel", "threshold": 16, "onSuccess": { "move": 1, "rep": 5 }, "onFailure": { "move": 15, "rep": 0 } },
+        { "text": "Adjust your line", "threshold": 11, "onSuccess": { "move": 4, "rep": 0 }, "onFailure": { "move": 8, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "The Intimidator",
+      "desc": "A legendary veteran is all over your bumper, flashing their lights and swerving.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Hold your ground", "threshold": 17, "onSuccess": { "move": -1, "rep": 40 }, "onFailure": { "move": 12, "rep": -10 } },
+        { "text": "Let them by", "threshold": 6, "onSuccess": { "move": 2, "rep": 5 }, "onFailure": { "move": 3, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "Blown Header",
+      "desc": "The exhaust is screaming and cabin heat is rising rapidly. You're starting to feel dizzy.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Open the air vents", "threshold": 11, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 6, "rep": 0 } },
+        { "text": "Push through the pain", "threshold": 18, "onSuccess": { "move": -2, "rep": 10 }, "onFailure": { "move": 35, "rep": -5 } }
+      ]
+    },
+    {
+      "title": "Aero Loose",
+      "desc": "The car in front is swerving, messing up the air over your front wing. You're pushing toward the wall.",
+      "stat": "speed",
+      "choices": [
+        { "text": "Back out of the wake", "threshold": 10, "onSuccess": { "move": 2, "rep": 0 }, "onFailure": { "move": 4, "rep": 0 } },
+        { "text": "Power through it", "threshold": 16, "onSuccess": { "move": -2, "rep": 5 }, "onFailure": { "move": 10, "rep": 0 } }
+      ]
+    },
+    {
+      "title": "The Post-Race Interview",
+      "desc": "You just got wrecked out of the lead. The reporter puts a microphone in your face.",
+      "stat": "rep",
+      "choices": [
+        { "text": "Stay professional", "threshold": 12, "onSuccess": { "move": 0, "rep": 20 }, "onFailure": { "move": 0, "rep": 10 } },
+        { "text": "Blame the other guy", "threshold": 10, "onSuccess": { "move": 0, "rep": -15 }, "onFailure": { "move": 0, "rep": -30 } }
+      ]
+    }
+    {
+      "title": "The Rain Delay",
+      "desc": "Red flag! The cars are parked on pit road while the jet dryers work. How do you spend the hour?",
+      "stat": "rep",
+      "choices": [
+        { "text": "Review telemetry data", "threshold": 12, "onSuccess": { "move": -2, "rep": 5 }, "onFailure": { "move": 0, "rep": 0 } },
+        { "text": "Interact with the crowd", "threshold": 8, "onSuccess": { "move": 0, "rep": 30 }, "onFailure": { "move": 1, "rep": 15 } }
+      ]
+    },
+    {
+      "title": "Carbon Fiber Bodywork",
+      "desc": "A piece of your fender is rubbing the tire after a light brush with the wall. It's smoking.",
+      "stat": "consistency",
+      "choices": [
+        { "text": "Rub it off against the wall", "threshold": 16, "onSuccess": { "move": 0, "rep": 10 }, "onFailure": { "move": 20, "rep": -5 } },
+        { "text": "Hope it clears itself", "threshold": 13, "onSuccess": { "move": -1, "rep": 0 }, "onFailure": { "move": 30, "rep": -10 } }
+      ]
+    },
+    {
+      "title": "The Championship Moment",
+      "desc": "It all comes down to this. One lap to go. You have to finish ahead of your rival to win the title.",
+      "stat": "craft",
+      "choices": [
+        { "text": "The 'Slide Job'", "threshold": 18, "onSuccess": { "move": -1, "rep": 100 }, "onFailure": { "move": 10, "rep": 10 } },
+        { "text": "Bump and Run", "threshold": 14, "onSuccess": { "move": -1, "rep": -20 }, "onFailure": { "move": 5, "rep": -40 } }
+      ]
+    }
+  ]
+}
