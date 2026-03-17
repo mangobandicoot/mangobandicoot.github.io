@@ -1,81 +1,138 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// FULL THROTTLE v3.0 — THE INTERACTIVE INTERFACE
-// ═══════════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FULL THROTTLE v1.5.2 — OFFICIAL UI STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
-function renderDashboard(c) {
-    c.innerHTML = `
-        <div class="card">
-            <h2>Driver Career</h2>
-            <div style="display:grid; grid-template-columns:1fr 1fr;">
-                <div><small>Safety Rating</small><br><strong style="color:var(--accent); font-size:20px;">${G.sr.toFixed(2)}</strong></div>
-                <div style="text-align:right;"><small>Tier</small><br><strong>Level ${G.tier}</strong></div>
-            </div>
-        </div>
-        <div class="card">
-            <h3>Recent Logs</h3>
-            ${G.history.slice(-3).reverse().map(h => `<p style="font-size:14px; border-bottom:1px solid var(--border); padding:5px 0;">${h}</p>`).join('') || 'No starts yet.'}
-        </div>
-    `;
+:root {
+    --bg-black: #05070A;
+    --bg-card: #0D1117;
+    --bg-nav: #080C14;
+    --accent: #F59E0B;
+    --blue: #3B82F6;
+    --border: #1E2433;
+    --text-white: #FFFFFF;
+    --text-gray: #94A3B8;
 }
 
-function renderRaceMenu(c) {
-    c.innerHTML = '<h1>Series Schedule</h1>';
-    DATA.SERIES.forEach(s => {
-        const locked = G.tier < s.tier;
-        c.innerHTML += `
-            <div class="card" style="opacity:${locked ? 0.4 : 1}; border-left: 4px solid ${s.color}">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><h3>${s.name}</h3><small>Fee: $${s.fee}</small></div>
-                    <button class="btn-primary" onclick="startRaceSession('${s.id}')" ${locked ? 'disabled' : ''}>ENTER</button>
-                </div>
-            </div>
-        `;
-    });
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
 }
 
-function renderPrepScreen() {
-    const c = document.getElementById('game-content');
-    c.innerHTML = `
-        <div class="card">
-            <h2>Track: ${G.session.track.name}</h2>
-            <p>Type: ${G.session.track.type} | Rival: ${G.session.rival.name}</p>
-            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
-            <p>Garage Setup:</p>
-            <div style="display:grid; gap:10px; margin-bottom:20px;">
-                <label>Wing: <input type="range" min="1" max="10" value="${G.car.setup.wing}" onchange="G.car.setup.wing=parseInt(this.value)"></label>
-                <label>Springs: <input type="range" min="1" max="10" value="${G.car.setup.suspension}" onchange="G.car.setup.suspension=parseInt(this.value)"></label>
-            </div>
-            <button class="btn-primary" style="width:100%" onclick="renderRaceMoment()">GREEN FLAG</button>
-        </div>
-    `;
+body {
+    margin: 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    background-color: var(--bg-black);
+    color: var(--text-white);
+    overflow-x: hidden;
+    user-select: none;
 }
 
-function renderRaceMoment() {
-    const c = document.getElementById('game-content');
-    c.innerHTML = `
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; font-weight:900;">
-                <span style="color:var(--accent)">LAP ${G.session.lap}/${G.session.totalLaps}</span>
-                <span>P${G.session.position}</span>
-            </div>
-            <div style="background:#161B22; height:8px; margin:15px 0; border-radius:4px;"><div style="background:var(--accent); height:100%; width:${(G.session.lap / G.session.totalLaps)*100}%;"></div></div>
-            <p style="font-size:12px; color:#94A3B8;">Rival ${G.session.rival.name} is ${G.session.rival.style}</p>
-            <div style="display:grid; gap:10px;">
-                <button class="btn-primary" onclick="processDecision('push')">PUSH (High Speed/Risk)</button>
-                <button class="btn-primary" style="background:var(--blue)" onclick="processDecision('defend')">DEFEND (Hold Position)</button>
-                <button class="btn-primary" style="background:#10B981" onclick="processDecision('save')">SAVE (Cool Down)</button>
-            </div>
-        </div>
-    `;
+/* --- SETUP SCREEN --- */
+#setup-screen {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #111827 0%, #05070A 100%);
+    padding: 20px;
 }
 
-function renderGarage(c) {
-    c.innerHTML = '<h1>Performance Shop</h1>';
-    DATA.UPGRADES.forEach(u => {
-        c.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><div><strong>${u.name}</strong></div><button class="btn-primary" onclick="G.stats['${u.stat}']+=1; G.money-=${u.cost}; saveGame(); switchTab('garage');">$${u.cost}</button></div>`;
-    });
+.setup-card {
+    background: var(--bg-card);
+    padding: 40px 30px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-function renderStats(c) {
-    c.innerHTML = `<div class="card"><h2>Attributes</h2><p>Speed: ${G.stats.speed}</p><p>Racecraft: ${G.stats.craft}</p></div>`;
+/* --- APP HEADER --- */
+#header {
+    background: var(--bg-nav);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
+
+/* --- NAVIGATION --- */
+#tabs {
+    background: var(--bg-nav);
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    padding: 15px 5px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    width: 25%;
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom: 3px solid var(--accent);
+}
+
+/* --- CONTENT CARDS --- */
+#game-content {
+    padding: 20px;
+    padding-bottom: 100px;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 12px;
+    border-radius: 2px;
+}
+
+.card h2 { margin-top: 0; font-size: 20px; color: var(--accent); text-transform: uppercase; }
+.card h3 { margin: 0; font-size: 18px; }
+
+/* --- INPUTS & BUTTONS --- */
+input {
+    width: 100%;
+    background: #161B22;
+    border: 1px solid var(--border);
+    padding: 15px;
+    color: white;
+    font-family: inherit;
+    font-size: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+input:focus { outline: none; border-color: var(--accent); }
+
+.btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-family: inherit;
+    font-weight: 900;
+    border: none;
+    border-radius: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+
+/* Scrollbar Fix for mobile */
+::-webkit-scrollbar { width: 0px; background: transparent; }
