@@ -1,105 +1,47 @@
 :root {
-    --bg: #0F172A;
-    --card: #1E293B;
-    --primary: #38BDF8;
-    --accent: #F472B6;
-    --text: #F8FAFC;
-    --text-dim: #94A3B8;
-    --danger: #EF4444;
-    --success: #22C55E;
+    --bg: #0a0a0c;          /* Deep Black/Grey */
+    --card: #16161a;        /* Engine Block Grey */
+    --primary: #fde047;     /* Racing Yellow */
+    --accent: #38bdf8;      /* Pro Blue */
+    --text: #ffffff;
+    --text-dim: #94a3b8;
+    --border: #262626;
 }
-
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
     background-color: var(--bg);
+    background-image: radial-gradient(circle at 50% 50%, #1a1a1e 0%, #0a0a0c 100%);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 20px;
-    line-height: 1.5;
+    padding: 15px;
+    letter-spacing: 0.5px;
 }
-
-#container { max-width: 500px; margin: 0 auto; }
 
 .card {
     background: var(--card);
     padding: 20px;
-    border-radius: 12px;
+    border-radius: 4px; /* Sharper corners look more "mechanical" */
     margin-bottom: 15px;
-    border: 1px solid #334155;
-}
-
-h2 { margin-top: 0; color: var(--primary); }
-
-label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; }
-
-input {
-    width: 100%;
-    padding: 12px;
-    background: #0F172A;
-    border: 1px solid #475569;
-    color: white;
-    border-radius: 8px;
-    font-size: 16px;
-    margin-bottom: 10px;
+    border-left: 4px solid var(--primary); /* Racing stripe on every card */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
 
 .btn-primary {
     background: var(--primary);
-    color: #0F172A;
+    color: #000;
     border: none;
-    padding: 14px;
-    border-radius: 8px;
-    font-weight: bold;
+    padding: 16px;
+    border-radius: 4px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     width: 100%;
-    font-size: 16px;
     cursor: pointer;
+    box-shadow: 0 4px 0 #ca8a04; /* 3D Button effect */
 }
 
-#navbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    position: sticky;
-    top: 10px;
-    z-index: 10;
-}
-
-#navbar button {
-    flex: 1;
-    padding: 10px 5px;
-    background: #334155;
-    border: none;
-    color: white;
-    border-radius: 6px;
-    font-size: 12px;
-}
-
-.hidden { display: none !important; }
-
-/* Modal for Race Events */
-#modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 100;
-}
-
-.stat-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.stat-box {
-    background: #0F172A;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
+.btn-primary:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #ca8a04;
 }
