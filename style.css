@@ -1,6 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
    FULL THROTTLE v1.5.2 — OFFICIAL UI STYLES
    ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+    --bg-black: #05070A;
+    --bg-card: #0D1117;
+    --bg-nav: #080C14;
+    --accent: #F59E0B;   /* The gold color for buttons */
+    --blue: #3B82F6;
+    --border: #1E2433;
+    --text-white: #FFFFFF;
+    --text-gray: #94A3B8;
+}
 
 :root {
     --bg-black: #05070A;
