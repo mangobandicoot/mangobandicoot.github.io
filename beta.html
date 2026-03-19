@@ -1,0 +1,332 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle v1.5.2-SIM</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:#04060E;color:#E2E8F0;font-size:16px;line-height:1.45}
+input,textarea,select,button{font-family:inherit;font-size:15px}
+input,textarea,select{background:#131822;border:1px solid #64748B;border-radius:6px;color:#F9FAFB;padding:8px 11px}
+input:focus,textarea:focus,select:focus{outline:2px solid #D97706;outline-offset:1px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0B0F1A}
+::-webkit-scrollbar-thumb{background:#64748B;border-radius:3px}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#setup-screen{position:fixed;inset:0;background:#04060E;display:flex;align-items:center;justify-content:center;z-index:999}
+#setup-screen.hidden{display:none}
+#header{background:#080C14;border-bottom:2px solid #1E2433;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-shrink:0}
+.driver-name{font-size:22px;font-weight:900;color:#F59E0B;line-height:1}
+.driver-sub{font-size:12px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:2px}
+.hdr-stats{display:flex;gap:24px;margin-left:auto}
+.hdr-stat .val{font-size:17px;font-weight:800;color:#F9FAFB;line-height:1}
+.hdr-stat .lbl{font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
+#tabs{background:#080C14;border-bottom:2px solid #1E2433;display:flex;gap:2px;padding:6px 24px 0;flex-shrink:0;overflow-x:auto}
+.tab{background:transparent;border:none;border-bottom:3px solid transparent;color:#94A3B8;padding:7px 16px;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:color 0.15s}
+.tab:hover{color:#E2E8F0}
+.tab.active{color:#F59E0B;border-bottom-color:#F59E0B}
+.tab-badge{display:inline-block;background:#D97706;color:#000;font-size:10px;font-weight:900;padding:1px 5px;border-radius:10px;margin-left:5px;vertical-align:middle}
+#content{flex:1;overflow-y:auto;padding:24px}
+.page{max-width:980px;margin:0 auto;animation:fadeIn 0.2s ease}
+.page-title{font-size:26px;font-weight:900;margin-bottom:6px;color:#F9FAFB}
+.page-sub{font-size:15px;color:#94A3B8;margin-bottom:20px}
+.card{background:#0B0F1A;border:1px solid #1E2433;border-radius:10px;padding:18px;margin-bottom:14px}
+.card-title{font-size:14px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat-bar{margin-bottom:10px}
+.stat-bar .sb-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px}
+.stat-bar .sb-lbl{color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em}
+.stat-bar .sb-val{color:#E5E7EB;font-weight:700}
+.stat-bar .sb-track{height:5px;background:#1E2433;border-radius:3px;overflow:hidden}
+.stat-bar .sb-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:0.04em;border:1px solid;white-space:nowrap}
+button{cursor:pointer;border:none;border-radius:6px;font-weight:700;letter-spacing:0.03em;transition:opacity 0.15s,filter 0.15s;white-space:nowrap}
+button:not(:disabled):hover{filter:brightness(1.12)}
+button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
+.btn{padding:8px 18px;font-size:14px}
+.btn-lg{padding:11px 24px;font-size:16px}
+.btn-full{width:100%}
+.btn-sm{padding:5px 12px;font-size:13px}
+.btn-primary{background:#D97706;color:#000}
+.btn-ghost{background:transparent;color:#CBD5E1;border:1px solid #64748B}
+.row-item{display:flex;align-items:center;gap:14px;background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:11px 14px;margin-bottom:8px}
+.row-item .accent{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.row-name{font-size:15px;font-weight:800;color:#F9FAFB}
+.row-sub{font-size:14px;color:#94A3B8;margin-top:2px}
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:500;padding:16px}
+#modal-overlay.hidden{display:none}
+#modal-box{background:#0B0F1A;border:1px solid #64748B;border-radius:14px;padding:26px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto}
+.modal-title{font-size:22px;font-weight:900;color:#F9FAFB;margin-bottom:16px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.setup-box{text-align:center;max-width:480px;width:100%;padding:24px}
+.setup-logo{font-size:78px;font-weight:900;line-height:0.88;background:linear-gradient(135deg,#F59E0B,#FBBF24,#F97316);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.setup-card{background:#0B0F1A;border:1px solid #1E2433;border-radius:12px;padding:30px;margin-bottom:16px}
+.setup-card input,.setup-card select{width:100%;font-size:20px;font-weight:700;text-align:center;margin-bottom:18px;border-width:2px}
+.mt-8{margin-top:8px}
+.text-gold{color:#F59E0B!important}
+.text-green{color:#10B981!important}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div id="setup-screen">
+<div class="setup-box">
+<div class="setup-logo">FULL<br>THROTTLE</div>
+<div class="setup-card">
+<form id="setup-form">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px">Driver Name</div>
+<input id="driver-name-input" type="text" placeholder="Enter name..." required>
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px">Car Number</div>
+<input id="driver-number-input" type="number" placeholder="00" min="0" max="999" required style="font-size:32px;color:#F59E0B">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px">Home State</div>
+<select id="driver-state-input"></select>
+<button type="submit" class="btn btn-lg btn-primary btn-full" style="margin-top:20px">START CAREER →</button>
+</form>
+</div>
+</div>
+</div>
+<div id="app" style="display:none">
+<div id="header"></div>
+<div id="tabs"></div>
+<div id="content"></div>
+</div>
+<div id="modal-overlay" class="hidden"><div id="modal-box"></div></div>
+
+<script>
+const APP_VERSION='v1.5.2-SIM';
+const US_STATES=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
+const US_STATE_NAMES={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
+
+const SERIES=[
+{id:'mini_stock',name:'Mini Stock Series',tier:1,races:10,pay:120,winBonus:600,reqRep:0,reqFans:0,color:'#8B5CF6',fee:120},
+{id:'street_stock',name:'Street Stock Series',tier:2,races:12,pay:280,winBonus:1200,reqRep:35,reqFans:200,color:'#3B82F6',fee:250},
+{id:'nascar_cup',name:'NASCAR Cup Series',tier:7,races:36,pay:200000,winBonus:1000000,reqRep:320,reqFans:200000,color:'#EC4899',fee:80000},
+];
+
+function getSeries(id){return SERIES.find(s=>s.id===id);}
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function fmtMoney(n){return '$'+n.toLocaleString();}
+function $(id){return document.getElementById(id);}
+
+const SERIES_FIELD_SIZE={mini_stock:18,street_stock:20,nascar_cup:40};
+
+function initState(name){
+  return {
+    driverName:name,homeState:'ME',carNumber:0,season:1,week:1,
+    money:5000,reputation:0,fans:0,
+    wins:0,top5s:0,starts:0,poles:0,
+    contracts:[],pendingOffers:[],
+    schedules:{},
+    log:['Season 1. $5,000 and a dream.'],
+  };
+}
+
+function saveState(state){
+  localStorage.setItem('fullthrottle_sim_save',JSON.stringify(state));
+}
+
+function getState(){
+  const raw=localStorage.getItem('fullthrottle_sim_save');
+  if(!raw)return null;
+  try{return JSON.parse(raw);}catch(e){return null;}
+}
+
+function updateHeader(state){
+  $('header').innerHTML=`
+    <div>
+      <div class="driver-sub">SEASON ${state.season}</div>
+      <div class="driver-name">#${state.carNumber} ${state.driverName}</div>
+    </div>
+    <div class="hdr-stats">
+      <div class="hdr-stat">
+        <div class="val text-green">${fmtMoney(state.money)}</div>
+        <div class="lbl">Money</div>
+      </div>
+      <div class="hdr-stat">
+        <div class="val">${state.reputation}</div>
+        <div class="lbl">Rep</div>
+      </div>
+      <div class="hdr-stat">
+        <div class="val text-gold">${state.wins}W</div>
+        <div class="lbl">Wins</div>
+      </div>
+    </div>
+  `;
+}
+
+let currentPage='dashboard';
+
+function updateTabs(state){
+  const tabs=[
+    {id:'dashboard',label:'Dashboard'},
+    {id:'contracts',label:'Contracts'},
+  ];
+  $('tabs').innerHTML=tabs.map(t=>`
+    <button class="tab ${currentPage===t.id?'active':''}" onclick="showPage('${t.id}')">
+      ${t.label}
+    </button>
+  `).join('');
+}
+
+function showPage(page){
+  currentPage=page;
+  const st=getState();
+  updateTabs(st);
+  
+  if(page==='dashboard'){
+    renderDashboard(st);
+  }else if(page==='contracts'){
+    renderContracts(st);
+  }
+}
+
+function renderDashboard(state){
+  $('content').innerHTML=`
+    <div class="page">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Season ${state.season}</div>
+      
+      <div class="card">
+        <div class="card-title">Career Stats</div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Starts</span><span class="sb-val">${state.starts}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">${state.wins}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">${state.top5s}</span></div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Game Log</div>
+        ${(state.log||[]).slice(-5).reverse().map(l=>`<div style="font-size:13px;color:#94A3B8;margin-bottom:4px">${l}</div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderContracts(state){
+  const offers=state.pendingOffers||[];
+  
+  $('content').innerHTML=`
+    <div class="page">
+      <div class="page-title">Contracts</div>
+      
+      ${offers.length>0?`
+        <div class="card">
+          <div class="card-title">Available Offers</div>
+          ${offers.map(o=>{
+            const s=getSeries(o.seriesId);
+            return `
+              <div class="row-item">
+                <div class="accent" style="background:${s.color}"></div>
+                <div style="flex:1">
+                  <div class="row-name">${o.team}</div>
+                  <div class="row-sub">${s.name}</div>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="signContract('${o.id}')">Sign</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `:`
+        <div class="card">
+          <div style="text-align:center;padding:30px;color:#64748B">
+            No contract offers yet. Keep racing to build reputation.
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function signContract(contractId){
+  const st=getState();
+  const offer=st.pendingOffers.find(o=>o.id===contractId);
+  if(!offer)return;
+  
+  st.contracts.push(offer);
+  st.pendingOffers=st.pendingOffers.filter(o=>o.id!==contractId);
+  st.log.push('Signed with '+offer.team);
+  
+  saveState(st);
+  showPage('contracts');
+}
+
+function showModal(html){
+  $('modal-box').innerHTML=html;
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal(){
+  $('modal-overlay').classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const sel=$('driver-state-input');
+  if(sel){
+    US_STATES.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s;
+      o.textContent=US_STATE_NAMES[s];
+      if(s==='ME')o.selected=true;
+      sel.appendChild(o);
+    });
+  }
+  
+  const existingSave=getState();
+  
+  if(existingSave){
+    $('setup-screen').classList.add('hidden');
+    $('app').style.display='flex';
+    updateHeader(existingSave);
+    updateTabs(existingSave);
+    showPage('dashboard');
+  }else{
+    const setupForm=$('setup-form');
+    setupForm.addEventListener('submit',e=>{
+      e.preventDefault();
+      
+      const driverName=$('driver-name-input').value.trim();
+      const driverNumber=parseInt($('driver-number-input').value);
+      const homeState=$('driver-state-input').value;
+      
+      if(!driverName){
+        alert('Please enter your driver name');
+        return;
+      }
+      
+      const newState=initState(driverName);
+      newState.homeState=homeState;
+      newState.carNumber=driverNumber;
+      
+      newState.pendingOffers=[
+        {id:uid(),team:'Local Racing',seriesId:'mini_stock'},
+        {id:uid(),team:'Street Kings Racing',seriesId:'street_stock'},
+      ];
+      
+      saveState(newState);
+      
+      $('setup-screen').classList.add('hidden');
+      $('app').style.display='flex';
+      
+      updateHeader(newState);
+      updateTabs(newState);
+      showPage('dashboard');
+    });
+  }
+  
+  $('modal-overlay').addEventListener('click',e=>{
+    if(e.target===$('modal-overlay')){
+      closeModal();
+    }
+  });
+});
+</script>
+</body>
+</html>
