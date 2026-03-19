@@ -4741,8 +4741,12 @@ function getState() {
 // ═══════════════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded');
+  
   // Populate state dropdown
   const sel = document.getElementById('driver-state-input');
+  console.log('State dropdown:', sel);
+  
   if (sel && sel.options.length === 0) {
     const usG = document.createElement('optgroup');
     usG.label = 'United States';
@@ -4766,10 +4770,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     sel.appendChild(usG);
     sel.appendChild(iG);
+    console.log('State dropdown populated');
   }
   
   // Check for existing save
   const existingSave = getState();
+  console.log('Existing save:', existingSave);
   
   if (existingSave) {
     // Load existing career
@@ -4787,233 +4793,92 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } else {
     // New career setup
+    console.log('Setting up new career form');
     const setupForm = document.getElementById('setup-form');
+    console.log('Setup form:', setupForm);
+    
     setupForm.addEventListener('submit', e => {
+      console.log('Form submitted!');
       e.preventDefault();
       
       const driverName = document.getElementById('driver-name-input').value.trim();
-      const driverNumber = parseInt(document.getElementById('driver-number-input').value);
+      const driverNumberInput = document.getElementById('driver-number-input');
+      const driverNumber = driverNumberInput ? parseInt(driverNumberInput.value) : 0;
       const homeState = document.getElementById('driver-state-input').value;
       
+      console.log('Driver name:', driverName);
+      console.log('Driver number:', driverNumber);
+      console.log('Home state:', homeState);
+      
       if (!driverName) {
-        showToast('Please enter your driver name', 'error');
+        alert('Please enter your driver name');
         return;
       }
       
-      if (isNaN(driverNumber) || driverNumber < 0 || driverNumber > 999) {
-        showToast('Please enter a valid car number (0-999)', 'error');
+      if (driverNumberInput && (isNaN(driverNumber) || driverNumber < 0 || driverNumber > 999)) {
+        alert('Please enter a valid car number (0-999)');
         return;
       }
+      
+      console.log('Creating new state...');
       
       // Initialize new career
       const newState = initState(driverName);
       newState.homeState = homeState;
-      newState.carNumber = driverNumber;
+      if (driverNumberInput) newState.carNumber = driverNumber;
+      
+      console.log('New state created:', newState);
       
       saveState(newState);
+      console.log('State saved');
       
       // Hide setup, show game
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('app').style.display = 'flex';
       
+      console.log('Updating UI...');
       updateHeader(newState);
       updateTabs(newState);
       showPage('dashboard');
       
-      showToast(`Welcome to Full Throttle, ${driverName}!`, 'success');
+      alert('Welcome to Full Throttle, ' + driverName + '!');
     });
   }
   
   // Import save from setup screen
-  document.getElementById('import-setup').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = evt => {
-      try {
-        const data = JSON.parse(evt.target.result);
-        localStorage.setItem('fullthrottle_sim_save', evt.target.result);
-        location.reload();
-      } catch (err) {
-        showToast('Invalid save file', 'error');
-      }
-    };
-    reader.readAsText(file);
-  });
+  const importInput = document.getElementById('import-setup');
+  if (importInput) {
+    importInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          localStorage.setItem('fullthrottle_sim_save', evt.target.result);
+          location.reload();
+        } catch (err) {
+          alert('Invalid save file');
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
   
   // Modal overlay click to close
-  document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) {
-      closeModal();
-    }
-  });
-});
-
-// ═══════════════════════════════════════════════════════════════════════
-// KEYBOARD SHORTCUTS
-// ═══════════════════════════════════════════════════════════════════════
-
-document.addEventListener('keydown', e => {
-  // ESC to close modal
-  if (e.key === 'Escape') {
-    if (!document.getElementById('modal-overlay').classList.contains('hidden')) {
-      closeModal();
-    }
-  }
-  
-  // Ctrl/Cmd + S to save (prevent default)
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-    e.preventDefault();
-    const st = getState();
-    if (st) {
-      saveState(st);
-      showToast('Game saved', 'success');
-    }
+  const modalOverlay = document.getElementById('modal-overlay');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', e => {
+      if (e.target === modalOverlay) {
+        closeModal();
+      }
+    });
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════
-// DEVELOPMENT HELPERS (comment out for production)
-// ═══════════════════════════════════════════════════════════════════════
-
-// Expose to console for debugging
-window.DEV = {
-  getState,
-  saveState,
-  addMoney: (amount) => {
-    const st = getState();
-    if (!st) return;
-    st.money += amount;
-    saveState(st);
-    updateHeader(st);
-    showToast(`Added ${fmtMoney(amount)}`, 'success');
-  },
-  addRep: (amount) => {
-    const st = getState();
-    if (!st) return;
-    st.reputation += amount;
-    saveState(st);
-    updateHeader(st);
-    showToast(`Added ${amount} reputation`, 'success');
-  },
-  addFans: (amount) => {
-    const st = getState();
-    if (!st) return;
-    st.fans += amount;
-    saveState(st);
-    updateHeader(st);
-    showToast(`Added ${amount} fans`, 'success');
-  },
-  repairCar: () => {
-    const st = getState();
-    if (!st) return;
-    Object.keys(st.carCondition).forEach(k => st.carCondition[k] = 100);
-    saveState(st);
-    showToast('Car repaired to 100%', 'success');
-  },
-  skipToOffseason: () => {
-    const st = getState();
-    if (!st) return;
-    st.contracts.forEach(c => {
-      const sched = st.schedules[c.seriesId] || [];
-      sched.forEach(r => {
-        if (!r.result) {
-          r.result = {
-            position: rand(1, 10),
-            dnf: false,
-            points: 30,
-            prize: 5000,
-            fieldSize: 20,
-          };
-        }
-      });
-    });
-    advanceSeason(st);
-    saveState(st);
-    showPage('dashboard');
-    showToast('Advanced to offseason', 'success');
-  },
-  unlockAllPerks: () => {
-    const st = getState();
-    if (!st) return;
-    st.driverPerks = DRIVER_PERKS.map(p => p.id);
-    saveState(st);
-    showToast('All perks unlocked', 'success');
-  },
-  maxUpgrades: () => {
-    const st = getState();
-    if (!st) return;
-    CAR_UPGRADES.forEach(u => {
-      st.carUpgrades[u.id] = u.tiers.length;
-    });
-    saveState(st);
-    showToast('All upgrades maxed', 'success');
-  },
-  viewLog: () => {
-    const st = getState();
-    if (!st) return;
-    console.log('=== GAME LOG ===');
-    (st.log || []).forEach(entry => console.log(entry));
-  },
-  clearDrama: () => {
-    const st = getState();
-    if (!st) return;
-    st.dramaQueue = [];
-    saveState(st);
-    closeModal();
-    showToast('Drama queue cleared', 'success');
-  },
-  testCallout: (type = 'incident') => {
-    const st = getState();
-    if (!st) return;
-    const drivers = st.drivers.filter(d => d.active);
-    if (!drivers.length) return;
-    const d = drivers[rand(0, drivers.length - 1)];
-    const quote = getPersonalityCallout(d.name, type).replace(/{name}/g, d.name).replace(/{player}/g, st.driverName);
-    st.dramaQueue.push({
-      id: 'test_callout_' + uid(),
-      title: type === 'incident' ? 'Post-Race Callout' : 'Respect Earned',
-      effect: 'callout',
-      calloutData: { fired: true, driverName: d.name, quote, type },
-      desc: quote,
-      valence: type === 'incident' ? 'negative' : 'positive',
-    });
-    saveState(st);
-    processDramaQueue(st);
-  },
-  simulateFullSeason: () => {
-    const st = getState();
-    if (!st) return;
-    st.contracts.forEach(c => {
-      const sched = st.schedules[c.seriesId] || [];
-      sched.forEach((r, idx) => {
-        if (!r.result) {
-          const qualResult = simulateQualifying(st, c.seriesId, idx);
-          r.qualifying = qualResult;
-          
-          const raceResult = simulateRace(st, c.seriesId, idx, qualResult.position);
-          const choiceResults = raceResult.scenarios.map(() => ({
-            posDelta: rand(-2, 2),
-            dnfRisk: 0.02,
-            fanBonus: rand(20, 100),
-          }));
-          const narrativeDelta = choiceResults.reduce((sum, cr) => sum + cr.posDelta, 0);
-          raceResult.narrativeDelta = clamp(narrativeDelta, -3, 3);
-          
-          const finalResult = resolveRace(raceResult, choiceResults);
-          processRaceResult(st, c.seriesId, idx, finalResult);
-        }
-      });
-    });
-    saveState(st);
-    showPage('dashboard');
-    showToast('Full season simulated', 'success');
-  },
-};
-
-console.log('Full Throttle SIM loaded. Type window.DEV in console for debug commands.');
-
+console.log('Script loaded successfully');
 </script>
 </body>
 </html>
+
