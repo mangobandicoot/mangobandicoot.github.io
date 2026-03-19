@@ -1112,95 +1112,10 @@ function simulateQualifying(state, seriesId, raceIdx) {
 //
 //Section 4
 //
-// Simulate race — runs through scenarios, accumulates position changes
-// Returns: {position, dnf, dnfReason, points, prize, pole, lapsLed, mostLaps, fieldSize, closeFinishes, incidentDrivers, scenarioResults}
-function simulateRace(state, seriesId, raceIdx, qualPosition) {
-  const s = getSeries(seriesId);
-  const fieldSize = SERIES_FIELD_SIZE[seriesId]||20;
-  const attrs = state.driverAttrs||{};
-  const upgrades = state.carUpgrades||{};
-  const race = (state.schedules[seriesId]||[])[raceIdx]||{};
-  const totalLaps = s.races * 3; // approximate race laps (3 per race in schedule)
-  const perks = state.driverPerks||[];
-
-  // Starting position
-  let pos = qualPosition || Math.floor(fieldSize * 0.5);
-
-  // Base positional swing — engine, chassis, driving skill composite
-  const baseSkill = (
-    getAttrBonus(attrs, 'consistency') * 3 +
-    getAttrBonus(attrs, 'aggression') * 1.5 +
-    getUpgradeBonus(upgrades, 'posBonus') +
-    getUpgradeBonus(upgrades, 'speedBonus') * 0.3 +
-    getUpgradeBonus(upgrades, 'consistencyBonus') * 0.2 +
-    (state.confidence||0) * 2
-  );
-
-  // Late-race bonus
-  const lateRaceBonus = getUpgradeBonus(upgrades, 'lateRaceBonus') * 0.2;
-
-  // Condition modifier
-  const cond = CONDITIONS.find(c=>c.id===(race.condition||'clear'))||CONDITIONS[0];
-  let condBonus = 0;
-  if (['light_rain','heavy_rain'].includes(cond.id)) {
-    condBonus += getAttrBonus(attrs, 'wet_weather') * 2;
-    if (perks.includes('rain_master')) condBonus *= 2;
-  }
-
-  // DNF base probability — modified by car condition, engine upgrade, consistency
-  let dnfProb = 0.12 - getAttrBonus(attrs, 'consistency') * 0.01;
-  if (state.carCondition) {
-    const avgCond = Object.values(state.carCondition).reduce((a,b)=>a+b,0)/5;
-    if (avgCond < 30) dnfProb += 0.15;
-    else if (avgCond < 50) dnfProb += 0.06;
-  }
-  dnfProb -= getUpgradeBonus(upgrades, 'dnfReduce');
-  if (perks.includes('iron_will') && (state.carCondition?.engine||100) < 40) dnfProb *= 0.8;
-  dnfProb = clamp(dnfProb, 0.01, 0.45);
-
-  // DNF check
-  const isDNF = Math.random() < dnfProb;
-
-  // Build scenarios for this race
-  const numScenarios = rand(2,4);
-  const ctx = buildSimContext(state, seriesId, raceIdx, pos, fieldSize, 5, totalLaps);
-  const scenarios = pickScenarios(ctx, numScenarios, RACE_SCENARIOS);
-
-  // Track scenario results for the modal
-  const scenarioResults = [];
-  let totalPosDelta = 0;
-  let raceIncidentDrivers = [];
-  let extraDNFRisk = 0;
-  let extraFanBonus = 0;
-
-  for (const sc of scenarios) {
-    // This gets filled in when the player makes choices — store empty for now
-    scenarioResults.push({
-      scenario: sc,
-      choiceMade: null,
-      outcome: null,
-      posDelta: 0,
-    });
-  }
-
-  // Without player input yet, just store pending state
-  // The modal will call resolveRaceScenarios() after player makes all choices
-
-  return {
-    pending: true,
-    scenarios: scenarioResults,
-    basePos: pos,
-    fieldSize,
-    dnfRoll: Math.random(), // stored for deterministic resolve
-    dnfProb,
-    baseSkill,
-    lateRaceBonus,
-    condBonus,
-    qualPosition: pos,
-    seriesId,
-    raceIdx,
-  };
-}
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// RACE RESOLUTION & CORE GAME LOGIC
+// ═══════════════════════════════════════════════════════════════════════
 
 // Resolve race after all choices made
 function resolveRace(pendingRace, choiceResults) {
@@ -1220,8 +1135,7 @@ function resolveRace(pendingRace, choiceResults) {
     if (cr.incidentDriver) incidentDrivers.push(cr.incidentDriver);
   });
 
-  // Apply narrative delta — choices made across the race flow shift the result
-  // Positive = driver made smart calls, negative = driver made costly calls
+  // Apply narrative delta
   if (narrativeDelta) totalPosDelta += narrativeDelta;
 
   // Apply base skill drift
@@ -1260,11 +1174,10 @@ function resolveRace(pendingRace, choiceResults) {
   let finalPos = basePos - Math.round(totalPosDelta);
   finalPos = clamp(finalPos, 1, fieldSize);
 
-  // Laps led — top 5 has a chance
+  // Laps led
   const lapsLed = finalPos <= 5 && Math.random() < 0.4;
   const mostLaps = finalPos === 1 && Math.random() < 0.5;
 
-  // Close finishes built in processRaceResult where state is available
   const closeFinishes = [];
 
   const points = calcPoints(seriesId, finalPos, finalPos===1, lapsLed, mostLaps);
@@ -1282,6 +1195,7 @@ function resolveRace(pendingRace, choiceResults) {
     mostLaps,
     closeFinishes,
     incidentDrivers,
+    qualPosition,
   };
 }
 
@@ -1298,15 +1212,12 @@ function buildFinishOrder(state, seriesId, playerPos, fieldSize) {
   }
   return order;
 }
-// ═══════════════════════════════════════════════════════════════════════
-// FULL THROTTLE SIM — Core Game Logic (from v1.5.2)
-// ═══════════════════════════════════════════════════════════════════════
 
-// rand, randF, shuffle, clamp, uid, fmtMoney, fmtFans, ordinal defined in utils block above
-
+// Points and prize calculations
 function calcPoints(seriesId,pos,pole,lapsLed,mostLaps){
   return (IRACING_PTS[Math.max(0,pos-1)]||1)+(pole?1:0)+(lapsLed?1:0)+(mostLaps?3:0);
 }
+
 function calcPrize(seriesId,pos,fs){
   const s=getSeries(seriesId);
   if(pos===1)return s.pay+s.winBonus;
@@ -1314,7 +1225,7 @@ function calcPrize(seriesId,pos,fs){
   return Math.floor(s.pay*pct);
 }
 
-// ── Real-world series schedules (2024 season tracks, in order) ────────
+// Real-world series schedules (2024 season tracks)
 const REAL_SCHEDULES = {
   arca_menards: [
     {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
@@ -1440,10 +1351,8 @@ const REAL_SCHEDULES = {
 
 function generateSchedule(seriesId,trackPools){
   const s=getSeries(seriesId);
-  // Use real schedule for tier 4+ series
   if(REAL_SCHEDULES[seriesId]){
     const realTracks=REAL_SCHEDULES[seriesId];
-    // Trim or pad to match series race count
     const count=s.races;
     const picks=[];
     while(picks.length<count)realTracks.forEach(t=>{if(picks.length<count)picks.push(t);});
@@ -1452,7 +1361,6 @@ function generateSchedule(seriesId,trackPools){
       qualifying:null,result:null,bonusResult:null,condition:rollCondition(),
     }));
   }
-  // Generated schedule for lower tiers
   const isFree=seriesId==='mini_stock'||seriesId==='street_stock'||seriesId==='super_late_model';
   const pool=trackPools?(isFree?trackPools.free:trackPools.paid):(isFree?FREE_TRACKS:PAID_TRACKS);
   const slinger=isFree?pool.find(t=>t.fig8):null;
@@ -1498,21 +1406,21 @@ function generateOffers(rep,fans){
   return shuffle(offers).slice(0,4);
 }
 
-function makeSponsor(seriesId,type='primary',international=false){
+function makeSponsor(seriesId,type,international){
+  type=type||'primary';
+  international=international||false;
   const brands=international?SPONSOR_BRANDS.international:(SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock);
   const brand=brands[rand(0,brands.length-1)];
   const st=SPONSOR_TYPES[international?'international':type];
   const s=getSeries(seriesId);
   const base=Math.floor(s.pay*(type==='primary'?3:type==='associate'?0.8:0.3)*randF(0.8,1.3));
   const seasons=rand(st.dur[0],st.dur[1]);
-  // Sponsor expectations — what they signed you to achieve
   const goalTypes=['top5_pct','wins','finish_pct'];
   const goalType=goalTypes[rand(0,goalTypes.length-1)];
   const sponsorGoal={
     type:goalType,
-    // top5_pct: finish top-5 in X% of races; wins: win at least N; finish_pct: finish (not DNF) X% of races
     target:goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85),
-    racesTracked:0, racesAchieved:0, warned:false, praised:false,
+    racesTracked:0,racesAchieved:0,warned:false,praised:false,
     desc:goalType==='top5_pct'?`Expect top-5 finishes in at least ${rand(25,50)}% of races`:
          goalType==='wins'?`Expect at least ${rand(1,2)} win${rand(1,2)>1?'s':''} this season`:
          `Expect you to finish (not DNF) in ${rand(60,85)}% of races`,
@@ -1520,61 +1428,20 @@ function makeSponsor(seriesId,type='primary',international=false){
   return {id:uid(),brand,type:international?'international':type,seriesId,valuePerSeason:base,seasonsLeft:seasons,totalSeasons:seasons,happiness:75,winBonus:Math.floor(base*0.15),top5Bonus:Math.floor(base*0.05),minHappy:25,international,sponsorGoal};
 }
 
-// ── Driver bio pool ────────────────────────────────────────────────────────
-const DRIVER_BIO_LINES = [
-  "Grew up watching his dad run late models every Saturday night. Never left.",
-  "Started karting at eight and hasn't stopped since. Skipped college for this.",
-  "Works a day job through the week and races on weekends. Has for twelve years.",
-  "Won three consecutive track championships before anyone in a higher series noticed.",
-  "His engine builder is also his uncle. The arrangement has outlasted two marriages.",
-  "Moved down from the Midwest three seasons ago chasing better competition.",
-  "Used to race dirt before switching to asphalt. Still thinks dirt is harder.",
-  "Every car he's ever had is under his own name. No team money. No investors.",
-  "Crew chief relationship goes back to high school. Best friend. Worst critic.",
-  "Comes from a logging family. Says racing is quieter. Nobody argues with that.",
-  "Spent four seasons in the bottom ten before finding the right setup package.",
-  "Drives with a chip on his shoulder that the results are slowly justifying.",
-  "Former military. The discipline shows in his consistency. The temper, less so.",
-  "Built his first car from a wrecked shell in a rented garage bay.",
-  "Has three kids. All three have been to every race since they were born.",
-  "Known in the paddock for showing up earlier than everyone and leaving last.",
-  "Nearly quit after back-to-back DNFs. Crew chief talked him out of it.",
-  "Sponsors rotate but the number on the door hasn't changed in six years.",
-  "Ran his first season without a spotter. Doesn't recommend it.",
-  "Quiet in the pits. Loud on the radio. The crew has adjusted.",
-  "Grew up in the bleachers watching this series. Now he's in it.",
-  "No formal training. Learned entirely from watching tape and asking questions.",
-  "His qualifying pace has always been better than his race pace. Working on it.",
-  "Finished second in points last season and doesn't talk about it at all.",
-  "Backup car has more miles on it than the primary. That should tell you something.",
-  "Runs a tight budget. Every repair decision gets debated for at least a week.",
-  "Known for clean restarts. Takes the long view on track position.",
-  "Career DNF rate is above average. He'd tell you luck is part of the game.",
-  "Has never sponsored himself out of a series. Earns every ride he gets.",
-  "Strong on short tracks. Struggles when the field goes superspeedway.",
-  "Came up through the same program as two current Cup drivers. Took his own path.",
-  "Car owner, driver, and PR rep all at once. The hustle is the whole operation.",
-  "Never finished lower than P8 in a qualifying session. Race day is the puzzle.",
-  "Known for late-race charge. Manages tires better than anyone in the field.",
-  "Moved teams twice in four seasons. Each time the car got better.",
-  "Former mechanic who crossed to the driver's side. Setup understanding shows.",
-  "Has a superstition about the order he puts his gear on. Nobody asks about it.",
-  "Won his first feature on a night when three faster cars broke. Didn't care.",
-  "Builds the chassis himself in the offseason. Has the hands for it.",
-  "His worst finish streak lasted six races. Came back and won three in a row.",
-];
-
 function generateDriverBio() {
   return DRIVER_BIO_LINES[rand(0, DRIVER_BIO_LINES.length - 1)];
 }
 
-function createDriver(name,skill=null,seriesId=null,source='generated'){
+function createDriver(name,skill,seriesId,source){
+  skill=skill!==null&&skill!==undefined?skill:rand(30,75);
+  seriesId=seriesId||'mini_stock';
+  source=source||'generated';
   const tier=seriesId?(getSeries(seriesId)?.tier||1):1;
   const homeState=randomHomeState();
   return {
-    id:uid(),name,source,skill:skill!==null?skill:rand(30,75),
-    currentSeriesId:seriesId||'mini_stock',
-    currentTeam:(()=>{const tl=TEAMS[seriesId||'mini_stock']||[''];return tl[rand(0,tl.length-1)];})(),
+    id:uid(),name,source,skill,
+    currentSeriesId:seriesId,
+    currentTeam:(()=>{const tl=TEAMS[seriesId]||[''];return tl[rand(0,tl.length-1)];})(),
     rep:rand(0,Math.max(0,(tier-1)*30)),fans:rand(0,Math.max(0,(tier-1)*500)),
     money:rand(1000,5000*tier),wins:0,top5s:0,starts:0,seasonPoints:0,seasonWins:0,
     active:true,injuredOrPenalized:false,substituteFor:null,notes:'',careerHistory:[],
@@ -1589,22 +1456,20 @@ function generateInitialDriverPool(){
     const count=SERIES_FIELD_SIZE[s.id]||20;
     for(let i=0;i<count;i++){
       const homeState=randomHomeState();
-      const isIntl=typeof INTL_REGIONS!=='undefined'&&INTL_REGIONS.includes(homeState);
+      const isIntl=INTL_REGIONS.includes(homeState);
       let name=isIntl?generateAIName(homeState):generateAIName();
-      // Guarantee uniqueness
       let attempts=0;
       while(drivers.find(d=>d.name===name)&&attempts++<20){
         name=isIntl?generateAIName(homeState):generateAIName();
       }
       const d=createDriver(name,rand(25,85),s.id,'generated');
-      d.homeState=homeState; // override with the one we already picked
+      d.homeState=homeState;
       drivers.push(d);
     }
   });
   return drivers;
 }
 
-// Generate a small set of pre-existing relationships for a new career
 function generateStartingRivals(drivers) {
   const rivals = [];
   const pool = (drivers||[]).filter(d=>d.currentSeriesId==='mini_stock'||d.currentSeriesId==='street_stock');
@@ -1630,12 +1495,9 @@ function generateStartingRivals(drivers) {
   return rivals;
 }
 
-// Seed AI-AI relationships — each driver has opinions of a handful of peers
-// Stored on the driver object as driverRelationships: [{name, type}]
-// type: 'rival' | 'friend' | 'neutral'
 function seedAIDriverRelationships(drivers) {
   drivers.forEach(d => {
-    if (d.driverRelationships) return; // already seeded
+    if (d.driverRelationships) return;
     d.driverRelationships = [];
     const peers = drivers.filter(p=>p.id!==d.id&&p.currentSeriesId===d.currentSeriesId);
     if (!peers.length) return;
@@ -1650,21 +1512,17 @@ function seedAIDriverRelationships(drivers) {
   });
 }
 
-// Evolve AI-AI relationships based on simulated season outcomes
 function evolveAIRelationships(state) {
   if (!state.drivers) return;
   state.drivers.forEach(d => {
     if (!d.driverRelationships) d.driverRelationships = [];
-    // Small chance each season of a relationship shifting
     d.driverRelationships.forEach(rel => {
       if (Math.random() < 0.15) {
-        // Shift: rival can cool, friend can sour, neutral can tip either way
         if (rel.type==='rival' && Math.random()<0.3)      rel.type='neutral';
         else if (rel.type==='friend' && Math.random()<0.2) rel.type='neutral';
         else if (rel.type==='neutral')                     rel.type=Math.random()<0.5?'rival':'friend';
       }
     });
-    // Small chance of gaining a new relationship with someone in their series
     if (Math.random()<0.2) {
       const peers = (state.drivers||[]).filter(p=>p.id!==d.id&&p.currentSeriesId===d.currentSeriesId&&!d.driverRelationships.find(r=>r.name===p.name));
       if (peers.length) {
@@ -1675,7 +1533,6 @@ function evolveAIRelationships(state) {
       }
     }
   });
-  // Generate AI-AI drama that occasionally spills into player's feed
   const rivalPairs = [];
   state.drivers.forEach(d=>{
     (d.driverRelationships||[]).filter(r=>r.type==='rival').forEach(rel=>{
@@ -1695,8 +1552,8 @@ function evolveAIRelationships(state) {
   }
 }
 
-// ── Relationship system ──────────────────────────────────────────────
-function touchRival(rivals, name, type, clean=true) {
+function touchRival(rivals, name, type, clean) {
+  clean=clean!==undefined?clean:true;
   let r = rivals.find(x => x.name === name);
   if (!r) { r={name,incidents:0,closeRaces:0,cleanBattles:0}; rivals.push(r); }
   if (type==='incident') r.incidents++;
@@ -1735,10 +1592,12 @@ const REL_DESC={
 };
 
 const DRIVER_PERSONALITIES=['hothead','veteran','joker','ice_cold','showman','grinder'];
+
 function getPersonality(name){
   let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffffffff;
   return DRIVER_PERSONALITIES[Math.abs(h)%DRIVER_PERSONALITIES.length];
 }
+
 const PERSONALITY_CALLOUT={
   hothead:{
     incident:[
@@ -1847,7 +1706,7 @@ function calcDriverLevel(state){
 function initState(name){
   const drivers = generateInitialDriverPool();
   const state = {
-    driverName:name, homeState:'ME', season:1, week:1,
+    driverName:name, homeState:'ME', carNumber:0, season:1, week:1,
     money:5000, reputation:0, fans:0,
     wins:0, top5s:0, starts:0, poles:0,
     totalPrizeMoney:0, totalMerchRevenue:0,
@@ -1864,7 +1723,6 @@ function initState(name){
     drivers,
     log:['Season 1. $5,000, a dream, and a simulated engine that hopefully doesn\'t blow. Let\'s go.'],
     settings:{},
-    // SIM-specific fields
     driverAttrs: initDriverAttrs(),
     driverAttrPoints: DRIVER_ATTR_POINTS_START - DRIVER_ATTRS.length * DRIVER_ATTR_DEFAULT,
     driverPerks: [],
@@ -1873,12 +1731,12 @@ function initState(name){
     lastSocialPost:{},
     trackHistory: {},
   };
-  // Seed pre-existing relationships from local circuit history
   state.rivals = generateStartingRivals(drivers);
-  // Seed AI-AI relationships so the world has texture from day 1
   seedAIDriverRelationships(drivers);
   return state;
 }
+</script>
+
 //
 //Section 5
 //
