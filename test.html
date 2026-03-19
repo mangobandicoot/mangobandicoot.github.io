@@ -1,3 +1,5 @@
+// Section 1
+//
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -97,7 +99,7 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 .setup-box{text-align:center;max-width:480px;width:100%;padding:24px;animation:slideUp 0.5s ease}
 .setup-logo{font-size:78px;font-weight:900;line-height:0.88;background:linear-gradient(135deg,#F59E0B,#FBBF24,#F97316);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;margin-bottom:10px}
 .setup-card{background:#0B0F1A;border:1px solid #1E2433;border-radius:12px;padding:30px;margin-bottom:16px}
-.setup-card input{width:100%;font-size:20px;font-weight:700;text-align:center;margin-bottom:18px;border-width:2px}
+.setup-card input,.setup-card select{width:100%;font-size:20px;font-weight:700;text-align:center;margin-bottom:18px;border-width:2px}
 .setup-hint{font-size:14px;color:#64748B;margin-bottom:20px;line-height:1.5}
 .sim-badge{display:inline-block;background:#4C1D95;color:#DDD6FE;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;letter-spacing:0.1em;margin-bottom:10px;border:1px solid #7C3AED44}
 .sim-scene{background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px}
@@ -162,22 +164,13 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 <form id="setup-form">
 <div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em">Your Driver Name</div>
 <input id="driver-name-input" type="text" placeholder="Enter your name..." maxlength="28" required autocomplete="off">
+
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:0.1em">Car Number</div>
+<input id="driver-number-input" type="number" placeholder="00" min="0" max="999" required autocomplete="off" style="font-size:32px;font-weight:900;color:#F59E0B">
+
 <div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:0.1em">Home State / Region</div>
 <select id="driver-state-input" style="width:100%;margin-bottom:16px;font-size:16px;font-weight:600;text-align:center"></select>
-<script>
-(function(){
-  const sel=document.getElementById('driver-state-input');
-  if(!sel||sel.options.length>0)return;
-  const usStates=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
-  const intlRegions=['Europe','Africa','Asia','South America','Central America','Australia'];
-  const names={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
-  const usG=document.createElement('optgroup');usG.label='United States';
-  const iG=document.createElement('optgroup');iG.label='International';
-  usStates.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=names[s]||s;if(s==='ME')o.selected=true;usG.appendChild(o);});
-  intlRegions.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;iG.appendChild(o);});
-  sel.appendChild(usG);sel.appendChild(iG);
-})();
-</script>
+
 <div class="setup-hint">No iRacing required. Qualify and race by picking narrative choices. Build your driver RPG-style, upgrade your car between races. All contracts, sponsors, rivals and series progression from the original — fully intact.</div>
 <button type="submit" class="btn btn-lg btn-primary btn-full">START CAREER &#8594;</button>
 </form>
@@ -194,6 +187,10 @@ Have a save file? <label style="color:#D97706;cursor:pointer;margin-left:4px">Im
 </div>
 <div id="modal-overlay" class="hidden"><div id="modal-box"></div></div>
 <div id="toast-container"></div>
+
+//
+// Section 2
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // FULL THROTTLE SIM — Data Constants (identical to v1.5.2)
@@ -576,6 +573,9 @@ function getDriverBio(name) {
 }
 
 </script>
+//
+//Section 3
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // FULL THROTTLE SIM — Simulation Engine
@@ -1109,6 +1109,9 @@ function simulateQualifying(state, seriesId, raceIdx) {
 
   return { position, pole, fieldSize };
 }
+//
+//Section 4
+//
 // Simulate race — runs through scenarios, accumulates position changes
 // Returns: {position, dnf, dnfReason, points, prize, pole, lapsLed, mostLaps, fieldSize, closeFinishes, incidentDrivers, scenarioResults}
 function simulateRace(state, seriesId, raceIdx, qualPosition) {
@@ -1877,6 +1880,9 @@ function initState(name){
   seedAIDriverRelationships(drivers);
   return state;
 }
+//
+//Section 5
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // CALLOUT SYSTEM — Drivers publicly respond to incidents and close finishes
@@ -2325,6 +2331,9 @@ function generateSeasonNarrative(state, seriesId, finalStandings) {
 }
 
 </script>
+//
+//Section 6
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // PROCESS RACE RESULT — Core race result handler with all new features
@@ -2807,6 +2816,9 @@ function advanceSeason(state) {
 }
 
 </script>
+//
+//Section 7
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // UI RENDERING — Dashboard, Contracts, Sponsors, Rivals, Business
@@ -3264,6 +3276,9 @@ function renderBusiness(state) {
 }
 
 </script>
+//
+//Section 8
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // UI RENDERING — Standings, Team Management, Garage, Drivers Tab
@@ -3773,6 +3788,9 @@ function repairAll() {
 }
 
 </script>
+//
+//Section 9
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // SIMULATION MODALS — Qualifying and Race with scenario choices
@@ -4227,6 +4245,9 @@ function runSpecialEvent(eventId) {
 }
 
 </script>
+//
+//Section 10
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // ACTION HANDLERS — User interactions, contract signing, sponsor management
@@ -4711,88 +4732,17 @@ function getState() {
 }
 
 </script>
+//
+//Section 11
+//
 <script>
 // ═══════════════════════════════════════════════════════════════════════
 // BOOTSTRAP — Game initialization and setup
 // ═══════════════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Check for existing save
-  const existingSave = getState();
-  
-  if (existingSave) {
-    // Load existing career
-    $('setup-screen').classList.add('hidden');
-    $('app').style.display = 'flex';
-    
-    updateHeader(existingSave);
-    updateTabs(existingSave);
-    
-    // Check for pending drama
-    if (existingSave.dramaQueue && existingSave.dramaQueue.length > 0) {
-      processDramaQueue(existingSave);
-    } else {
-      showPage('dashboard');
-    }
-  } else {
-    // New career setup
-    const setupForm = $('setup-form');
-    setupForm.addEventListener('submit', e => {
-      e.preventDefault();
-      
-      const driverName = $('driver-name-input').value.trim();
-      const homeState = $('driver-state-input').value;
-      
-      if (!driverName) {
-        showToast('Please enter your driver name', 'error');
-        return;
-      }
-      
-      // Initialize new career
-      const newState = initState(driverName);
-      newState.homeState = homeState;
-      
-      saveState(newState);
-      
-      // Hide setup, show game
-      $('setup-screen').classList.add('hidden');
-      $('app').style.display = 'flex';
-      
-      updateHeader(newState);
-      updateTabs(newState);
-      showPage('dashboard');
-      
-      showToast(`Welcome to Full Throttle, ${driverName}!`, 'success');
-    });
-  }
-  
-  // Import save from setup screen
-  $('import-setup').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = evt => {
-      try {
-        const data = JSON.parse(evt.target.result);
-        localStorage.setItem('fullthrottle_sim_save', evt.target.result);
-        location.reload();
-      } catch (err) {
-        showToast('Invalid save file', 'error');
-      }
-    };
-    reader.readAsText(file);
-  });
-  
-  // Modal overlay click to close
-  $('modal-overlay').addEventListener('click', e => {
-    if (e.target === $('modal-overlay')) {
-      closeModal();
-    }
-  });
-  
-  // Populate state/region dropdown (already done inline in HTML, but double-check)
-  const sel = $('driver-state-input');
+  // Populate state dropdown
+  const sel = document.getElementById('driver-state-input');
   if (sel && sel.options.length === 0) {
     const usG = document.createElement('optgroup');
     usG.label = 'United States';
@@ -4817,6 +4767,87 @@ document.addEventListener('DOMContentLoaded', () => {
     sel.appendChild(usG);
     sel.appendChild(iG);
   }
+  
+  // Check for existing save
+  const existingSave = getState();
+  
+  if (existingSave) {
+    // Load existing career
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    
+    updateHeader(existingSave);
+    updateTabs(existingSave);
+    
+    // Check for pending drama
+    if (existingSave.dramaQueue && existingSave.dramaQueue.length > 0) {
+      processDramaQueue(existingSave);
+    } else {
+      showPage('dashboard');
+    }
+  } else {
+    // New career setup
+    const setupForm = document.getElementById('setup-form');
+    setupForm.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const driverName = document.getElementById('driver-name-input').value.trim();
+      const driverNumber = parseInt(document.getElementById('driver-number-input').value);
+      const homeState = document.getElementById('driver-state-input').value;
+      
+      if (!driverName) {
+        showToast('Please enter your driver name', 'error');
+        return;
+      }
+      
+      if (isNaN(driverNumber) || driverNumber < 0 || driverNumber > 999) {
+        showToast('Please enter a valid car number (0-999)', 'error');
+        return;
+      }
+      
+      // Initialize new career
+      const newState = initState(driverName);
+      newState.homeState = homeState;
+      newState.carNumber = driverNumber;
+      
+      saveState(newState);
+      
+      // Hide setup, show game
+      document.getElementById('setup-screen').classList.add('hidden');
+      document.getElementById('app').style.display = 'flex';
+      
+      updateHeader(newState);
+      updateTabs(newState);
+      showPage('dashboard');
+      
+      showToast(`Welcome to Full Throttle, ${driverName}!`, 'success');
+    });
+  }
+  
+  // Import save from setup screen
+  document.getElementById('import-setup').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        localStorage.setItem('fullthrottle_sim_save', evt.target.result);
+        location.reload();
+      } catch (err) {
+        showToast('Invalid save file', 'error');
+      }
+    };
+    reader.readAsText(file);
+  });
+  
+  // Modal overlay click to close
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) {
+      closeModal();
+    }
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -4826,7 +4857,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', e => {
   // ESC to close modal
   if (e.key === 'Escape') {
-    if (!$('modal-overlay').classList.contains('hidden')) {
+    if (!document.getElementById('modal-overlay').classList.contains('hidden')) {
       closeModal();
     }
   }
