@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Setup Test</title>
+<style>
+body{background:#000;color:#fff;font-family:Arial;padding:20px}
+input,select,button{display:block;width:100%;margin:10px 0;padding:10px;font-size:16px}
+button{background:#f90;color:#000;border:none;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>Setup Test</h1>
+<form id="setup-form">
+  <input id="driver-name" type="text" placeholder="Name" required>
+  <input id="driver-number" type="number" placeholder="Number" min="0" max="999" required>
+  <select id="driver-state">
+    <option value="ME">Maine</option>
+    <option value="NC">North Carolina</option>
+  </select>
+  <button type="submit">START</button>
+</form>
+<div id="result"></div>
+
+<script>
+document.getElementById('setup-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById('driver-name').value;
+  const number = document.getElementById('driver-number').value;
+  const state = document.getElementById('driver-state').value;
+  
+  document.getElementById('result').innerHTML = 
+    '<h2>Success!</h2>' +
+    '<p>Name: ' + name + '</p>' +
+    '<p>Number: ' + number + '</p>' +
+    '<p>State: ' + state + '</p>';
+  
+  alert('Form submitted: ' + name);
+});
+</script>
+</body>
+</html>
