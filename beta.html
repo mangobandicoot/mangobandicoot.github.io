@@ -1,8 +1,9 @@
+//PART 1
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Full Throttle v1.5.2-SIM</title>
+<title>Full Throttle v1.5.2-SIM — Simulated Career RPG</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -41,7 +42,6 @@ input:focus,textarea:focus,select:focus{outline:2px solid #D97706;outline-offset
 .stat-bar .sb-val{color:#E5E7EB;font-weight:700}
 .stat-bar .sb-track{height:5px;background:#1E2433;border-radius:3px;overflow:hidden}
 .stat-bar .sb-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
-.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:0.04em;border:1px solid;white-space:nowrap}
 button{cursor:pointer;border:none;border-radius:6px;font-weight:700;letter-spacing:0.03em;transition:opacity 0.15s,filter 0.15s;white-space:nowrap}
 button:not(:disabled):hover{filter:brightness(1.12)}
 button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
@@ -50,6 +50,7 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 .btn-full{width:100%}
 .btn-sm{padding:5px 12px;font-size:13px}
 .btn-primary{background:#D97706;color:#000}
+.btn-success{background:#065F46;color:#6EE7B7}
 .btn-ghost{background:transparent;color:#CBD5E1;border:1px solid #64748B}
 .row-item{display:flex;align-items:center;gap:14px;background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:11px 14px;margin-bottom:8px}
 .row-item .accent{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
@@ -61,28 +62,31 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 .modal-title{font-size:22px;font-weight:900;color:#F9FAFB;margin-bottom:16px}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .setup-box{text-align:center;max-width:480px;width:100%;padding:24px}
-.setup-logo{font-size:78px;font-weight:900;line-height:0.88;background:linear-gradient(135deg,#F59E0B,#FBBF24,#F97316);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.setup-logo{font-size:78px;font-weight:900;line-height:0.88;background:linear-gradient(135deg,#F59E0B,#FBBF24,#F97316);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;margin-bottom:10px}
 .setup-card{background:#0B0F1A;border:1px solid #1E2433;border-radius:12px;padding:30px;margin-bottom:16px}
 .setup-card input,.setup-card select{width:100%;font-size:20px;font-weight:700;text-align:center;margin-bottom:18px;border-width:2px}
-.mt-8{margin-top:8px}
 .text-gold{color:#F59E0B!important}
 .text-green{color:#10B981!important}
+.mt-8{margin-top:8px}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
 <div id="setup-screen">
 <div class="setup-box">
+<div style="font-size:11px;letter-spacing:0.35em;color:#94A3B8;text-transform:uppercase;margin-bottom:12px">Full Throttle — Simulated Branch</div>
 <div class="setup-logo">FULL<br>THROTTLE</div>
 <div class="setup-card">
 <form id="setup-form">
-<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px">Driver Name</div>
-<input id="driver-name-input" type="text" placeholder="Enter name..." required>
-<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px">Car Number</div>
-<input id="driver-number-input" type="number" placeholder="00" min="0" max="999" required style="font-size:32px;color:#F59E0B">
-<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px">Home State</div>
-<select id="driver-state-input"></select>
-<button type="submit" class="btn btn-lg btn-primary btn-full" style="margin-top:20px">START CAREER →</button>
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em">Your Driver Name</div>
+<input id="driver-name-input" type="text" placeholder="Enter your name..." maxlength="28" required autocomplete="off">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:0.1em">Car Number</div>
+<input id="driver-number-input" type="number" placeholder="00" min="0" max="999" required autocomplete="off" style="font-size:32px;font-weight:900;color:#F59E0B">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:0.1em">Home State / Region</div>
+<select id="driver-state-input" style="width:100%;margin-bottom:16px;font-size:16px;font-weight:600;text-align:center"></select>
+<div style="font-size:14px;color:#64748B;margin-bottom:20px;line-height:1.5">No iRacing required. Qualify and race by picking narrative choices. Build your driver RPG-style, upgrade your car between races.</div>
+<button type="submit" class="btn btn-lg btn-primary btn-full">START CAREER &#8594;</button>
 </form>
 </div>
 </div>
@@ -94,34 +98,546 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 </div>
 <div id="modal-overlay" class="hidden"><div id="modal-box"></div></div>
 
-<script>
-const APP_VERSION='v1.5.2-SIM';
-const US_STATES=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
-const US_STATE_NAMES={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
+//PART 2
 
-const SERIES=[
-{id:'mini_stock',name:'Mini Stock Series',tier:1,races:10,pay:120,winBonus:600,reqRep:0,reqFans:0,color:'#8B5CF6',fee:120},
-{id:'street_stock',name:'Street Stock Series',tier:2,races:12,pay:280,winBonus:1200,reqRep:35,reqFans:200,color:'#3B82F6',fee:250},
-{id:'nascar_cup',name:'NASCAR Cup Series',tier:7,races:36,pay:200000,winBonus:1000000,reqRep:320,reqFans:200000,color:'#EC4899',fee:80000},
+<script>
+const APP_VERSION = 'v1.5.2-SIM';
+
+const US_STATES = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
+
+const US_STATE_NAMES = {AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
+
+const INTL_REGIONS = ['Europe','Africa','Asia','South America','Central America','Australia'];
+
+const SERIES = [
+  {id:'mini_stock',name:'Mini Stock Series',short:'Mini Stock',tier:1,races:10,pay:120,winBonus:600,reqRep:0,reqFans:0,color:'#8B5CF6',maxTerm:1,maxTm:1,fee:120},
+  {id:'street_stock',name:'Street Stock Series',short:'Street Stock',tier:2,races:12,pay:280,winBonus:1200,reqRep:35,reqFans:200,color:'#3B82F6',maxTerm:1,maxTm:1,fee:250},
+  {id:'late_model_stock',name:'Late Model Stock Tour',short:'Late Model',tier:3,races:16,pay:1800,winBonus:7000,reqRep:80,reqFans:800,color:'#10B981',maxTerm:1,maxTm:2,fee:1000},
+  {id:'super_late_model',name:'Super Late Model Tour',short:'Super Late',tier:3,races:14,pay:2800,winBonus:10000,reqRep:65,reqFans:500,color:'#F97316',maxTerm:1,maxTm:2,fee:800},
+  {id:'arca_menards',name:'ARCA Menards Series',short:'ARCA',tier:4,races:20,pay:12000,winBonus:35000,reqRep:130,reqFans:3000,color:'#F59E0B',maxTerm:2,maxTm:2,fee:4000},
+  {id:'nascar_trucks',name:'NASCAR Craftsman Truck Series',short:'Trucks',tier:5,races:23,pay:25000,winBonus:90000,reqRep:180,reqFans:12000,color:'#EF4444',maxTerm:2,maxTm:3,fee:15000},
+  {id:'nascar_xfinity',name:'NASCAR Xfinity Series',short:'Xfinity',tier:6,races:33,pay:75000,winBonus:250000,reqRep:240,reqFans:55000,color:'#06B6D4',maxTerm:3,maxTm:3,fee:35000},
+  {id:'nascar_cup',name:'NASCAR Cup Series',short:'Cup Series',tier:7,races:36,pay:200000,winBonus:1000000,reqRep:320,reqFans:200000,color:'#EC4899',maxTerm:3,maxTm:3,fee:80000},
 ];
 
-function getSeries(id){return SERIES.find(s=>s.id===id);}
-function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
-function fmtMoney(n){return '$'+n.toLocaleString();}
-function $(id){return document.getElementById(id);}
+const SERIES_FIELD_SIZE = {mini_stock:18,street_stock:20,late_model_stock:22,super_late_model:20,arca_menards:28,nascar_trucks:32,nascar_xfinity:36,nascar_cup:40};
 
-const SERIES_FIELD_SIZE={mini_stock:18,street_stock:20,nascar_cup:40};
+const IRACING_PTS = Array.from({length:50},(_,i)=>Math.max(1,43-i));
 
-function initState(name){
-  return {
-    driverName:name,homeState:'ME',carNumber:0,season:1,week:1,
-    money:5000,reputation:0,fans:0,
-    wins:0,top5s:0,starts:0,poles:0,
-    contracts:[],pendingOffers:[],
-    schedules:{},
-    log:['Season 1. $5,000 and a dream.'],
+const DRIVER_ATTRS = [
+  {id:'qualifying',name:'Qualifying',desc:'Improves starting position rolls',max:10,color:'#8B5CF6'},
+  {id:'consistency',name:'Consistency',desc:'Reduces DNF risk, steadier results',max:10,color:'#10B981'},
+  {id:'aggression',name:'Aggression',desc:'Bonus to position gains, riskier plays pay off',max:10,color:'#EF4444'},
+  {id:'restarts',name:'Restarts',desc:'Better late-race and restart scenarios',max:10,color:'#F59E0B'},
+  {id:'fuel_mgmt',name:'Fuel Mgmt',desc:'Strategy scenarios favor you',max:10,color:'#06B6D4'},
+  {id:'wet_weather',name:'Wet Weather',desc:'Bonus in rain/slick conditions',max:10,color:'#3B82F6'},
+];
+
+const DRIVER_ATTR_DEFAULT = 1;
+const DRIVER_ATTR_POINTS_START = 15;
+
+const DRIVER_PERKS = [
+  {id:'clutch',name:'Clutch',icon:'🎯',desc:'Qualifying bonus in high-pressure sessions.',reqLvl:5},
+  {id:'rain_master',name:'Rain Master',icon:'🌧️',desc:'Double wet weather attribute bonus.',reqLvl:10},
+  {id:'iron_will',name:'Iron Will',icon:'💪',desc:'Reduce DNF risk when car condition is critical.',reqLvl:15},
+  {id:'crowd_pleaser',name:'Crowd Pleaser',icon:'👥',desc:'+25% fan gain from all sources.',reqLvl:20},
+  {id:'sponsor_magnet',name:'Sponsor Magnet',icon:'💰',desc:'Sponsor happiness decays 30% slower.',reqLvl:25},
+  {id:'legend',name:'Legend',icon:'🏆',desc:'+30% reputation gain from all sources.',reqLvl:30},
+];
+
+const CAR_UPGRADES = [
+  {id:'engine',name:'Engine',icon:'🔥',desc:'Raw speed and power.',tiers:[
+    {name:'Stage 1',cost:2000,desc:'Blueprinted motor',bonus:{speedBonus:2,posBonus:1}},
+    {name:'Stage 2',cost:8000,desc:'Performance heads',bonus:{speedBonus:4,posBonus:2}},
+    {name:'Stage 3',cost:25000,desc:'Custom cam, forged internals',bonus:{speedBonus:7,posBonus:3}},
+  ]},
+  {id:'chassis',name:'Chassis',icon:'🏗️',desc:'Handling and stability.',tiers:[
+    {name:'Stage 1',cost:3000,desc:'Tubular reinforcement',bonus:{consistencyBonus:2,dnfReduce:0.02}},
+    {name:'Stage 2',cost:12000,desc:'Custom geometry',bonus:{consistencyBonus:4,dnfReduce:0.04}},
+    {name:'Stage 3',cost:35000,desc:'Full chromoly cage',bonus:{consistencyBonus:6,dnfReduce:0.07}},
+  ]},
+  {id:'suspension',name:'Suspension',icon:'⚙️',desc:'Corner speed and control.',tiers:[
+    {name:'Stage 1',cost:2500,desc:'Adjustable shocks',bonus:{posBonus:1,trafficBonus:2}},
+    {name:'Stage 2',cost:10000,desc:'Coilover kit',bonus:{posBonus:2,trafficBonus:4}},
+    {name:'Stage 3',cost:30000,desc:'Full race suspension',bonus:{posBonus:3,trafficBonus:6}},
+  ]},
+  {id:'aero',name:'Aero',icon:'💨',desc:'Downforce and top speed.',tiers:[
+    {name:'Stage 1',cost:1500,desc:'Rear spoiler upgrade',bonus:{speedBonus:1,overtakeBonus:2}},
+    {name:'Stage 2',cost:6000,desc:'Front splitter',bonus:{speedBonus:2,overtakeBonus:4}},
+    {name:'Stage 3',cost:20000,desc:'Full aero package',bonus:{speedBonus:4,overtakeBonus:6}},
+  ]},
+  {id:'tires',name:'Tire Program',icon:'🛞',desc:'Grip and longevity.',tiers:[
+    {name:'Stage 1',cost:1000,desc:'Compound optimization',bonus:{lateRaceBonus:2,wearReduce:0.1}},
+    {name:'Stage 2',cost:5000,desc:'Custom tire strategy',bonus:{lateRaceBonus:4,wearReduce:0.2}},
+    {name:'Stage 3',cost:15000,desc:'Full tire development',bonus:{lateRaceBonus:6,wearReduce:0.3}},
+  ]},
+  {id:'pit_crew',name:'Pit Crew',icon:'🔧',desc:'Pit stop speed and strategy.',tiers:[
+    {name:'Stage 1',cost:2000,desc:'Experienced pit crew',bonus:{pitBonus:1,strategyBonus:1}},
+    {name:'Stage 2',cost:8000,desc:'Elite pit crew',bonus:{pitBonus:2,strategyBonus:2}},
+    {name:'Stage 3',cost:25000,desc:'Championship pit crew',bonus:{pitBonus:4,strategyBonus:3}},
+  ]},
+];
+
+const TEAMS = {
+  mini_stock:["Pawlowski's Auto Body","Earl's Speed Shop","Backwoods Motorsports","County Line Racing","Hilltop Racing"],
+  street_stock:['Barnyard Racing',"Cousin's Garage",'Rural Route Racing','Three Dog Racing','Riverside Motorsports'],
+  late_model_stock:['Southern Speed Racing','Appalachian Motorsports','Piedmont Racing Co.','Blue Ridge Speed','Tri-State Racing'],
+  super_late_model:['Carolina Asphalt Racing','Ridgeline Motorsports','Summit Racing Stable','Tri-Oval Racing','Flatout Racing'],
+  arca_menards:['Pinnacle Motorsports','Elevation Racing','Heritage Speed Group','National Oval Racing','Summit Motorsports'],
+  nascar_trucks:['Frontier Truck Racing','Wildfire Motorsports','Crossroads Racing','Thunder Racing','Apex Truck Team'],
+  nascar_xfinity:['Silver Arrow Racing','Criterion Motorsports','Momentum Racing Partners','Apex National','Phoenix Racing'],
+  nascar_cup:['Titan Motorsports','Crown Racing','Dynasty Motor Racing','Apex Cup Team','Legacy Motor Club'],
+};
+
+const AI_FIRST = ['Kyle','Jimmy','Dale','Bobby','Ronnie','Chase','Tyler','Rick','Austin','Sammy','Devin','Nate','Cole','Brady','Zach','Marcus','Joey','Pete','Garrett','Hank','Luke','Cody','Ray','Brent','Travis','Dustin','Mitch','Greg','Aaron','Vince','Drew','Lenny','Stan','Wayne','Danny','Trent','Seth','Ricky','Caleb','Wade','Jason','Connor','Mike','Phil','Gary','Dave','Shawn','Curt','Neil','Vance','Brett','Derek','Shane','Lance','Todd','Denny','Clint','Regan','David','Matt'];
+
+const AI_LAST = ['McAllister','Hayes','Whitfield','Tremont','Stacks','Duvall','Boone','Cantrell','Phelps','Gross','Hargrove','Wicker','Farris','Holt','Tunnell','Deen','Ruiz','Slade','Finch','Dillon','Farber','Marsh','Sutton','Holloway','Yount','Falk','Pruitt','Sable','Tull','Corley','Paxson','Hobbs','Cutler','Rideout','Kowalski','Malone','Voss','Firth','Lehr','Bale'];
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function randF(min,max){return Math.random()*(max-min)+min}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
+function fmtMoney(n){return '$'+n.toLocaleString()}
+function fmtFans(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':n.toString()}
+function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+function getSeries(id){return SERIES.find(s=>s.id===id)}
+function generateAIName(){const f=AI_FIRST[rand(0,AI_FIRST.length-1)];const l=AI_LAST[rand(0,AI_LAST.length-1)];return Math.random()<0.12?f+' '+l+' Jr.':f+' '+l}
+
+function getAttrBonus(attrs,id){const val=(attrs||{})[id]||DRIVER_ATTR_DEFAULT;return val-DRIVER_ATTR_DEFAULT}
+
+function getUpgradeBonus(upgrades,bonusKey){let total=0;CAR_UPGRADES.forEach(upg=>{const lvl=(upgrades||{})[upg.id]||0;if(lvl>0){const tier=upg.tiers[lvl-1];if(tier&&tier.bonus[bonusKey])total+=tier.bonus[bonusKey]}});return total}
+
+function calcPoints(seriesId,pos,pole,lapsLed,mostLaps){return (IRACING_PTS[Math.max(0,pos-1)]||1)+(pole?1:0)+(lapsLed?1:0)+(mostLaps?3:0)}
+
+function calcPrize(seriesId,pos,fs){const s=getSeries(seriesId);if(pos===1)return s.pay+s.winBonus;const pct=Math.max(0.10,0.70-((pos-2)/(fs-2))*0.60);return Math.floor(s.pay*pct)}
+
+function calcDriverLevel(state){return Math.floor((state.wins*3+state.top5s+state.poles*2)/5)}
+
+function addLog(state,msg){state.log.push('[S'+state.season+' W'+state.week+'] '+msg);if(state.log.length>200)state.log=state.log.slice(-200)}
+
+function initDriverAttrs(){const attrs={};DRIVER_ATTRS.forEach(a=>{attrs[a.id]=DRIVER_ATTR_DEFAULT});return attrs}
+
+function initCarUpgrades(){const ups={};CAR_UPGRADES.forEach(u=>{ups[u.id]=0});return ups}
+</script>
+
+//PART 3
+
+<script>
+const QUALI_SCENARIOS = [
+  {scene:"You are on your out-lap with two minutes left in the session. The track is rubbering up fast on the bottom. Do you go for the bottom or commit to the top?",choices:[
+    {label:"Take the bottom — rubber is key",modifier:1.12,icon:"📉"},
+    {label:"Work the top — your comfort zone",modifier:1.02,icon:"📈"},
+    {label:"Mix it up — best of both sectors",modifier:1.07,icon:"🔀"},
+  ]},
+  {scene:"Traffic is heavy. A lapped car from practice is slow through the middle of the circuit right as you start your hot lap.",choices:[
+    {label:"Abort and wait for a clean lap",modifier:0.95,icon:"⏱️"},
+    {label:"Thread the gap — stay on it",modifier:1.10,icon:"⚡"},
+    {label:"Radio the crew to sort the timing",modifier:1.02,icon:"📻"},
+  ]},
+  {scene:"Your engineer says the front tires are still not up to temp on the out-lap. Session ends in two laps.",choices:[
+    {label:"Scrub them hard through the first chicane",modifier:1.08,icon:"🌡️"},
+    {label:"Drive the lap as-is and trust your feel",modifier:0.92,icon:"🎯"},
+    {label:"Box for a fresh set and one more shot",modifier:1.00,icon:"🔄"},
+  ]},
+];
+
+const RACE_SCENARIOS = [
+  {id:'opening_laps',when:ctx=>ctx.lap<=3,weight:3,scene:ctx=>"Lap "+ctx.lap+". The field is stacked from the start. Cars are squeezing three-wide through turns 3-4.",choices:[
+    {label:"Be aggressive — claim your real estate now",icon:"💥",posModifier:2,dnfRisk:0.10,fanBonus:60,narrativeResult:{good:"You establish yourself early. Three spots gained.",bad:"Three-wide goes wrong. Contact drops you back five."}},
+    {label:"Be patient — let the dust settle",icon:"⏳",posModifier:0,dnfRisk:0.01,fanBonus:20,narrativeResult:{good:"Smart. The chaos clears and you pick up two free spots.",bad:"Too patient. The field gaps out and you are stuck mid-pack."}},
+    {label:"Take the high line around the outside",icon:"🔄",posModifier:1,dnfRisk:0.06,fanBonus:40,narrativeResult:{good:"Slick move. You go around the outside and gain two spots cleanly.",bad:"No room up top. You get pinched and lose two spots."}},
+  ]},
+  {id:'restart_battle',when:ctx=>ctx.lap>3&&ctx.pos<=Math.ceil(ctx.fieldSize*0.5),weight:4,scene:ctx=>"Green flag flies on the restart. You are P"+ctx.pos+" with "+ctx.lapsLeft+" to go.",choices:[
+    {label:"Dive to the inside — take the spot",icon:"⚡",posModifier:2,dnfRisk:0.08,fanBonus:80,narrativeResult:{good:"You thread the needle perfectly. The move sticks.",bad:"Contact. You both lose positions."}},
+    {label:"Stay patient — protect your line",icon:"🛡️",posModifier:0,dnfRisk:0.01,fanBonus:20,narrativeResult:{good:"Clean restart. You hold your line.",bad:"You hesitate and get squeezed back two spots."}},
+    {label:"Go high and build momentum through 3-4",icon:"📈",posModifier:1,dnfRisk:0.02,fanBonus:40,narrativeResult:{good:"Smart move. You gain two spots through turns 3-4.",bad:"Everyone else was thinking the same thing. You net zero."}},
+  ]},
+  {id:'fuel_decision',when:ctx=>ctx.lapsLeft>0&&ctx.lapsLeft<=Math.floor(ctx.fieldSize*0.4),weight:2,scene:ctx=>"Your spotter comes on: fuel is getting tight. "+ctx.lapsLeft+" laps left.",choices:[
+    {label:"Trust the math — go to the end",icon:"🎲",posModifier:3,dnfRisk:0.12,fanBonus:100,narrativeResult:{good:"You make it on fumes. Everyone who pitted is behind you now.",bad:"You run out on the last lap. Should have pitted."}},
+    {label:"Pit for a splash — play it safe",icon:"⛽",posModifier:-3,dnfRisk:0.02,fanBonus:0,narrativeResult:{good:"Smart call. You come out clean and fight back hard.",bad:"You lost five spots in the pit cycle."}},
+    {label:"Back off the throttle — stretch the fuel",icon:"💡",posModifier:1,dnfRisk:0.04,fanBonus:30,narrativeResult:{good:"Textbook fuel management. You stretch it and keep your spot.",bad:"Backing off cost you two positions."}},
+  ]},
+  {id:'late_battle',when:ctx=>ctx.lapsLeft<=5&&ctx.lapsLeft>0&&ctx.pos<=10,weight:4,scene:ctx=>ctx.lapsLeft+" laps to go. A fast car is right on your bumper. This is it.",choices:[
+    {label:"Make the move — door to door into turn 1",icon:"⚡",posModifier:2,dnfRisk:0.07,fanBonus:150,narrativeResult:{good:"You squeeze alongside and make it stick.",bad:"Contact. You lose the spot and have to fight back."}},
+    {label:"Keep it smooth — drive clean consistent laps",icon:"✅",posModifier:1,dnfRisk:0.02,fanBonus:60,narrativeResult:{good:"Consistent laps do the job. They cannot find a way past.",bad:"You are giving up ground every lap."}},
+    {label:"Work lapped traffic to your advantage",icon:"🧭",posModifier:1,dnfRisk:0.03,fanBonus:80,narrativeResult:{good:"You use a lapped car perfectly. The gap opens up.",bad:"The lapped car hurt you too."}},
+  ]},
+];
+
+function buildSimContext(state,seriesId,raceIdx,currentPos,fieldSize,lapNum,totalLaps){
+  return{lap:lapNum,pos:currentPos,fieldSize,lapsLeft:totalLaps-lapNum,condition:'clear',rival:null,driverAttrs:state.driverAttrs||{},carUpgrades:state.carUpgrades||{},seriesId};
+}
+
+function pickScenarios(ctx,count,pool){
+  const eligible=pool.filter(s=>s.when(ctx));
+  if(!eligible.length)return[];
+  const picked=[];
+  const used=new Set();
+  let attempts=0;
+  while(picked.length<count&&attempts<50){
+    attempts++;
+    const total=eligible.reduce((s,e)=>used.has(e.id)?s:s+e.weight,0);
+    let r=Math.random()*total;
+    for(const s of eligible){
+      if(used.has(s.id))continue;
+      r-=s.weight;
+      if(r<=0){picked.push(s);used.add(s.id);break}
+    }
+  }
+  return picked;
+}
+
+function simulateQualifying(state,seriesId,raceIdx){
+  const s=getSeries(seriesId);
+  const fieldSize=SERIES_FIELD_SIZE[seriesId]||20;
+  const attrs=state.driverAttrs||{};
+  const upgrades=state.carUpgrades||{};
+  
+  let baseRoll=Math.random()*100;
+  const qualAttr=getAttrBonus(attrs,'qualifying');
+  baseRoll+=qualAttr*4;
+  baseRoll+=getUpgradeBonus(upgrades,'speedBonus')*0.4;
+  baseRoll+=getUpgradeBonus(upgrades,'pitBonus')*0.3;
+  baseRoll+=(state.confidence||0)*3;
+  
+  const perks=state.driverPerks||[];
+  if(perks.includes('clutch'))baseRoll+=8;
+  
+  baseRoll=clamp(baseRoll,1,115);
+  const pctile=baseRoll/115;
+  const rawPos=Math.round(fieldSize*(1-pctile*0.95))+1;
+  const position=clamp(rawPos,1,fieldSize);
+  const pole=position===1;
+  
+  return{position,pole,fieldSize};
+}
+
+function simulateRace(state,seriesId,raceIdx,qualPosition){
+  const s=getSeries(seriesId);
+  const fieldSize=SERIES_FIELD_SIZE[seriesId]||20;
+  const attrs=state.driverAttrs||{};
+  const upgrades=state.carUpgrades||{};
+  const totalLaps=s.races*3;
+  const perks=state.driverPerks||[];
+  
+  let pos=qualPosition||Math.floor(fieldSize*0.5);
+  
+  const baseSkill=(
+    getAttrBonus(attrs,'consistency')*3+
+    getAttrBonus(attrs,'aggression')*1.5+
+    getUpgradeBonus(upgrades,'posBonus')+
+    getUpgradeBonus(upgrades,'speedBonus')*0.3+
+    getUpgradeBonus(upgrades,'consistencyBonus')*0.2+
+    (state.confidence||0)*2
+  );
+  
+  const lateRaceBonus=getUpgradeBonus(upgrades,'lateRaceBonus')*0.2;
+  
+  let dnfProb=0.12-getAttrBonus(attrs,'consistency')*0.01;
+  if(state.carCondition){
+    const avgCond=Object.values(state.carCondition).reduce((a,b)=>a+b,0)/5;
+    if(avgCond<30)dnfProb+=0.15;
+    else if(avgCond<50)dnfProb+=0.06;
+  }
+  dnfProb-=getUpgradeBonus(upgrades,'dnfReduce');
+  if(perks.includes('iron_will')&&(state.carCondition?.engine||100)<40)dnfProb*=0.8;
+  dnfProb=clamp(dnfProb,0.01,0.45);
+  
+  const numScenarios=rand(2,4);
+  const ctx=buildSimContext(state,seriesId,raceIdx,pos,fieldSize,5,totalLaps);
+  const scenarios=pickScenarios(ctx,numScenarios,RACE_SCENARIOS);
+  
+  const scenarioResults=[];
+  for(const sc of scenarios){
+    scenarioResults.push({scenario:sc,choiceMade:null,outcome:null,posDelta:0});
+  }
+  
+  return{
+    pending:true,scenarios:scenarioResults,basePos:pos,fieldSize,
+    dnfRoll:Math.random(),dnfProb,baseSkill,lateRaceBonus,condBonus:0,
+    qualPosition:pos,seriesId,raceIdx,
   };
+}
+
+function resolveRace(pendingRace,choiceResults){
+  const{basePos,fieldSize,dnfRoll,dnfProb,baseSkill,lateRaceBonus,condBonus,qualPosition,seriesId,narrativeDelta}=pendingRace;
+  const s=getSeries(seriesId);
+  
+  let totalPosDelta=0;
+  let extraDNFRisk=0;
+  const incidentDrivers=[];
+  
+  choiceResults.forEach(cr=>{
+    totalPosDelta+=cr.posDelta||0;
+    extraDNFRisk+=cr.dnfRisk||0;
+    if(cr.incidentDriver)incidentDrivers.push(cr.incidentDriver);
+  });
+  
+  if(narrativeDelta)totalPosDelta+=narrativeDelta;
+  
+  const skillDrift=baseSkill*randF(0.5,1.5);
+  totalPosDelta+=skillDrift;
+  totalPosDelta+=lateRaceBonus*randF(0.5,1.5);
+  totalPosDelta+=condBonus;
+  
+  const finalDNFProb=dnfProb+extraDNFRisk;
+  const isDNF=(dnfRoll+(extraDNFRisk*0.5))<finalDNFProb;
+  
+  if(isDNF){
+    const dnfReasons=['engine failure','crash damage','fuel issue','overheating','suspension failure','oil pressure'];
+    const dnfReason=dnfReasons[rand(0,dnfReasons.length-1)];
+    return{position:fieldSize,dnf:true,dnfReason,fieldSize,points:0,prize:0,pole:false,lapsLed:false,mostLaps:false,closeFinishes:[],incidentDrivers,qualPosition};
+  }
+  
+  let finalPos=basePos-Math.round(totalPosDelta);
+  finalPos=clamp(finalPos,1,fieldSize);
+  
+  const lapsLed=finalPos<=5&&Math.random()<0.4;
+  const mostLaps=finalPos===1&&Math.random()<0.5;
+  const closeFinishes=[];
+  const points=calcPoints(seriesId,finalPos,finalPos===1,lapsLed,mostLaps);
+  const prize=calcPrize(seriesId,finalPos,fieldSize);
+  
+  return{position:finalPos,dnf:false,dnfReason:null,fieldSize,points,prize,pole:qualPosition===1,lapsLed,mostLaps,closeFinishes,incidentDrivers,qualPosition};
+}
+</script>
+
+// PART 4
+
+<script>
+function makeContract(seriesId,quality){
+  const s=getSeries(seriesId);
+  const teamList=TEAMS[seriesId]||['Independent Racing'];
+  const team=teamList[rand(0,teamList.length-1)];
+  const mult={poor:0.7,average:1.0,good:1.3,elite:1.7}[quality];
+  const termSeasons=rand(1,s.maxTerm);
+  const tmCount=rand(0,Math.min(s.maxTm,quality==='elite'?3:quality==='good'?2:1));
+  const prizeShare=s.tier<=3?{poor:0.60,average:0.70,good:0.78,elite:0.85}[quality]:{poor:0.70,average:0.80,good:0.88,elite:0.95}[quality];
+  const signingBonus=s.tier>=4?Math.floor(s.pay*s.races*mult*randF(0.2,0.4)):0;
+  return{
+    id:uid(),team,seriesId,quality,salary:signingBonus,prizeShare,entryFee:s.fee,
+    termSeasons,seasonsCompleted:0,winBonus:Math.floor(s.winBonus*mult*randF(0.5,0.9)),
+    races:s.races,racesCompleted:0,earnings:0,missedFinishWarnings:0,
+    reqFinish:quality==='elite'?8:quality==='good'?12:18,penaltyRate:0.35,buyoutRate:0.50,
+    teammates:new Array(tmCount).fill(null),crewPackage:'basic',indie:false,
+  };
+}
+
+function generateOffers(rep,fans){
+  const offers=[];
+  SERIES.forEach(s=>{
+    if(rep>=s.reqRep-10&&fans>=s.reqFans*0.5){
+      const q=rep>=s.reqRep+50?'good':rep>=s.reqRep+20?'average':'poor';
+      if(Math.random()<(rep>=s.reqRep?0.65:0.25))offers.push(makeContract(s.id,q));
+    }
+  });
+  if(!offers.length)offers.push(makeContract('mini_stock','poor'));
+  return shuffle(offers).slice(0,4);
+}
+
+function generateSchedule(seriesId){
+  const s=getSeries(seriesId);
+  const tracks=['Charlotte Motor Speedway','Daytona International Speedway','Bristol Motor Speedway','Talladega Superspeedway','Martinsville Speedway','Richmond Raceway','Dover Motor Speedway','Phoenix Raceway'];
+  const sched=[];
+  for(let i=0;i<s.races;i++){
+    const track=tracks[rand(0,tracks.length-1)];
+    sched.push({round:i+1,track,city:'TBD',state:'NC',qualifying:null,result:null,condition:'clear'});
+  }
+  return sched;
+}
+
+function createDriver(name,skill,seriesId,source){
+  skill=skill!==null&&skill!==undefined?skill:rand(30,75);
+  seriesId=seriesId||'mini_stock';
+  source=source||'generated';
+  const tier=seriesId?(getSeries(seriesId)?.tier||1):1;
+  return{
+    id:uid(),name,source,skill,
+    currentSeriesId:seriesId,
+    currentTeam:'Independent',
+    rep:rand(0,Math.max(0,(tier-1)*30)),
+    fans:rand(0,Math.max(0,(tier-1)*500)),
+    money:rand(1000,5000*tier),
+    wins:0,top5s:0,starts:0,seasonPoints:0,seasonWins:0,
+    active:true,homeState:US_STATES[rand(0,US_STATES.length-1)],
+  };
+}
+
+function generateInitialDriverPool(){
+  const drivers=[];
+  SERIES.forEach(s=>{
+    const count=SERIES_FIELD_SIZE[s.id]||20;
+    for(let i=0;i<count;i++){
+      let name=generateAIName();
+      let attempts=0;
+      while(drivers.find(d=>d.name===name)&&attempts++<20){
+        name=generateAIName();
+      }
+      const d=createDriver(name,rand(25,85),s.id,'generated');
+      drivers.push(d);
+    }
+  });
+  return drivers;
+}
+
+function processRaceResult(state,seriesId,raceIdx,result){
+  const s=getSeries(seriesId);
+  const sched=state.schedules[seriesId];
+  const race=sched[raceIdx];
+  const contract=state.contracts.find(c=>c.seriesId===seriesId);
+  
+  state.starts++;
+  if(result.position===1)state.wins++;
+  if(result.position<=5)state.top5s++;
+  if(result.pole)state.poles++;
+  
+  if(contract){
+    contract.racesCompleted++;
+    if(result.position===1){
+      contract.wins=(contract.wins||0)+1;
+    }
+  }
+  
+  if(!state.championshipPoints)state.championshipPoints={};
+  if(!state.championshipPoints[seriesId])state.championshipPoints[seriesId]={};
+  state.championshipPoints[seriesId][state.driverName]=(state.championshipPoints[seriesId][state.driverName]||0)+result.points;
+  
+  let totalPrize=result.prize;
+  if(result.position===1&&contract&&contract.winBonus){
+    totalPrize+=contract.winBonus;
+    addLog(state,`Win bonus from ${contract.team}: ${fmtMoney(contract.winBonus)}`);
+  }
+  
+  const prizeShare=contract?.prizeShare||0.70;
+  const playerPrize=Math.floor(totalPrize*prizeShare);
+  state.money+=playerPrize;
+  state.totalPrizeMoney=(state.totalPrizeMoney||0)+playerPrize;
+  
+  if(contract)contract.earnings+=playerPrize;
+  
+  const baseFanGain=result.dnf?0:result.position===1?rand(100,300):result.position<=5?rand(50,150):rand(10,50);
+  state.fans+=baseFanGain;
+  
+  let repGain=0;
+  if(result.dnf){
+    repGain=-2;
+  }else if(result.position===1){
+    repGain=10+s.tier*2;
+  }else if(result.position<=5){
+    repGain=5+s.tier;
+  }else if(result.position<=10){
+    repGain=2;
+  }else{
+    repGain=1;
+  }
+  state.reputation+=repGain;
+  
+  if(result.position===1){
+    state.confidence=Math.min(10,(state.confidence||0)+3);
+  }else if(result.position<=5){
+    state.confidence=Math.min(10,(state.confidence||0)+1);
+  }else if(result.dnf){
+    state.confidence=Math.max(-10,(state.confidence||0)-3);
+  }else if(result.position>result.fieldSize*0.7){
+    state.confidence=Math.max(-10,(state.confidence||0)-1);
+  }
+  
+  if(!state.carCondition)state.carCondition={engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  
+  if(result.dnf){
+    state.carCondition.engine=Math.max(0,state.carCondition.engine-rand(15,30));
+    state.carCondition.suspension=Math.max(0,state.carCondition.suspension-rand(10,25));
+    state.carCondition.chassis=Math.max(0,state.carCondition.chassis-rand(10,20));
+    state.carCondition.tires=Math.max(0,state.carCondition.tires-rand(20,40));
+    state.carCondition.brakes=Math.max(0,state.carCondition.brakes-rand(15,30));
+  }else{
+    state.carCondition.engine-=rand(3,8);
+    state.carCondition.suspension-=rand(2,6);
+    state.carCondition.chassis-=rand(2,5);
+    state.carCondition.tires-=rand(5,12);
+    state.carCondition.brakes-=rand(3,7);
+    Object.keys(state.carCondition).forEach(k=>{
+      state.carCondition[k]=Math.max(0,state.carCondition[k]);
+    });
+  }
+  
+  race.result=result;
+  
+  if(!state.raceHistory)state.raceHistory=[];
+  state.raceHistory.push({
+    season:state.season,
+    seriesId,
+    round:raceIdx+1,
+    track:race.track,
+    position:result.position,
+    dnf:result.dnf,
+    pole:result.pole,
+    prize:playerPrize,
+    points:result.points,
+  });
+  
+  const oldLevel=state.driverLevel||0;
+  const newLevel=calcDriverLevel(state);
+  if(newLevel>oldLevel){
+    state.driverLevel=newLevel;
+    addLog(state,`Driver Level Up! Now Level ${newLevel}`);
+  }
+  
+  addLog(state,`${race.track} - ${result.dnf?'DNF ('+result.dnfReason+')':'P'+result.position} - ${fmtMoney(playerPrize)} - ${result.points} pts`);
+}
+
+function initState(name,carNumber,homeState){
+  const drivers=generateInitialDriverPool();
+  const state={
+    driverName:name,
+    homeState:homeState||'ME',
+    carNumber:carNumber||0,
+    season:1,
+    week:1,
+    money:5000,
+    reputation:0,
+    fans:0,
+    wins:0,
+    top5s:0,
+    starts:0,
+    poles:0,
+    totalPrizeMoney:0,
+    totalMerchRevenue:0,
+    contracts:[],
+    pendingOffers:generateOffers(0,0),
+    schedules:{},
+    championshipPoints:{},
+    seriesFields:{},
+    sponsors:[],
+    sponsorOffers:[],
+    rivals:[],
+    teammates:[],
+    offTrackDone:[],
+    dramaQueue:[],
+    seasonGoals:[],
+    goalHistory:[],
+    seasonHistory:[],
+    confidence:0,
+    spotter:null,
+    milestones:[],
+    offseasonOffers:[],
+    offseasonPhase:false,
+    carCondition:{engine:100,suspension:100,chassis:100,tires:100,brakes:100},
+    specialResults:[],
+    raceHistory:[],
+    drivers,
+    log:['Season 1. $5,000, a dream, and a simulated engine that hopefully doesn\'t blow. Let\'s go.'],
+    settings:{},
+    driverAttrs:initDriverAttrs(),
+    driverAttrPoints:DRIVER_ATTR_POINTS_START-DRIVER_ATTRS.length*DRIVER_ATTR_DEFAULT,
+    driverPerks:[],
+    carUpgrades:initCarUpgrades(),
+    driverLevel:0,
+    lastSocialPost:{},
+    trackHistory:{},
+  };
+  return state;
 }
 
 function saveState(state){
@@ -131,10 +647,31 @@ function saveState(state){
 function getState(){
   const raw=localStorage.getItem('fullthrottle_sim_save');
   if(!raw)return null;
-  try{return JSON.parse(raw);}catch(e){return null;}
+  try{
+    return JSON.parse(raw);
+  }catch(e){
+    return null;
+  }
+}
+</script>
+
+//PART 5
+
+<script>
+function $(id){return document.getElementById(id)}
+
+function showModal(html){
+  $('modal-box').innerHTML=html;
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal(){
+  $('modal-overlay').classList.add('hidden');
+  $('modal-box').innerHTML='';
 }
 
 function updateHeader(state){
+  const driverLevel=calcDriverLevel(state);
   $('header').innerHTML=`
     <div>
       <div class="driver-sub">SEASON ${state.season}</div>
@@ -147,11 +684,15 @@ function updateHeader(state){
       </div>
       <div class="hdr-stat">
         <div class="val">${state.reputation}</div>
-        <div class="lbl">Rep</div>
+        <div class="lbl">Reputation</div>
       </div>
       <div class="hdr-stat">
-        <div class="val text-gold">${state.wins}W</div>
-        <div class="lbl">Wins</div>
+        <div class="val">${fmtFans(state.fans)}</div>
+        <div class="lbl">Fans</div>
+      </div>
+      <div class="hdr-stat">
+        <div class="val text-gold">Lvl ${driverLevel}</div>
+        <div class="lbl">Driver</div>
       </div>
     </div>
   `;
@@ -160,13 +701,20 @@ function updateHeader(state){
 let currentPage='dashboard';
 
 function updateTabs(state){
+  const contractCount=(state.pendingOffers||[]).length;
   const tabs=[
-    {id:'dashboard',label:'Dashboard'},
-    {id:'contracts',label:'Contracts'},
+    {id:'dashboard',label:'Dashboard',badge:null},
+    {id:'contracts',label:'Contracts',badge:contractCount>0?contractCount:null},
+    {id:'schedule',label:'Schedule',badge:null},
+    {id:'standings',label:'Standings',badge:null},
+    {id:'garage',label:'Garage',badge:null},
+    {id:'settings',label:'Settings',badge:null},
   ];
+  
   $('tabs').innerHTML=tabs.map(t=>`
     <button class="tab ${currentPage===t.id?'active':''}" onclick="showPage('${t.id}')">
       ${t.label}
+      ${t.badge?`<span class="tab-badge">${t.badge}</span>`:''}
     </button>
   `).join('');
 }
@@ -176,107 +724,803 @@ function showPage(page){
   const st=getState();
   updateTabs(st);
   
-  if(page==='dashboard'){
-    renderDashboard(st);
-  }else if(page==='contracts'){
-    renderContracts(st);
+  switch(page){
+    case 'dashboard':renderDashboard(st);break;
+    case 'contracts':renderContracts(st);break;
+    case 'schedule':renderSchedule(st);break;
+    case 'standings':renderStandings(st);break;
+    case 'garage':renderGarage(st);break;
+    case 'settings':renderSettings(st);break;
+    default:renderDashboard(st);
   }
 }
 
 function renderDashboard(state){
-  $('content').innerHTML=`
+  const activeSeries=[...new Set(state.contracts.map(c=>c.seriesId))];
+  const upcomingRaces=[];
+  
+  activeSeries.forEach(seriesId=>{
+    const sched=state.schedules[seriesId]||[];
+    const nextRace=sched.find(r=>!r.result);
+    if(nextRace){
+      upcomingRaces.push({
+        seriesId,
+        series:getSeries(seriesId),
+        race:nextRace,
+      });
+    }
+  });
+  
+  const recentFinishes=(state.raceHistory||[])
+    .slice(-5)
+    .reverse()
+    .map(rh=>({
+      track:rh.track,
+      pos:rh.dnf?'DNF':'P'+rh.position,
+      color:rh.dnf?'#EF4444':rh.position===1?'#F59E0B':rh.position<=5?'#10B981':'#64748B',
+    }));
+  
+  let html=`
     <div class="page">
       <div class="page-title">Dashboard</div>
-      <div class="page-sub">Season ${state.season}</div>
+      <div class="page-sub">Season ${state.season}, Week ${state.week}</div>
       
-      <div class="card">
-        <div class="card-title">Career Stats</div>
-        <div class="stat-bar">
-          <div class="sb-row"><span class="sb-lbl">Starts</span><span class="sb-val">${state.starts}</span></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Career Stats</div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Starts</span><span class="sb-val">${state.starts}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">${state.wins}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">${state.top5s}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Poles</span><span class="sb-val">${state.poles}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Win Rate</span><span class="sb-val">${state.starts>0?((state.wins/state.starts)*100).toFixed(1):0}%</span></div>
+          </div>
         </div>
-        <div class="stat-bar">
-          <div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">${state.wins}</span></div>
-        </div>
-        <div class="stat-bar">
-          <div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">${state.top5s}</span></div>
+        
+        <div class="card">
+          <div class="card-title">Driver Level ${state.driverLevel||0}</div>
+          ${(state.driverPerks||[]).length>0?`
+            <div style="margin-bottom:10px;font-size:13px;color:#94A3B8">Active Perks:</div>
+            ${(state.driverPerks||[]).map(pId=>{
+              const p=DRIVER_PERKS.find(pk=>pk.id===pId);
+              return p?`<div style="margin-bottom:6px"><span style="font-size:16px">${p.icon}</span> <span style="font-weight:700;color:#F9FAFB">${p.name}</span></div>`:'';
+            }).join('')}
+          `:`<div style="font-size:13px;color:#64748B">No perks unlocked yet. Keep racing to level up.</div>`}
         </div>
       </div>
       
+      ${recentFinishes.length>0?`
+        <div class="card">
+          <div class="card-title">Recent Results</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${recentFinishes.map(rf=>`
+              <div style="padding:6px 12px;background:${rf.color};color:#000;border-radius:6px;font-size:13px;font-weight:700">
+                ${rf.pos}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `:''}
+      
+      ${upcomingRaces.length>0?`
+        <div class="card">
+          <div class="card-title">Next Race${upcomingRaces.length>1?'s':''}</div>
+          ${upcomingRaces.map(ur=>`
+            <div class="row-item" style="margin-bottom:8px">
+              <div style="flex:1">
+                <div class="row-name">${ur.race.track}</div>
+                <div class="row-sub">${ur.race.city||'TBD'}, ${ur.race.state||'TBD'} • ${ur.series.short}</div>
+              </div>
+              <button class="btn btn-sm btn-primary" onclick="openSimQualModal('${ur.seriesId}',${ur.race.round-1})">Qualify</button>
+            </div>
+          `).join('')}
+        </div>
+      `:`
+        <div class="card">
+          <div style="font-size:14px;color:#64748B;text-align:center;padding:20px">
+            No active races. Sign a contract to get started.
+          </div>
+        </div>
+      `}
+      
       <div class="card">
-        <div class="card-title">Game Log</div>
-        ${(state.log||[]).slice(-5).reverse().map(l=>`<div style="font-size:13px;color:#94A3B8;margin-bottom:4px">${l}</div>`).join('')}
+        <div class="card-title">Car Condition</div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Engine</span><span class="sb-val">${state.carCondition.engine}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.engine}%;background:${state.carCondition.engine>70?'#10B981':state.carCondition.engine>40?'#F59E0B':'#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Suspension</span><span class="sb-val">${state.carCondition.suspension}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.suspension}%;background:${state.carCondition.suspension>70?'#10B981':state.carCondition.suspension>40?'#F59E0B':'#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Chassis</span><span class="sb-val">${state.carCondition.chassis}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.chassis}%;background:${state.carCondition.chassis>70?'#10B981':state.carCondition.chassis>40?'#F59E0B':'#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Tires</span><span class="sb-val">${state.carCondition.tires}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.tires}%;background:${state.carCondition.tires>70?'#10B981':state.carCondition.tires>40?'#F59E0B':'#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Brakes</span><span class="sb-val">${state.carCondition.brakes}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.brakes}%;background:${state.carCondition.brakes>70?'#10B981':state.carCondition.brakes>40?'#F59E0B':'#EF4444'}"></div></div>
+        </div>
+        <button class="btn btn-ghost btn-full mt-8" onclick="showPage('garage')">Garage & Upgrades</button>
       </div>
     </div>
   `;
+  
+  $('content').innerHTML=html;
 }
+</script>
 
+//PART 6
+
+<script>
 function renderContracts(state){
+  const active=state.contracts.filter(c=>c.seasonsCompleted<c.termSeasons);
+  const completed=state.contracts.filter(c=>c.seasonsCompleted>=c.termSeasons);
   const offers=state.pendingOffers||[];
   
-  $('content').innerHTML=`
+  let html=`
     <div class="page">
       <div class="page-title">Contracts</div>
-      
-      ${offers.length>0?`
-        <div class="card">
-          <div class="card-title">Available Offers</div>
-          ${offers.map(o=>{
-            const s=getSeries(o.seriesId);
-            return `
-              <div class="row-item">
-                <div class="accent" style="background:${s.color}"></div>
-                <div style="flex:1">
-                  <div class="row-name">${o.team}</div>
-                  <div class="row-sub">${s.name}</div>
-                </div>
-                <button class="btn btn-sm btn-primary" onclick="signContract('${o.id}')">Sign</button>
+      <div class="page-sub">Active rides and incoming offers</div>
+  `;
+  
+  if(active.length>0){
+    html+=`<div class="card"><div class="card-title">Active Contracts</div>`;
+    active.forEach(c=>{
+      const s=getSeries(c.seriesId);
+      const sched=state.schedules[c.seriesId]||[];
+      const nextRace=sched.find(r=>!r.result);
+      html+=`
+        <div class="row-item">
+          <div class="accent" style="background:${s.color}"></div>
+          <div style="flex:1">
+            <div class="row-name">${c.team}</div>
+            <div class="row-sub">${s.name} • Year ${c.seasonsCompleted+1}/${c.termSeasons}</div>
+            <div class="row-sub">${c.racesCompleted}/${c.races} races • ${fmtMoney(c.salary)} signing bonus • ${(c.prizeShare*100).toFixed(0)}% prize share</div>
+          </div>
+          ${nextRace?`<button class="btn btn-sm btn-primary" onclick="openSimQualModal('${c.seriesId}',${nextRace.round-1})">Next Race</button>`:''}
+        </div>
+      `;
+    });
+    html+=`</div>`;
+  }
+  
+  if(offers.length>0){
+    html+=`<div class="card"><div class="card-title">Contract Offers (${offers.length})</div>`;
+    offers.forEach(o=>{
+      const s=getSeries(o.seriesId);
+      html+=`
+        <div class="row-item">
+          <div class="accent" style="background:${s.color}"></div>
+          <div style="flex:1">
+            <div class="row-name">${o.team}</div>
+            <div class="row-sub">${s.name} • ${o.quality.toUpperCase()}</div>
+            <div class="row-sub">${o.termSeasons} season${o.termSeasons>1?'s':''} • ${fmtMoney(o.salary)} signing • ${(o.prizeShare*100).toFixed(0)}% prize share</div>
+          </div>
+          <button class="btn btn-sm btn-success" onclick="doSignContract('${o.id}')">Sign</button>
+        </div>
+      `;
+    });
+    html+=`</div>`;
+  }
+  
+  if(completed.length>0){
+    html+=`<div class="card"><div class="card-title">Completed Contracts</div>`;
+    completed.forEach(c=>{
+      const s=getSeries(c.seriesId);
+      html+=`
+        <div class="row-item">
+          <div style="flex:1">
+            <div class="row-name">${c.team}</div>
+            <div class="row-sub">${s.name} • ${c.seasonsCompleted} season${c.seasonsCompleted>1?'s':''}</div>
+            <div class="row-sub">${fmtMoney(c.earnings)} earned</div>
+          </div>
+        </div>
+      `;
+    });
+    html+=`</div>`;
+  }
+  
+  if(active.length===0&&offers.length===0){
+    html+=`
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No active contracts. Build reputation and fans to attract offers.
+        </div>
+      </div>
+    `;
+  }
+  
+  html+=`</div>`;
+  $('content').innerHTML=html;
+}
+
+function renderSchedule(state){
+  const activeSeries=[...new Set(state.contracts.map(c=>c.seriesId))];
+  
+  let html=`
+    <div class="page">
+      <div class="page-title">Race Schedule</div>
+      <div class="page-sub">Season ${state.season} calendar</div>
+  `;
+  
+  activeSeries.forEach(seriesId=>{
+    const s=getSeries(seriesId);
+    const sched=state.schedules[seriesId]||[];
+    
+    html+=`
+      <div class="card">
+        <div class="card-title">${s.name}</div>
+        ${sched.map(r=>`
+          <div class="row-item">
+            <div style="flex:1">
+              <div class="row-name">Round ${r.round}: ${r.track}</div>
+              <div class="row-sub">${r.city||'TBD'}, ${r.state||'TBD'}</div>
+              ${r.result?`<div class="row-sub" style="color:${r.result.dnf?'#EF4444':r.result.position===1?'#F59E0B':'#E2E8F0'}">${r.result.dnf?'DNF':'P'+r.result.position} • ${r.result.points} pts</div>`:''}
+            </div>
+            ${!r.result?`<button class="btn btn-sm btn-primary" onclick="openSimQualModal('${seriesId}',${r.round-1})">Race</button>`:''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+  
+  if(activeSeries.length===0){
+    html+=`
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No active schedules. Sign a contract to see the calendar.
+        </div>
+      </div>
+    `;
+  }
+  
+  html+=`</div>`;
+  $('content').innerHTML=html;
+}
+
+function renderStandings(state){
+  const activeSeries=[...new Set(state.contracts.map(c=>c.seriesId))];
+  
+  let html=`
+    <div class="page">
+      <div class="page-title">Championship Standings</div>
+      <div class="page-sub">Season ${state.season} points</div>
+  `;
+  
+  activeSeries.forEach(seriesId=>{
+    const s=getSeries(seriesId);
+    const pts=state.championshipPoints[seriesId]||{};
+    const standings=Object.entries(pts)
+      .map(([name,points])=>({name,points,isPlayer:name===state.driverName}))
+      .sort((a,b)=>b.points-a.points);
+    
+    html+=`
+      <div class="card">
+        <div class="card-title">${s.name}</div>
+        <div style="font-size:13px;color:#94A3B8;margin-bottom:10px">
+          ${standings.map((st,idx)=>{
+            const pos=idx+1;
+            const behind=pos===1?'---':'-'+(standings[0].points-st.points);
+            return`
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1E2433;${st.isPlayer?'font-weight:700;color:#F59E0B':''}">
+                <span>${pos}. ${st.name}</span>
+                <span>${st.points} pts (${behind})</span>
               </div>
             `;
           }).join('')}
         </div>
-      `:`
-        <div class="card">
-          <div style="text-align:center;padding:30px;color:#64748B">
-            No contract offers yet. Keep racing to build reputation.
-          </div>
+      </div>
+    `;
+  });
+  
+  if(activeSeries.length===0){
+    html+=`
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No active championships. Sign a contract to compete.
         </div>
-      `}
-    </div>
-  `;
+      </div>
+    `;
+  }
+  
+  html+=`</div>`;
+  $('content').innerHTML=html;
 }
 
-function signContract(contractId){
+function doSignContract(contractId){
   const st=getState();
   const offer=st.pendingOffers.find(o=>o.id===contractId);
   if(!offer)return;
   
+  if(st.money<offer.entryFee){
+    alert('Not enough money for entry fee');
+    return;
+  }
+  
+  st.money-=offer.entryFee;
   st.contracts.push(offer);
   st.pendingOffers=st.pendingOffers.filter(o=>o.id!==contractId);
-  st.log.push('Signed with '+offer.team);
+  
+  const s=getSeries(offer.seriesId);
+  st.schedules[offer.seriesId]=generateSchedule(offer.seriesId);
+  
+  if(!st.championshipPoints[offer.seriesId]){
+    st.championshipPoints[offer.seriesId]={};
+  }
+  st.championshipPoints[offer.seriesId][st.driverName]=0;
+  
+  addLog(st,`Signed with ${offer.team} for ${s.name} (${offer.termSeasons} season${offer.termSeasons>1?'s':''})`);
   
   saveState(st);
+  closeModal();
   showPage('contracts');
 }
+</script>
 
-function showModal(html){
-  $('modal-box').innerHTML=html;
-  $('modal-overlay').classList.remove('hidden');
+//PART 7
+
+<script>
+function renderGarage(state){
+  const attrs=state.driverAttrs||{};
+  const upgrades=state.carUpgrades||{};
+  const attrPoints=state.driverAttrPoints||0;
+  
+  let html=`
+    <div class="page">
+      <div class="page-title">Garage</div>
+      <div class="page-sub">Driver attributes, car upgrades, and repairs</div>
+      
+      <div class="card">
+        <div class="card-title">Driver Attributes</div>
+        ${attrPoints>0?`
+          <div style="background:#060A10;border:1px solid #F59E0B44;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:700;color:#F9FAFB">Available Points</div>
+            <div style="font-size:24px;font-weight:900;color:#F59E0B">${attrPoints}</div>
+          </div>
+        `:''}
+        
+        ${DRIVER_ATTRS.map(a=>{
+          const val=attrs[a.id]||DRIVER_ATTR_DEFAULT;
+          const pct=((val-1)/(a.max-1))*100;
+          return`
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0D1117">
+              <div style="font-size:14px;font-weight:800;color:#F9FAFB;width:130px;flex-shrink:0">${a.name}</div>
+              <div style="font-size:12px;color:#64748B;flex:1;line-height:1.4">${a.desc}</div>
+              <div style="font-size:20px;font-weight:900;width:32px;text-align:center;flex-shrink:0">${val}</div>
+              <div style="width:80px;height:5px;background:#1E2433;border-radius:3px;overflow:hidden;flex-shrink:0">
+                <div style="height:100%;border-radius:3px;width:${pct}%;background:${a.color};transition:width 0.3s"></div>
+              </div>
+              <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+                <button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:12px" ${val<=1||attrPoints<=0?'disabled':''} onclick="adjustAttr('${a.id}',-1)">−</button>
+                <button class="btn btn-sm btn-primary" style="padding:3px 8px;font-size:12px" ${val>=a.max||attrPoints<=0?'disabled':''} onclick="adjustAttr('${a.id}',1)">+</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Car Upgrades</div>
+        ${CAR_UPGRADES.map(u=>{
+          const lvl=upgrades[u.id]||0;
+          return`
+            <div style="background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:14px;margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="font-size:24px">${u.icon}</div>
+                <div style="flex:1">
+                  <div style="font-size:15px;font-weight:800;color:#F9FAFB">${u.name}</div>
+                  <div style="font-size:13px;color:#94A3B8">${u.desc}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                ${u.tiers.map((t,idx)=>{
+                  const tierIdx=idx+1;
+                  const owned=lvl>=tierIdx;
+                  const available=lvl===tierIdx-1&&state.money>=t.cost;
+                  const locked=lvl<tierIdx-1||(lvl===tierIdx-1&&state.money<t.cost);
+                  return`
+                    <div style="width:32px;height:32px;border-radius:5px;border:2px solid ${owned?'#10B981':available?'#F59E0B':'#1E2433'};background:${owned?'#065F46':available?'#78350F22':'#0B0F1A'};color:${owned?'#6EE7B7':available?'#F59E0B':'#64748B'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;cursor:${available?'pointer':'not-allowed'};opacity:${locked?'0.3':'1'};transition:all 0.15s" 
+                         title="${t.name} - ${t.desc} - ${fmtMoney(t.cost)}"
+                         ${available?`onclick="buyUpgrade('${u.id}',${tierIdx})"`:''}>
+                      ${tierIdx}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              ${lvl<u.tiers.length?`
+                <div style="margin-top:8px;font-size:12px;color:#64748B">
+                  Next: ${u.tiers[lvl].name} — ${fmtMoney(u.tiers[lvl].cost)}
+                </div>
+              `:`
+                <div style="margin-top:8px;font-size:12px;color:#10B981">✓ Maxed Out</div>
+              `}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  
+  $('content').innerHTML=html;
 }
 
-function closeModal(){
-  $('modal-overlay').classList.add('hidden');
+function renderSettings(state){
+  let html=`
+    <div class="page">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">Game version ${APP_VERSION}</div>
+      
+      <div class="card">
+        <div class="card-title">Save & Export</div>
+        <button class="btn btn-primary btn-full" style="margin-bottom:8px" onclick="exportSave()">Download Save File</button>
+        <button class="btn btn-ghost btn-full" onclick="importSavePrompt()">Import Save File</button>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Career Stats</div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Total Prize Money</span><span class="sb-val">${fmtMoney(state.totalPrizeMoney||0)}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Career Starts</span><span class="sb-val">${state.starts}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Career Wins</span><span class="sb-val">${state.wins}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Win Rate</span><span class="sb-val">${state.starts>0?((state.wins/state.starts)*100).toFixed(1):0}%</span></div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Danger Zone</div>
+        <button class="btn btn-ghost btn-full" style="border-color:#EF4444;color:#EF4444" onclick="confirmRestart()">Restart Career</button>
+      </div>
+    </div>
+  `;
+  
+  $('content').innerHTML=html;
 }
 
+function adjustAttr(attrId,delta){
+  const st=getState();
+  const attrs=st.driverAttrs||{};
+  const attrDef=DRIVER_ATTRS.find(a=>a.id===attrId);
+  if(!attrDef)return;
+  
+  const current=attrs[attrId]||DRIVER_ATTR_DEFAULT;
+  const newVal=current+delta;
+  
+  if(newVal<1||newVal>attrDef.max)return;
+  if(delta>0&&st.driverAttrPoints<=0)return;
+  
+  attrs[attrId]=newVal;
+  st.driverAttrPoints-=delta;
+  
+  saveState(st);
+  renderGarage(st);
+}
+
+function buyUpgrade(upgradeId,tier){
+  const st=getState();
+  const upgrades=st.carUpgrades||{};
+  const upgDef=CAR_UPGRADES.find(u=>u.id===upgradeId);
+  if(!upgDef)return;
+  
+  const currentLvl=upgrades[upgradeId]||0;
+  if(currentLvl!==tier-1)return;
+  
+  const tierDef=upgDef.tiers[tier-1];
+  if(!tierDef||st.money<tierDef.cost)return;
+  
+  st.money-=tierDef.cost;
+  upgrades[upgradeId]=tier;
+  
+  addLog(st,`Purchased ${upgDef.name} ${tierDef.name} for ${fmtMoney(tierDef.cost)}`);
+  saveState(st);
+  renderGarage(st);
+  updateHeader(st);
+}
+
+function exportSave(){
+  const st=getState();
+  const json=JSON.stringify(st,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`fullthrottle_save_s${st.season}_${st.driverName.replace(/\s/g,'_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importSavePrompt(){
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='.json';
+  input.onchange=e=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=evt=>{
+      try{
+        const data=JSON.parse(evt.target.result);
+        localStorage.setItem('fullthrottle_sim_save',evt.target.result);
+        location.reload();
+      }catch(err){
+        alert('Invalid save file');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function confirmRestart(){
+  if(!confirm('Are you sure? This will delete your current career permanently.'))return;
+  localStorage.removeItem('fullthrottle_sim_save');
+  location.reload();
+}
+</script>
+
+//PART 8
+
+<script>
+let pendingQualResult=null;
+let pendingRaceResult=null;
+let currentRaceChoices=[];
+
+function openSimQualModal(seriesId,raceIdx){
+  const st=getState();
+  const s=getSeries(seriesId);
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  
+  if(race.qualifying){
+    openSimRaceModal(seriesId,raceIdx);
+    return;
+  }
+  
+  const scenario=QUALI_SCENARIOS[rand(0,QUALI_SCENARIOS.length-1)];
+  
+  let html=`
+    <div class="modal-title">Qualifying: ${race.track}</div>
+    <div style="font-size:14px;color:#94A3B8;margin-bottom:20px">${s.name} • Round ${race.round}</div>
+    
+    <div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:900;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px">QUALIFYING SESSION</div>
+      <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${scenario.scene}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${scenario.choices.map((ch,idx)=>`
+          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="resolveQuali('${seriesId}',${raceIdx},${ch.modifier})">
+            <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function resolveQuali(seriesId,raceIdx,modifier){
+  const st=getState();
+  const qualResult=simulateQualifying(st,seriesId,raceIdx);
+  
+  const adjustedPos=Math.round(qualResult.position*modifier);
+  qualResult.position=clamp(adjustedPos,1,qualResult.fieldSize);
+  qualResult.pole=qualResult.position===1;
+  
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  race.qualifying=qualResult;
+  
+  if(qualResult.pole)st.poles++;
+  
+  saveState(st);
+  
+  let html=`
+    <div class="modal-title">Qualifying Results</div>
+    
+    <div style="background:#060A10;border-radius:8px;padding:14px 16px;margin:16px 0;display:flex;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Position</div>
+        <div style="font-size:${qualResult.pole?'32px':'22px'};font-weight:900;margin-top:2px;color:${qualResult.pole?'#F59E0B':'#F9FAFB'}">${qualResult.pole?'🏁 POLE':ordinal(qualResult.position)}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Field Size</div>
+        <div style="font-size:22px;font-weight:900;margin-top:2px">${qualResult.fieldSize}</div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="openSimRaceModal('${seriesId}',${raceIdx})">Continue to Race</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function openSimRaceModal(seriesId,raceIdx){
+  const st=getState();
+  const s=getSeries(seriesId);
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  
+  if(race.result){
+    alert('Race already completed');
+    closeModal();
+    return;
+  }
+  
+  if(!race.qualifying){
+    openSimQualModal(seriesId,raceIdx);
+    return;
+  }
+  
+  const raceResult=simulateRace(st,seriesId,raceIdx,race.qualifying.position);
+  pendingRaceResult=raceResult;
+  currentRaceChoices=[];
+  
+  showRaceScenario(seriesId,raceIdx,0);
+}
+
+function showRaceScenario(seriesId,raceIdx,scenarioIdx){
+  const st=getState();
+  const s=getSeries(seriesId);
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  
+  if(!pendingRaceResult||!pendingRaceResult.scenarios)return;
+  
+  if(scenarioIdx>=pendingRaceResult.scenarios.length){
+    finishRace(seriesId,raceIdx);
+    return;
+  }
+  
+  const scenarioData=pendingRaceResult.scenarios[scenarioIdx];
+  const sc=scenarioData.scenario;
+  
+  let html=`
+    <div class="modal-title">${race.track}</div>
+    <div style="font-size:14px;color:#94A3B8;margin-bottom:20px">${s.name} • Round ${race.round} • Scenario ${scenarioIdx+1}/${pendingRaceResult.scenarios.length}</div>
+    
+    <div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:900;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px">RACE SCENARIO</div>
+      <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${sc.scene({lap:5+scenarioIdx*10,pos:pendingRaceResult.basePos,fieldSize:pendingRaceResult.fieldSize,lapsLeft:50-scenarioIdx*10})}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${sc.choices.map((ch,idx)=>`
+          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="makeRaceChoice('${seriesId}',${raceIdx},${scenarioIdx},${idx})">
+            <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function makeRaceChoice(seriesId,raceIdx,scenarioIdx,choiceIdx){
+  const scenarioData=pendingRaceResult.scenarios[scenarioIdx];
+  const sc=scenarioData.scenario;
+  const choice=sc.choices[choiceIdx];
+  
+  const outcome={
+    posDelta:choice.posModifier||0,
+    dnfRisk:choice.dnfRisk||0,
+    fanBonus:choice.fanBonus||0,
+  };
+  
+  currentRaceChoices.push(outcome);
+  
+  const isGood=Math.random()<0.65;
+  const resultText=isGood?choice.narrativeResult?.good||'The move works.':choice.narrativeResult?.bad||'It doesn\'t work out.';
+  
+  let html=`
+    <div class="modal-title">Result</div>
+    
+    <div style="border-radius:8px;padding:14px 16px;margin-top:12px;border-left:3px solid ${isGood?'#10B981':'#EF4444'};background:${isGood?'#06130e':'#130606'}">
+      <div style="font-size:15px;font-weight:800;color:#F9FAFB;margin-bottom:4px">${isGood?'✓ Success':'✗ Setback'}</div>
+      <div style="font-size:14px;color:#94A3B8;line-height:1.5">${resultText}</div>
+    </div>
+    
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn btn-primary" onclick="showRaceScenario('${seriesId}',${raceIdx},${scenarioIdx+1})">${scenarioIdx+1<pendingRaceResult.scenarios.length?'Next Scenario':'See Final Results'}</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function finishRace(seriesId,raceIdx){
+  const st=getState();
+  const finalResult=resolveRace(pendingRaceResult,currentRaceChoices);
+  
+  processRaceResult(st,seriesId,raceIdx,finalResult);
+  saveState(st);
+  
+  let html=`
+    <div class="modal-title">Race Complete</div>
+    
+    <div style="background:#060A10;border-radius:8px;padding:14px 16px;margin:16px 0">
+      ${finalResult.dnf?`
+        <div style="font-size:32px;font-weight:900;color:#EF4444;margin-bottom:8px">DNF</div>
+        <div style="font-size:14px;color:#94A3B8">${finalResult.dnfReason}</div>
+      `:`
+        <div style="font-size:32px;font-weight:900;color:${finalResult.position===1?'#F59E0B':finalResult.position<=5?'#10B981':'#F9FAFB'};margin-bottom:8px">${finalResult.position===1?'🏁 WINNER':ordinal(finalResult.position)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+          <div>
+            <div style="font-size:12px;color:#94A3B8">Points Earned</div>
+            <div style="font-size:20px;font-weight:900">${finalResult.points}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:#94A3B8">Prize Money</div>
+            <div style="font-size:20px;font-weight:900;color:#10B981">${fmtMoney(finalResult.prize)}</div>
+          </div>
+        </div>
+      `}
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal();showPage('dashboard')">Continue</button>
+    </div>
+  `;
+  
+  showModal(html);
+  
+  pendingRaceResult=null;
+  currentRaceChoices=[];
+  
+  updateHeader(st);
+}
+</script>
+
+//PART 10
+
+<script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const sel=$('driver-state-input');
-  if(sel){
+  const stateSelect=$('driver-state-input');
+  if(stateSelect&&stateSelect.options.length===0){
+    const usG=document.createElement('optgroup');
+    usG.label='United States';
+    const iG=document.createElement('optgroup');
+    iG.label='International';
+    
     US_STATES.forEach(s=>{
       const o=document.createElement('option');
       o.value=s;
-      o.textContent=US_STATE_NAMES[s];
+      o.textContent=US_STATE_NAMES[s]||s;
       if(s==='ME')o.selected=true;
-      sel.appendChild(o);
+      usG.appendChild(o);
     });
+    
+    INTL_REGIONS.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s;
+      o.textContent=s;
+      iG.appendChild(o);
+    });
+    
+    stateSelect.appendChild(usG);
+    stateSelect.appendChild(iG);
   }
   
   const existingSave=getState();
@@ -284,6 +1528,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(existingSave){
     $('setup-screen').classList.add('hidden');
     $('app').style.display='flex';
+    
     updateHeader(existingSave);
     updateTabs(existingSave);
     showPage('dashboard');
@@ -301,14 +1546,12 @@ document.addEventListener('DOMContentLoaded',()=>{
         return;
       }
       
-      const newState=initState(driverName);
-      newState.homeState=homeState;
-      newState.carNumber=driverNumber;
+      if(isNaN(driverNumber)||driverNumber<0||driverNumber>999){
+        alert('Please enter a valid car number (0-999)');
+        return;
+      }
       
-      newState.pendingOffers=[
-        {id:uid(),team:'Local Racing',seriesId:'mini_stock'},
-        {id:uid(),team:'Street Kings Racing',seriesId:'street_stock'},
-      ];
+      const newState=initState(driverName,driverNumber,homeState);
       
       saveState(newState);
       
@@ -321,12 +1564,1716 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
   
-  $('modal-overlay').addEventListener('click',e=>{
-    if(e.target===$('modal-overlay')){
+  const modalOverlay=$('modal-overlay');
+  if(modalOverlay){
+    modalOverlay.addEventListener('click',e=>{
+      if(e.target===modalOverlay){
+        closeModal();
+      }
+    });
+  }
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(!$('modal-overlay').classList.contains('hidden')){
       closeModal();
     }
-  });
+  }
+  
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){
+    e.preventDefault();
+    const st=getState();
+    if(st){
+      saveState(st);
+      alert('Game saved');
+    }
+  }
 });
+
+window.DEV={
+  getState,
+  saveState,
+  addMoney:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.money+=amount;
+    saveState(st);
+    updateHeader(st);
+    alert('Added '+fmtMoney(amount));
+  },
+  addRep:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.reputation+=amount;
+    saveState(st);
+    updateHeader(st);
+    alert('Added '+amount+' reputation');
+  },
+  addFans:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.fans+=amount;
+    saveState(st);
+    updateHeader(st);
+    alert('Added '+amount+' fans');
+  },
+  repairCar:()=>{
+    const st=getState();
+    if(!st)return;
+    Object.keys(st.carCondition).forEach(k=>st.carCondition[k]=100);
+    saveState(st);
+    alert('Car repaired to 100%');
+  },
+  unlockAllPerks:()=>{
+    const st=getState();
+    if(!st)return;
+    st.driverPerks=DRIVER_PERKS.map(p=>p.id);
+    saveState(st);
+    alert('All perks unlocked');
+  },
+  maxUpgrades:()=>{
+    const st=getState();
+    if(!st)return;
+    CAR_UPGRADES.forEach(u=>{
+      st.carUpgrades[u.id]=u.tiers.length;
+    });
+    saveState(st);
+    alert('All upgrades maxed');
+  },
+  addAttrPoints:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.driverAttrPoints=(st.driverAttrPoints||0)+amount;
+    saveState(st);
+    alert('Added '+amount+' attribute points');
+  },
+  levelUp:()=>{
+    const st=getState();
+    if(!st)return;
+    st.wins+=5;
+    st.top5s+=5;
+    st.poles+=3;
+    const newLevel=calcDriverLevel(st);
+    st.driverLevel=newLevel;
+    saveState(st);
+    updateHeader(st);
+    alert('Leveled up to '+newLevel);
+  },
+  completeRace:(seriesId,raceIdx)=>{
+    const st=getState();
+    if(!st)return;
+    const sched=st.schedules[seriesId];
+    if(!sched)return;
+    const race=sched[raceIdx];
+    if(!race||race.result)return;
+    
+    if(!race.qualifying){
+      const qualResult=simulateQualifying(st,seriesId,raceIdx);
+      race.qualifying=qualResult;
+      if(qualResult.pole)st.poles++;
+    }
+    
+    const raceResult=simulateRace(st,seriesId,raceIdx,race.qualifying.position);
+    const choiceResults=raceResult.scenarios.map(()=>({
+      posDelta:rand(-1,2),
+      dnfRisk:0.02,
+      fanBonus:rand(20,100),
+    }));
+    const finalResult=resolveRace(raceResult,choiceResults);
+    processRaceResult(st,seriesId,raceIdx,finalResult);
+    
+    saveState(st);
+    updateHeader(st);
+    showPage('dashboard');
+    alert('Race auto-completed: '+(!finalResult.dnf?'P'+finalResult.position:'DNF'));
+  },
+  simulateFullSeason:()=>{
+    const st=getState();
+    if(!st)return;
+    st.contracts.forEach(c=>{
+      const sched=st.schedules[c.seriesId]||[];
+      sched.forEach((r,idx)=>{
+        if(!r.result){
+          if(!r.qualifying){
+            const qualResult=simulateQualifying(st,c.seriesId,idx);
+            r.qualifying=qualResult;
+            if(qualResult.pole)st.poles++;
+          }
+          const raceResult=simulateRace(st,c.seriesId,idx,r.qualifying.position);
+          const choiceResults=raceResult.scenarios.map(()=>({
+            posDelta:rand(-1,2),
+            dnfRisk:0.02,
+            fanBonus:rand(20,100),
+          }));
+          const finalResult=resolveRace(raceResult,choiceResults);
+          processRaceResult(st,c.seriesId,idx,finalResult);
+        }
+      });
+    });
+    saveState(st);
+    updateHeader(st);
+    showPage('dashboard');
+    alert('Full season simulated');
+  },
+  viewLog:()=>{
+    const st=getState();
+    if(!st)return;
+    console.log('=== GAME LOG ===');
+    (st.log||[]).forEach(entry=>console.log(entry));
+  },
+  reset:()=>{
+    if(confirm('Delete career permanently?')){
+      localStorage.removeItem('fullthrottle_sim_save');
+      location.reload();
+    }
+  },
+};
+
+console.log('Full Throttle v1.5.2-SIM loaded successfully');
+console.log('Type window.DEV in console for debug commands');
+</script>
+
+//PART 10
+
+<script>
+const DRIVER_PERSONALITIES=['hothead','veteran','joker','ice_cold','showman','grinder'];
+
+function getPersonality(name){
+  let h=0;
+  for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffffffff;
+  return DRIVER_PERSONALITIES[Math.abs(h)%DRIVER_PERSONALITIES.length];
+}
+
+const PERSONALITY_CALLOUT={
+  hothead:{
+    incident:[
+      "{name} was still hot in the garage. 'That was garbage and {player} knows it. Done being patient.'",
+      "{name} on the broadcast: 'Honestly? Pissed off. That's the only word I've got for it right now.'",
+      "On the team radio that got leaked, {name} said {player} 'races like an ass and somebody needs to say it.'",
+      "{name} posted before he was even out of the car: 'That was a damn joke and the whole paddock knows it.'",
+    ],
+    close:[
+      "{name} to the broadcast: 'Alright yeah, {player} had me working tonight. Hell of a battle.'",
+      "In the cool-down area, {name} shook his head. 'Damn good race, honestly. {player} was right there every lap.'",
+    ],
+  },
+  veteran:{
+    incident:[
+      "{name} kept it measured but the message was clear. 'I've been doing this a long time. That move has no place here.'",
+      "Post-race, {name} told reporters: 'I'll let the replay speak for itself. I just hope {player} watches it.'",
+      "{name}, plain and flat: 'Dirty racing. Simple as that.'",
+    ],
+    close:[
+      "{name} nodded in {player}'s direction after the race. 'That's how it's supposed to look. Good battle.'",
+      "{name} in the press room: 'I've raced a lot of people in this sport. {player} belongs here. Earned it tonight.'",
+    ],
+  },
+  joker:{
+    incident:[
+      "{name} posted a meme. The caption was just {player}'s name and a dumpster fire emoji. Seventeen thousand shares.",
+      "On the podcast: 'Look, I'm not gonna say {player} wrecked me on purpose. I'll just say the timing was real convenient.'",
+      "{name}, grinning on camera: 'Some people race clean and some people race creative. {player} is creative.'",
+    ],
+    close:[
+      "{name} on the broadcast, laughing: 'What the hell? {player} almost had me. Almost! Good stuff.'",
+      "Posted after the race: '{player} nearly pulled off the buffoonery of the year with that move. Respect. Almost worked.'",
+    ],
+  },
+  ice_cold:{
+    incident:[
+      "{name} gave reporters exactly one sentence: 'I saw it. I know what happened. We move on.'",
+      "Zero expression, total calm: '{player} made a decision in turn three. I'll remember it.'",
+      "{name} didn't post. Didn't interview. Just walked past every camera with the same face. Somehow that was worse.",
+    ],
+    close:[
+      "Brief statement from {name}: '{player} was fast. I was faster. Good race.'",
+      "{name} acknowledged it with a nod in the paddock. No words. Just a nod. Coming from {name}, that's high praise.",
+    ],
+  },
+  showman:{
+    incident:[
+      "{name} went full spectacle. 'This is the {player} and {name} show, baby, and tonight's episode was a damn mess. Stay tuned.'",
+      "The clip of {name} pointing at the camera saying '{player}, we're not done' has two million views and counting.",
+      "Post-race interview turned into a whole bit. '{player} tried to write me out of the script. I rewrote it. Still here.'",
+    ],
+    close:[
+      "{name} pointed straight at the camera in victory lane. 'That one's for {player}. Come on back next week, hell yes.'",
+      "Posted a three-minute video. First two and a half minutes hyping the battle. Last thirty seconds: pure respect for {player}.",
+    ],
+  },
+  grinder:{
+    incident:[
+      "{name}: 'All I can say is I don't race anybody that way. I race clean. I expect the same back.'",
+      "Quietly, to one reporter: 'That cost us points. That's the issue. Not the drama. The points.'",
+      "{name} filed a protest. It didn't go anywhere. The statement did.",
+    ],
+    close:[
+      "{name}: '{player} was solid tonight. Made me work every restart. That's what this is supposed to feel like.'",
+      "{name} to his crew chief on the radio, which got picked up: 'Tell {player}'s crew that was a hell of a battle.'",
+    ],
+  },
+};
+
+function getPersonalityCallout(driverName,type){
+  const p=getPersonality(driverName);
+  const pool=(PERSONALITY_CALLOUT[p]||PERSONALITY_CALLOUT.grinder)[type]||PERSONALITY_CALLOUT.grinder.incident;
+  return pool[rand(0,pool.length-1)];
+}
+
+const INTL_FIRST_NAMES={
+  'Europe':['Max','Lando','Charles','Carlos','Pierre','Esteban','Valtteri','Kimi','Sebastian','Fernando','Lewis','George'],
+  'Africa':['Kwame','Amadi','Jabari','Kofi','Chidi','Sekou','Malik','Omar','Zuberi','Rashid'],
+  'Asia':['Yuki','Takuma','Kamui','Kazuki','Naoki','Ryo','Satoru','Zhou','Li','Wei'],
+  'South America':['Felipe','Bruno','Nelson','Emerson','Rubens','Helio','Tony','Juan','Carlos','Sergio'],
+  'Central America':['Diego','Miguel','Alejandro','Ricardo','Fernando','Manuel','Luis','Pablo','Roberto','Javier'],
+  'Australia':['Daniel','Mark','Jack','Oscar','Will','Liam','Ryan','Scott','Tom','Matt'],
+};
+
+const INTL_LAST_NAMES={
+  'Europe':['Verstappen','Norris','Leclerc','Sainz','Gasly','Ocon','Bottas','Raikkonen','Vettel','Alonso','Hamilton','Russell','Hulkenberg','Magnussen','Stroll'],
+  'Africa':['Mensah','Okafor','Nkosi','Diallo','Mwangi','Banda','Kamara','Traore','Okeke','Adeyemi'],
+  'Asia':['Tsunoda','Kobayashi','Yamamoto','Nakajima','Sato','Matsuda','Tanaka','Guanyu','Chen','Wang'],
+  'South America':['Massa','Senna','Piquet','Fittipaldi','Barrichello','Castroneves','Kanaan','Montoya','Reutemann','Perez'],
+  'Central America':['Rodriguez','Gonzalez','Martinez','Lopez','Ramirez','Hernandez','Garcia','Sanchez','Torres','Morales'],
+  'Australia':['Ricciardo','Webber','Doohan','Piastri','Percat','Davison','Reynolds','McLaughlin','Courtney','Mostert'],
+};
+
+function randomHomeState(){
+  const allRegions=[...US_STATES,...INTL_REGIONS];
+  return allRegions[rand(0,allRegions.length-1)];
+}
+
+function generateAINameForRegion(region){
+  if(INTL_REGIONS.includes(region)){
+    const firstPool=INTL_FIRST_NAMES[region]||INTL_FIRST_NAMES['Europe'];
+    const lastPool=INTL_LAST_NAMES[region]||INTL_LAST_NAMES['Europe'];
+    const first=firstPool[rand(0,firstPool.length-1)];
+    const last=lastPool[rand(0,lastPool.length-1)];
+    return first+' '+last;
+  }else{
+    return generateAIName();
+  }
+}
+
+function seedAIDriverRelationships(drivers){
+  drivers.forEach(d=>{
+    if(d.driverRelationships)return;
+    d.driverRelationships=[];
+    const peers=drivers.filter(p=>p.id!==d.id&&p.currentSeriesId===d.currentSeriesId);
+    if(!peers.length)return;
+    shuffle(peers);
+    const count=rand(1,Math.min(4,peers.length));
+    for(let i=0;i<count;i++){
+      const p=peers[i];
+      const roll=Math.random();
+      const type=roll<0.3?'rival':roll<0.6?'friend':'neutral';
+      d.driverRelationships.push({name:p.name,type});
+    }
+  });
+}
+
+function evolveAIRelationships(state){
+  if(!state.drivers)return;
+  state.drivers.forEach(d=>{
+    if(!d.driverRelationships)d.driverRelationships=[];
+    d.driverRelationships.forEach(rel=>{
+      if(Math.random()<0.15){
+        if(rel.type==='rival'&&Math.random()<0.3)rel.type='neutral';
+        else if(rel.type==='friend'&&Math.random()<0.2)rel.type='neutral';
+        else if(rel.type==='neutral')rel.type=Math.random()<0.5?'rival':'friend';
+      }
+    });
+    if(Math.random()<0.2){
+      const peers=(state.drivers||[]).filter(p=>p.id!==d.id&&p.currentSeriesId===d.currentSeriesId&&!d.driverRelationships.find(r=>r.name===p.name));
+      if(peers.length){
+        const p=peers[rand(0,peers.length-1)];
+        const type=Math.random()<0.4?'rival':Math.random()<0.6?'friend':'neutral';
+        d.driverRelationships.push({name:p.name,type});
+        if(d.driverRelationships.length>6)d.driverRelationships.shift();
+      }
+    }
+  });
+}
+</script>
+
+//PART 11
+
+<script>
+function generateStartingRivals(drivers){
+  const rivals=[];
+  const pool=(drivers||[]).filter(d=>d.currentSeriesId==='mini_stock'||d.currentSeriesId==='street_stock');
+  if(!pool.length)return rivals;
+  shuffle(pool);
+  const count=Math.min(pool.length,rand(4,7));
+  for(let i=0;i<count;i++){
+    const d=pool[i];
+    const roll=Math.random();
+    let r;
+    if(roll<0.25){
+      r={name:d.name,incidents:rand(1,3),closeRaces:rand(0,2),cleanBattles:0,
+         preExisting:true,preExistingNote:'Ran into each other on the local circuit. History exists.'};
+    }else if(roll<0.50){
+      r={name:d.name,incidents:0,closeRaces:rand(2,4),cleanBattles:rand(2,4),
+         preExisting:true,preExistingNote:'Grew up racing each other. Mutual respect on track.'};
+    }else{
+      r={name:d.name,incidents:0,closeRaces:rand(0,2),cleanBattles:rand(0,1),
+         preExisting:true,preExistingNote:'You know each other from around the paddock.'};
+    }
+    rivals.push(r);
+  }
+  return rivals;
+}
+
+function touchRival(rivals,name,type,clean){
+  clean=clean!==undefined?clean:true;
+  let r=rivals.find(x=>x.name===name);
+  if(!r){r={name,incidents:0,closeRaces:0,cleanBattles:0};rivals.push(r);}
+  if(type==='incident')r.incidents++;
+  if(type==='close'){r.closeRaces++;if(clean)r.cleanBattles=(r.cleanBattles||0)+1;}
+  if(r.chosen==='chosen_rival'&&(r.cleanBattles||0)>=6)r.coolingDown=true;
+  if(r.chosen==='chosen_friend'&&(r.incidents||0)>=3)r.tension=true;
+}
+
+function relationship(r){
+  const i=r.incidents||0,c=r.closeRaces||0,cb=r.cleanBattles||0;
+  if(r.chosen==='chosen_rival'){
+    if(cb>=8&&i===0)return'racing_rival';
+    return(i>=1||c<=1)?'rival':'frenemy';
+  }
+  if(r.chosen==='chosen_friend'){
+    if(i>=4)return'frenemy';
+    return(c>=2||cb>=2)?'friend':'racing_rival';
+  }
+  if(i>=3&&c>=4)return'frenemy';
+  if(i>=3)return'rival';
+  if(c>=4)return cb>=c*0.7?'racing_rival':'friend';
+  return'acquaintance';
+}
+
+const REL_COLOR={rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8',chosen_rival:'#DC2626',chosen_friend:'#059669'};
+const REL_LABEL={rival:'RIVAL',friend:'FRIEND',f​​​​​​​​​​​​​​​​
+
+//PART 12
+
+<script>
+const SPONSOR_BRANDS={
+  mini_stock:['Local Auto Parts','County Towing','Main Street Garage','Family Diner','Hardware Co.'],
+  street_stock:['Regional Tools','State Farm Supply','Tri-County Motors','Valley Tire','Mountain Auto'],
+  late_model_stock:['Premium Parts','Advanced Automotive','Performance Racing','Speed Tech','Race Fuel Co.'],
+  super_late_model:['Elite Motors','Championship Parts','Pro Racing Gear','Victory Fuels','Podium Tech'],
+  arca_menards:['National Auto','Racing Solutions','Performance Systems','Speed Industries','Track Tech'],
+  nascar_trucks:['Heavy Duty Parts','Truck Racing Co.','Industrial Motors','Hauler Tech','Freight Systems'],
+  nascar_xfinity:['Premium Brands','Racing Electronics','Speed Solutions','Performance Plus','Tech Industries'],
+  nascar_cup:['Global Brands','Championship Motors','Elite Racing','Victory Systems','Premier Tech'],
+  international:['International Racing','Global Motors','Worldwide Tech','Universal Parts','Continental Speed'],
+};
+
+const SPONSOR_TYPES={
+  primary:{dur:[2,4],payMult:1.0},
+  associate:{dur:[1,3],payMult:0.3},
+  personal:{dur:[1,2],payMult:0.15},
+  international:{dur:[1,3],payMult:1.2},
+};
+
+function makeSponsor(seriesId,type,international){
+  type=type||'primary';
+  international=international||false;
+  const brands=international?SPONSOR_BRANDS.international:(SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock);
+  const brand=brands[rand(0,brands.length-1)];
+  const st=SPONSOR_TYPES[international?'international':type];
+  const s=getSeries(seriesId);
+  const base=Math.floor(s.pay*(type==='primary'?3:type==='associate'?0.8:0.3)*randF(0.8,1.3));
+  const seasons=rand(st.dur[0],st.dur[1]);
+  
+  const goalTypes=['top5_pct','wins','finish_pct'];
+  const goalType=goalTypes[rand(0,goalTypes.length-1)];
+  
+  const sponsorGoal={
+    type:goalType,
+    target:goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85),
+    racesTracked:0,
+    racesAchieved:0,
+    warned:false,
+    praised:false,
+    desc:goalType==='top5_pct'?`Expect top-5 finishes in at least ${rand(25,50)}% of races`:
+         goalType==='wins'?`Expect at least ${rand(1,2)} win${rand(1,2)>1?'s':''} this season`:
+         `Expect you to finish (not DNF) in ${rand(60,85)}% of races`,
+  };
+  
+  return{
+    id:uid(),
+    brand,
+    type:international?'international':type,
+    seriesId,
+    valuePerSeason:base,
+    seasonsLeft:seasons,
+    totalSeasons:seasons,
+    happiness:75,
+    winBonus:Math.floor(base*0.15),
+    top5Bonus:Math.floor(base*0.05),
+    minHappy:25,
+    international,
+    sponsorGoal,
+  };
+}
+
+function updateSponsorGoals(state,seriesId,result){
+  const sponsors=(state.sponsors||[]).filter(s=>s.seriesId===seriesId);
+  
+  sponsors.forEach(sp=>{
+    const goal=sp.sponsorGoal;
+    if(!goal)return;
+    
+    goal.racesTracked++;
+    
+    if(goal.type==='top5_pct'&&!result.dnf&&result.position<=5){
+      goal.racesAchieved++;
+    }else if(goal.type==='wins'&&result.position===1){
+      goal.racesAchieved++;
+    }else if(goal.type==='finish_pct'&&!result.dnf){
+      goal.racesAchieved++;
+    }
+    
+    const currentPct=goal.racesTracked>0?(goal.racesAchieved/goal.racesTracked)*100:0;
+    
+    if(goal.type==='top5_pct'){
+      if(currentPct>=goal.target&&!goal.praised&&goal.racesTracked>=5){
+        sp.happiness=Math.min(100,sp.happiness+10);
+        goal.praised=true;
+        addLog(state,`${sp.brand} is thrilled with your top-5 performance (+10 happiness)`);
+      }else if(currentPct<goal.target*0.6&&!goal.warned&&goal.racesTracked>=8){
+        sp.happiness=Math.max(0,sp.happiness-15);
+        goal.warned=true;
+        addLog(state,`${sp.brand} warns you about missing top-5 targets (-15 happiness)`);
+      }
+    }else if(goal.type==='wins'){
+      if(goal.racesAchieved>=goal.target&&!goal.praised){
+        sp.happiness=Math.min(100,sp.happiness+15);
+        goal.praised=true;
+        addLog(state,`${sp.brand} celebrates hitting the win target! (+15 happiness)`);
+      }else if(goal.racesTracked>=15&&goal.racesAchieved<goal.target&&!goal.warned){
+        sp.happiness=Math.max(0,sp.happiness-20);
+        goal.warned=true;
+        addLog(state,`${sp.brand} is disappointed with the lack of wins (-20 happiness)`);
+      }
+    }else if(goal.type==='finish_pct'){
+      if(currentPct>=goal.target&&!goal.praised&&goal.racesTracked>=5){
+        sp.happiness=Math.min(100,sp.happiness+8);
+        goal.praised=true;
+        addLog(state,`${sp.brand} is pleased with your reliability (+8 happiness)`);
+      }else if(currentPct<goal.target*0.7&&!goal.warned&&goal.racesTracked>=8){
+        sp.happiness=Math.max(0,sp.happiness-12);
+        goal.warned=true;
+        addLog(state,`${sp.brand} is concerned about DNF rate (-12 happiness)`);
+      }
+    }
+  });
+}
+
+function generateSponsorOffers(state){
+  const offers=[];
+  const activeSeries=[...new Set(state.contracts.map(c=>c.seriesId))];
+  
+  activeSeries.forEach(seriesId=>{
+    const s=getSeries(seriesId);
+    
+    if(state.reputation>=s.reqRep*0.8&&state.fans>=s.reqFans*0.6){
+      if(Math.random()<0.4){
+        offers.push(makeSponsor(seriesId,'primary',false));
+      }
+    }
+    
+    if(state.reputation>=s.reqRep*0.5&&state.fans>=s.reqFans*0.4){
+      if(Math.random()<0.5){
+        offers.push(makeSponsor(seriesId,'associate',false));
+      }
+    }
+    
+    if(state.reputation>=s.reqRep*1.5&&state.fans>=s.reqFans*1.2){
+      if(Math.random()<0.25){
+        offers.push(makeSponsor(seriesId,'primary',true));
+      }
+    }
+  });
+  
+  return shuffle(offers).slice(0,3);
+}
+
+function processSponsorPayments(state){
+  const sponsors=state.sponsors||[];
+  let totalPaid=0;
+  
+  sponsors.forEach(sp=>{
+    if(sp.seasonsLeft>0){
+      const payment=sp.valuePerSeason;
+      state.money+=payment;
+      totalPaid+=payment;
+      
+      sp.happiness=Math.max(0,sp.happiness-2);
+      
+      if(sp.happiness<sp.minHappy){
+        addLog(state,`${sp.brand} has terminated their sponsorship due to poor performance`);
+        sp.seasonsLeft=0;
+      }
+    }
+  });
+  
+  if(totalPaid>0){
+    addLog(state,`Sponsor payments: ${fmtMoney(totalPaid)}`);
+  }
+  
+  state.sponsors=sponsors.filter(sp=>sp.seasonsLeft>0);
+}
+
+function advanceSponsors(state){
+  const sponsors=state.sponsors||[];
+  
+  sponsors.forEach(sp=>{
+    if(sp.seasonsLeft>0){
+      sp.seasonsLeft--;
+      
+      if(sp.sponsorGoal){
+        sp.sponsorGoal.racesTracked=0;
+        sp.sponsorGoal.racesAchieved=0;
+        sp.sponsorGoal.warned=false;
+        sp.sponsorGoal.praised=false;
+      }
+    }
+  });
+  
+  state.sponsors=sponsors.filter(sp=>sp.seasonsLeft>0);
+  
+  state.sponsorOffers=generateSponsorOffers(state);
+}
+</script>
+
+//PART 13
+
+<script>
+function generateTeammates(state,contract){
+  const teammates=[];
+  const tmCount=contract.teammates.length;
+  if(tmCount===0)return teammates;
+  
+  const s=getSeries(contract.seriesId);
+  const drivers=(state.drivers||[]).filter(d=>d.currentSeriesId===contract.seriesId&&d.active&&d.name!==state.driverName);
+  
+  for(let i=0;i<tmCount;i++){
+    if(drivers.length===0)break;
+    const idx=rand(0,drivers.length-1);
+    const d=drivers[idx];
+    teammates.push({
+      name:d.name,
+      skill:d.skill||rand(40,80),
+      seasonPoints:0,
+      seasonWins:0,
+      seasonTop5s:0,
+      headToHeadWins:0,
+      headToHeadLosses:0,
+    });
+    drivers.splice(idx,1);
+  }
+  
+  return teammates;
+}
+
+function updateTeammateStats(state,seriesId,result){
+  const contract=state.contracts.find(c=>c.seriesId===seriesId);
+  if(!contract||!contract.teammates)return;
+  
+  const teammates=state.teammates||[];
+  const teamTeammates=teammates.filter(tm=>contract.teammates.find(ctm=>ctm.name===tm.name));
+  
+  teamTeammates.forEach(tm=>{
+    const tmPos=rand(Math.max(1,result.position-8),Math.min(result.fieldSize,result.position+8));
+    
+    if(tmPos===1){
+      tm.seasonWins=(tm.seasonWins||0)+1;
+    }
+    if(tmPos<=5){
+      tm.seasonTop5s=(tm.seasonTop5s||0)+1;
+    }
+    
+    const tmPoints=calcPoints(seriesId,tmPos,false,tmPos<=3&&Math.random()<0.3,false);
+    tm.seasonPoints=(tm.seasonPoints||0)+tmPoints;
+    
+    if(!result.dnf){
+      if(result.position<tmPos){
+        tm.headToHeadLosses=(tm.headToHeadLosses||0)+1;
+      }else if(result.position>tmPos){
+        tm.headToHeadWins=(tm.headToHeadWins||0)+1;
+      }
+    }
+  });
+}
+
+function advanceTeammates(state){
+  const teammates=state.teammates||[];
+  
+  teammates.forEach(tm=>{
+    tm.seasonPoints=0;
+    tm.seasonWins=0;
+    tm.seasonTop5s=0;
+  });
+}
+
+function generateTeamOwnershipOffer(state){
+  const activeSeries=[...new Set(state.contracts.map(c=>c.seriesId))];
+  if(activeSeries.length===0)return null;
+  
+  const eligibleSeries=activeSeries.filter(sId=>{
+    const s=getSeries(sId);
+    return state.reputation>=s.reqRep*1.5&&state.fans>=s.reqFans*1.2&&state.money>=s.pay*10;
+  });
+  
+  if(eligibleSeries.length===0)return null;
+  if(Math.random()>0.3)return null;
+  
+  const seriesId=eligibleSeries[rand(0,eligibleSeries.length-1)];
+  const s=getSeries(seriesId);
+  
+  const buyCost=s.pay*s.races*rand(3,6);
+  const operatingCost=Math.floor(s.pay*s.races*0.4);
+  
+  return{
+    id:uid(),
+    seriesId,
+    teamName:state.driverName+' Racing',
+    buyCost,
+    operatingCost,
+    driverSlots:rand(2,3),
+    desc:`Own and operate a ${s.short} team. Buy-in: ${fmtMoney(buyCost)}. Operating cost: ${fmtMoney(operatingCost)}/season.`,
+  };
+}
+
+function purchaseTeam(state,offerId){
+  const offer=state.teamOwnershipOffers?.find(o=>o.id===offerId);
+  if(!offer)return false;
+  
+  if(state.money<offer.buyCost){
+    return false;
+  }
+  
+  state.money-=offer.buyCost;
+  
+  if(!state.ownedTeams)state.ownedTeams=[];
+  
+  state.ownedTeams.push({
+    id:uid(),
+    seriesId:offer.seriesId,
+    teamName:offer.teamName,
+    operatingCost:offer.operatingCost,
+    driverSlots:offer.driverSlots,
+    drivers:[],
+    seasonRevenue:0,
+    seasonExpenses:offer.operatingCost,
+    totalRevenue:0,
+    totalExpenses:offer.buyCost,
+  });
+  
+  addLog(state,`Purchased ${offer.teamName} for ${fmtMoney(offer.buyCost)}`);
+  
+  state.teamOwnershipOffers=state.teamOwnershipOffers?.filter(o=>o.id!==offerId);
+  
+  return true;
+}
+
+function processOwnedTeamFinancials(state){
+  const teams=state.ownedTeams||[];
+  
+  teams.forEach(team=>{
+    state.money-=team.operatingCost;
+    team.seasonExpenses+=team.operatingCost;
+    team.totalExpenses+=team.operatingCost;
+    
+    team.drivers.forEach(driver=>{
+      const revenue=driver.seasonRevenue||0;
+      team.seasonRevenue+=revenue;
+      team.totalRevenue+=revenue;
+      state.money+=revenue;
+    });
+    
+    addLog(state,`${team.teamName}: Revenue ${fmtMoney(team.seasonRevenue)}, Expenses ${fmtMoney(team.seasonExpenses)}`);
+  });
+}
+
+function advanceOwnedTeams(state){
+  const teams=state.ownedTeams||[];
+  
+  teams.forEach(team=>{
+    team.seasonRevenue=0;
+    team.seasonExpenses=team.operatingCost;
+    
+    team.drivers.forEach(driver=>{
+      driver.seasonPoints=0;
+      driver.seasonWins=0;
+      driver.seasonTop5s=0;
+      driver.seasonRevenue=0;
+    });
+  });
+}
+</script>
+
+//PART 14
+
+<script>
+const REAL_SCHEDULES={
+  arca_menards:[
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Circuit of the Americas',city:'Austin',state:'TX'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Chicagoland Speedway',city:'Joliet',state:'IL'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+  ],
+  nascar_trucks:[
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+    {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+    {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+  ],
+  nascar_xfinity:[
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Circuit of the Americas',city:'Austin',state:'TX'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Dover Motor Speedway',city:'Dover',state:'DE'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Portland International Raceway',city:'Portland',state:'OR'},
+    {name:'Sonoma Raceway',city:'Sonoma',state:'CA'},
+    {name:'Chicago Street Course',city:'Chicago',state:'IL'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+    {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+    {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+  ],
+  nascar_cup:[
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Circuit of the Americas',city:'Austin',state:'TX'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Dover Motor Speedway',city:'Dover',state:'DE'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Sonoma Raceway',city:'Sonoma',state:'CA'},
+    {name:'Chicago Street Course',city:'Chicago',state:'IL'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+    {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Nashville Superspeedway',city:'Nashville',state:'TN'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+  ],
+};
+
+const GENERIC_TRACKS=[
+  {name:'Lakeside Speedway',city:'Springfield',state:'IL'},
+  {name:'Mountain View Raceway',city:'Asheville',state:'NC'},
+  {name:'Thunder Valley Speedway',city:'Knoxville',state:'TN'},
+  {name:'Sunset Speedway',city:'Phoenix',state:'AZ'},
+  {name:'River City Raceway',city:'Louisville',state:'KY'},
+  {name:'Pine Ridge Speedway',city:'Portland',state:'OR'},
+  {name:'Desert Diamond Raceway',city:'Tucson',state:'AZ'},
+  {name:'Harbor Speedway',city:'Baltimore',state:'MD'},
+  {name:'Valley Vista Raceway',city:'Fresno',state:'CA'},
+  {name:'Blueridge Speedway',city:'Roanoke',state:'VA'},
+];
+
+function generateScheduleWithRealTracks(seriesId){
+  const s=getSeries(seriesId);
+  
+  if(REAL_SCHEDULES[seriesId]){
+    const realTracks=REAL_SCHEDULES[seriesId];
+    const count=s.races;
+    const picks=[];
+    
+    while(picks.length<count){
+      realTracks.forEach(t=>{
+        if(picks.length<count)picks.push(t);
+      });
+    }
+    
+    return picks.slice(0,count).map((t,i)=>({
+      round:i+1,
+      track:t.name,
+      city:t.city,
+      state:t.state,
+      qualifying:null,
+      result:null,
+      condition:'clear',
+    }));
+  }
+  
+  const tracks=GENERIC_TRACKS;
+  const count=s.races;
+  const picks=[];
+  
+  while(picks.length<count){
+    const shuffled=shuffle(tracks);
+    shuffled.forEach(t=>{
+      if(picks.length<count)picks.push(t);
+    });
+  }
+  
+  return picks.slice(0,count).map((t,i)=>({
+    round:i+1,
+    track:t.name,
+    city:t.city,
+    state:t.state,
+    qualifying:null,
+    result:null,
+    condition:'clear',
+  }));
+}
+</script>
+
+//PART 15
+
+<script>
+function processRaceResultEnhanced(state,seriesId,raceIdx,result){
+  const s=getSeries(seriesId);
+  const sched=state.schedules[seriesId];
+  const race=sched[raceIdx];
+  const contract=state.contracts.find(c=>c.seriesId===seriesId);
+  
+  state.starts++;
+  if(result.position===1)state.wins++;
+  if(result.position<=5)state.top5s++;
+  if(result.pole)state.poles++;
+  
+  updateTrackHistory(state,race.track,result.position,result.dnf,result.pole);
+  
+  if(contract){
+    contract.racesCompleted++;
+    if(result.position===1){
+      contract.wins=(contract.wins||0)+1;
+    }
+  }
+  
+  if(!state.championshipPoints)state.championshipPoints={};
+  if(!state.championshipPoints[seriesId])state.championshipPoints[seriesId]={};
+  state.championshipPoints[seriesId][state.driverName]=(state.championshipPoints[seriesId][state.driverName]||0)+result.points;
+  
+  let totalPrize=result.prize;
+  if(result.position===1&&contract&&contract.winBonus){
+    totalPrize+=contract.winBonus;
+    addLog(state,`Win bonus from ${contract.team}: ${fmtMoney(contract.winBonus)}`);
+  }
+  
+  const prizeShare=contract?.prizeShare||0.70;
+  const playerPrize=Math.floor(totalPrize*prizeShare);
+  state.money+=playerPrize;
+  state.totalPrizeMoney=(state.totalPrizeMoney||0)+playerPrize;
+  
+  if(contract)contract.earnings+=playerPrize;
+  
+  updateSponsorGoals(state,seriesId,result);
+  
+  const sponsors=(state.sponsors||[]).filter(s=>s.seriesId===seriesId);
+  sponsors.forEach(sp=>{
+    if(result.position===1&&sp.winBonus){
+      state.money+=sp.winBonus;
+      addLog(state,`Win bonus from ${sp.brand}: ${fmtMoney(sp.winBonus)}`);
+    }else if(result.position<=5&&sp.top5Bonus){
+      state.money+=sp.top5Bonus;
+      addLog(state,`Top-5 bonus from ${sp.brand}: ${fmtMoney(sp.top5Bonus)}`);
+    }
+  });
+  
+  const baseFanGain=result.dnf?0:result.position===1?rand(100,300):result.position<=5?rand(50,150):rand(10,50);
+  const fanMult=1.0+(s.tier*0.1);
+  const totalFanGain=Math.floor(baseFanGain*fanMult);
+  state.fans+=totalFanGain;
+  
+  let repGain=0;
+  if(result.dnf){
+    repGain=-2;
+  }else if(result.position===1){
+    repGain=10+s.tier*2;
+  }else if(result.position<=5){
+    repGain=5+s.tier;
+  }else if(result.position<=10){
+    repGain=2;
+  }else{
+    repGain=1;
+  }
+  state.reputation+=repGain;
+  
+  if(result.position===1){
+    state.confidence=Math.min(10,(state.confidence||0)+3);
+  }else if(result.position<=5){
+    state.confidence=Math.min(10,(state.confidence||0)+1);
+  }else if(result.dnf){
+    state.confidence=Math.max(-10,(state.confidence||0)-3);
+  }else if(result.position>result.fieldSize*0.7){
+    state.confidence=Math.max(-10,(state.confidence||0)-1);
+  }
+  
+  if(!state.carCondition)state.carCondition={engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  
+  if(result.dnf){
+    state.carCondition.engine=Math.max(0,state.carCondition.engine-rand(15,30));
+    state.carCondition.suspension=Math.max(0,state.carCondition.suspension-rand(10,25));
+    state.carCondition.chassis=Math.max(0,state.carCondition.chassis-rand(10,20));
+    state.carCondition.tires=Math.max(0,state.carCondition.tires-rand(20,40));
+    state.carCondition.brakes=Math.max(0,state.carCondition.brakes-rand(15,30));
+  }else{
+    state.carCondition.engine-=rand(3,8);
+    state.carCondition.suspension-=rand(2,6);
+    state.carCondition.chassis-=rand(2,5);
+    state.carCondition.tires-=rand(5,12);
+    state.carCondition.brakes-=rand(3,7);
+    Object.keys(state.carCondition).forEach(k=>{
+      state.carCondition[k]=Math.max(0,state.carCondition[k]);
+    });
+  }
+  
+  updateTeammateStats(state,seriesId,result);
+  
+  if(result.incidentDrivers&&result.incidentDrivers.length>0){
+    result.incidentDrivers.forEach(dName=>{
+      touchRival(state.rivals||[],dName,'incident',false);
+      
+      if(Math.random()<0.4){
+        const callout=getPersonalityCallout(dName,'incident');
+        const quote=callout.replace(/{name}/g,dName).replace(/{player}/g,state.driverName);
+        addLog(state,`💬 ${quote}`);
+      }
+    });
+  }
+  
+  if(!result.dnf&&result.position<=10&&Math.random()<0.3){
+    const drivers=(state.drivers||[]).filter(d=>d.currentSeriesId===seriesId&&d.active&&d.name!==state.driverName);
+    if(drivers.length>0){
+      const rivalDriver=drivers[rand(0,drivers.length-1)];
+      touchRival(state.rivals||[],rivalDriver.name,'close',true);
+      
+      if(Math.random()<0.3){
+        const callout=getPersonalityCallout(rivalDriver.name,'close');
+        const quote=callout.replace(/{name}/g,rivalDriver.name).replace(/{player}/g,state.driverName);
+        addLog(state,`💬 ${quote}`);
+      }
+    }
+  }
+  
+  race.result=result;
+  
+  if(!state.raceHistory)state.raceHistory=[];
+  state.raceHistory.push({
+    season:state.season,
+    seriesId,
+    round:raceIdx+1,
+    track:race.track,
+    position:result.position,
+    dnf:result.dnf,
+    pole:result.pole,
+    prize:playerPrize,
+    points:result.points,
+  });
+  
+  const oldLevel=state.driverLevel||0;
+  const newLevel=calcDriverLevel(state);
+  if(newLevel>oldLevel){
+    state.driverLevel=newLevel;
+    state.driverAttrPoints=(state.driverAttrPoints||0)+3;
+    addLog(state,`🎖️ Driver Level Up! Now Level ${newLevel} (+3 attribute points)`);
+    
+    DRIVER_PERKS.forEach(p=>{
+      if(newLevel>=p.reqLvl&&!(state.driverPerks||[]).includes(p.id)){
+        if(!state.driverPerks)state.driverPerks=[];
+        state.driverPerks.push(p.id);
+        addLog(state,`✨ Perk Unlocked: ${p.icon} ${p.name} - ${p.desc}`);
+      }
+    });
+  }
+  
+  const summary=generateRaceSummary(state,seriesId,raceIdx,result);
+  addLog(state,summary);
+}
+
+function finishRaceEnhanced(seriesId,raceIdx){
+  const st=getState();
+  const finalResult=resolveRace(pendingRaceResult,currentRaceChoices);
+  
+  processRaceResultEnhanced(st,seriesId,raceIdx,finalResult);
+  
+  evolveAIRelationships(st);
+  
+  saveState(st);
+  
+  const race=st.schedules[seriesId][raceIdx];
+  
+  let html=`
+    <div class="modal-title">Race Complete</div>
+    <div style="font-size:14px;color:#94A3B8;margin-bottom:16px">${race.track}</div>
+    
+    <div style="background:#060A10;border-radius:8px;padding:14px 16px;margin:16px 0">
+      ${finalResult.dnf?`
+        <div style="font-size:32px;font-weight:900;color:#EF4444;margin-bottom:8px">DNF</div>
+        <div style="font-size:14px;color:#94A3B8">${finalResult.dnfReason}</div>
+      `:`
+        <div style="font-size:32px;font-weight:900;color:${finalResult.position===1?'#F59E0B':finalResult.position<=5?'#10B981':'#F9FAFB'};margin-bottom:8px">${finalResult.position===1?'🏁 WINNER':ordinal(finalResult.position)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+          <div>
+            <div style="font-size:12px;color:#94A3B8">Points Earned</div>
+            <div style="font-size:20px;font-weight:900">${finalResult.points}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:#94A3B8">Prize Money</div>
+            <div style="font-size:20px;font-weight:900;color:#10B981">${fmtMoney(finalResult.prize)}</div>
+          </div>
+        </div>
+      `}
+    </div>
+    
+    ${finalResult.pole||finalResult.lapsLed||finalResult.mostLaps?`
+      <div style="font-size:12px;color:#94A3B8;margin-top:12px">
+        ${finalResult.pole?'🏁 Pole Position • ':''}
+        ${finalResult.lapsLed?'📊 Laps Led • ':''}
+        ${finalResult.mostLaps?'⏱️ Most Laps Led':''}
+      </div>
+    `:''}
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal();showPage('dashboard')">Continue</button>
+    </div>
+  `;
+  
+  showModal(html);
+  
+  pendingRaceResult=null;
+  currentRaceChoices=[];
+  
+  updateHeader(st);
+}
+</script>
+
+//PART 16
+
+<script>
+function initStateComplete(name,carNumber,homeState){
+  const drivers=generateInitialDriverPool();
+  
+  drivers.forEach(d=>{
+    const isIntl=INTL_REGIONS.includes(d.homeState);
+    if(isIntl){
+      d.name=generateAINameForRegion(d.homeState);
+    }
+  });
+  
+  const state={
+    driverName:name,
+    homeState:homeState||'ME',
+    carNumber:carNumber||0,
+    season:1,
+    week:1,
+    money:5000,
+    reputation:0,
+    fans:0,
+    wins:0,
+    top5s:0,
+    starts:0,
+    poles:0,
+    totalPrizeMoney:0,
+    totalMerchRevenue:0,
+    contracts:[],
+    pendingOffers:generateOffers(0,0),
+    schedules:{},
+    championshipPoints:{},
+    seriesFields:{},
+    sponsors:[],
+    sponsorOffers:[],
+    rivals:[],
+    teammates:[],
+    offTrackDone:[],
+    dramaQueue:[],
+    seasonGoals:[],
+    goalHistory:[],
+    seasonHistory:[],
+    confidence:0,
+    spotter:null,
+    milestones:[],
+    offseasonOffers:[],
+    offseasonPhase:false,
+    carCondition:{engine:100,suspension:100,chassis:100,tires:100,brakes:100},
+    specialResults:[],
+    raceHistory:[],
+    drivers,
+    log:['Season 1. $5,000, a dream, and a simulated engine that hopefully doesn\'t blow. Let\'s go.'],
+    settings:{},
+    driverAttrs:initDriverAttrs(),
+    driverAttrPoints:DRIVER_ATTR_POINTS_START-DRIVER_ATTRS.length*DRIVER_ATTR_DEFAULT,
+    driverPerks:[],
+    carUpgrades:initCarUpgrades(),
+    driverLevel:0,
+    lastSocialPost:{},
+    trackHistory:{},
+    ownedTeams:[],
+    teamOwnershipOffers:[],
+  };
+  
+  state.rivals=generateStartingRivals(drivers);
+  seedAIDriverRelationships(drivers);
+  
+  return state;
+}
+
+function doSignContractEnhanced(contractId){
+  const st=getState();
+  const offer=st.pendingOffers.find(o=>o.id===contractId);
+  if(!offer)return;
+  
+  if(st.money<offer.entryFee){
+    showModal(`
+      <div class="modal-title">Insufficient Funds</div>
+      <div style="padding:20px 0;font-size:15px;color:#94A3B8">
+        You need ${fmtMoney(offer.entryFee)} to sign this contract.<br>
+        Current balance: ${fmtMoney(st.money)}
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+      </div>
+    `);
+    return;
+  }
+  
+  st.money-=offer.entryFee;
+  st.contracts.push(offer);
+  st.pendingOffers=st.pendingOffers.filter(o=>o.id!==contractId);
+  
+  const s=getSeries(offer.seriesId);
+  st.schedules[offer.seriesId]=generateScheduleWithRealTracks(offer.seriesId);
+  
+  if(!st.championshipPoints[offer.seriesId]){
+    st.championshipPoints[offer.seriesId]={};
+  }
+  st.championshipPoints[offer.seriesId][st.driverName]=0;
+  
+  if(offer.teammates&&offer.teammates.length>0){
+    const newTeammates=generateTeammates(st,offer);
+    if(!st.teammates)st.teammates=[];
+    st.teammates.push(...newTeammates);
+  }
+  
+  addLog(st,`Signed with ${offer.team} for ${s.name} (${offer.termSeasons} season${offer.termSeasons>1?'s':''})`);
+  
+  saveState(st);
+  closeModal();
+  showPage('contracts');
+  updateHeader(st);
+}
+
+function openSimQualModalEnhanced(seriesId,raceIdx){
+  const st=getState();
+  const s=getSeries(seriesId);
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  
+  if(race.qualifying){
+    openSimRaceModalEnhanced(seriesId,raceIdx);
+    return;
+  }
+  
+  const commentary=generatePreRaceCommentary(st,seriesId,raceIdx);
+  const scenario=QUALI_SCENARIOS[rand(0,QUALI_SCENARIOS.length-1)];
+  
+  let html=`
+    <div class="modal-title">Qualifying: ${race.track}</div>
+    <div style="font-size:14px;color:#94A3B8;margin-bottom:10px">${s.name} • Round ${race.round}</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:20px;font-style:italic;line-height:1.6">${commentary}</div>
+    
+    <div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:900;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px">QUALIFYING SESSION</div>
+      <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${scenario.scene}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${scenario.choices.map((ch,idx)=>`
+          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="resolveQualiEnhanced('${seriesId}',${raceIdx},${ch.modifier})">
+            <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function resolveQualiEnhanced(seriesId,raceIdx,modifier){
+  const st=getState();
+  const qualResult=simulateQualifying(st,seriesId,raceIdx);
+  
+  const adjustedPos=Math.round(qualResult.position*modifier);
+  qualResult.position=clamp(adjustedPos,1,qualResult.fieldSize);
+  qualResult.pole=qualResult.position===1;
+  
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  race.qualifying=qualResult;
+  
+  if(qualResult.pole)st.poles++;
+  
+  saveState(st);
+  
+  let html=`
+    <div class="modal-title">Qualifying Results</div>
+    
+    <div style="background:#060A10;border-radius:8px;padding:14px 16px;margin:16px 0;display:flex;gap:24px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Position</div>
+        <div style="font-size:${qualResult.pole?'32px':'22px'};font-weight:900;margin-top:2px;color:${qualResult.pole?'#F59E0B':'#F9FAFB'}">${qualResult.pole?'🏁 POLE':ordinal(qualResult.position)}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em">Field Size</div>
+        <div style="font-size:22px;font-weight:900;margin-top:2px">${qualResult.fieldSize}</div>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="openSimRaceModalEnhanced('${seriesId}',${raceIdx})">Continue to Race</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function openSimRaceModalEnhanced(seriesId,raceIdx){
+  const st=getState();
+  const s=getSeries(seriesId);
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  
+  if(race.result){
+    alert('Race already completed');
+    closeModal();
+    return;
+  }
+  
+  if(!race.qualifying){
+    openSimQualModalEnhanced(seriesId,raceIdx);
+    return;
+  }
+  
+  const raceResult=simulateRace(st,seriesId,raceIdx,race.qualifying.position);
+  pendingRaceResult=raceResult;
+  currentRaceChoices=[];
+  
+  showRaceScenarioEnhanced(seriesId,raceIdx,0);
+}
+
+function showRaceScenarioEnhanced(seriesId,raceIdx,scenarioIdx){
+  const st=getState();
+  const s=getSeries(seriesId);
+  const sched=st.schedules[seriesId];
+  const race=sched[raceIdx];
+  
+  if(!pendingRaceResult||!pendingRaceResult.scenarios)return;
+  
+  if(scenarioIdx>=pendingRaceResult.scenarios.length){
+    finishRaceEnhanced(seriesId,raceIdx);
+    return;
+  }
+  
+  const scenarioData=pendingRaceResult.scenarios[scenarioIdx];
+  const sc=scenarioData.scenario;
+  
+  let html=`
+    <div class="modal-title">${race.track}</div>
+    <div style="font-size:14px;color:#94A3B8;margin-bottom:20px">${s.name} • Round ${race.round} • Scenario ${scenarioIdx+1}/${pendingRaceResult.scenarios.length}</div>
+    
+    <div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:900;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px">RACE SCENARIO</div>
+      <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${sc.scene({lap:5+scenarioIdx*10,pos:pendingRaceResult.basePos,fieldSize:pendingRaceResult.fieldSize,lapsLeft:50-scenarioIdx*10})}</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${sc.choices.map((ch,idx)=>`
+          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="makeRaceChoiceEnhanced('${seriesId}',${raceIdx},${scenarioIdx},${idx})">
+            <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function makeRaceChoiceEnhanced(seriesId,raceIdx,scenarioIdx,choiceIdx){
+  const scenarioData=pendingRaceResult.scenarios[scenarioIdx];
+  const sc=scenarioData.scenario;
+  const choice=sc.choices[choiceIdx];
+  
+  const outcome={
+    posDelta:choice.posModifier||0,
+    dnfRisk:choice.dnfRisk||0,
+    fanBonus:choice.fanBonus||0,
+  };
+  
+  currentRaceChoices.push(outcome);
+  
+  const isGood=Math.random()<0.65;
+  const resultText=isGood?choice.narrativeResult?.good||'The move works.':choice.narrativeResult?.bad||'It doesn\'t work out.';
+  
+  let html=`
+    <div class="modal-title">Result</div>
+    
+    <div style="border-radius:8px;padding:14px 16px;margin-top:12px;border-left:3px solid ${isGood?'#10B981':'#EF4444'};background:${isGood?'#06130e':'#130606'}">
+      <div style="font-size:15px;font-weight:800;color:#F9FAFB;margin-bottom:4px">${isGood?'✓ Success':'✗ Setback'}</div>
+      <div style="font-size:14px;color:#94A3B8;line-height:1.5">${resultText}</div>
+    </div>
+    
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn btn-primary" onclick="showRaceScenarioEnhanced('${seriesId}',${raceIdx},${scenarioIdx+1})">${scenarioIdx+1<pendingRaceResult.scenarios.length?'Next Scenario':'See Final Results'}</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+</script>
+
+//PART 17
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const stateSelect=$('driver-state-input');
+  if(stateSelect&&stateSelect.options.length===0){
+    const usG=document.createElement('optgroup');
+    usG.label='United States';
+    const iG=document.createElement('optgroup');
+    iG.label='International';
+    
+    US_STATES.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s;
+      o.textContent=US_STATE_NAMES[s]||s;
+      if(s==='ME')o.selected=true;
+      usG.appendChild(o);
+    });
+    
+    INTL_REGIONS.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s;
+      o.textContent=s;
+      iG.appendChild(o);
+    });
+    
+    stateSelect.appendChild(usG);
+    stateSelect.appendChild(iG);
+  }
+  
+  const existingSave=getState();
+  
+  if(existingSave){
+    $('setup-screen').classList.add('hidden');
+    $('app').style.display='flex';
+    
+    updateHeader(existingSave);
+    updateTabs(existingSave);
+    showPage('dashboard');
+  }else{
+    const setupForm=$('setup-form');
+    setupForm.addEventListener('submit',e=>{
+      e.preventDefault();
+      
+      const driverName=$('driver-name-input').value.trim();
+      const driverNumber=parseInt($('driver-number-input').value);
+      const homeState=$('driver-state-input').value;
+      
+      if(!driverName){
+        alert('Please enter your driver name');
+        return;
+      }
+      
+      if(isNaN(driverNumber)||driverNumber<0||driverNumber>999){
+        alert('Please enter a valid car number (0-999)');
+        return;
+      }
+      
+      const newState=initStateComplete(driverName,driverNumber,homeState);
+      
+      saveState(newState);
+      
+      $('setup-screen').classList.add('hidden');
+      $('app').style.display='flex';
+      
+      updateHeader(newState);
+      updateTabs(newState);
+      showPage('dashboard');
+    });
+  }
+  
+  const modalOverlay=$('modal-overlay');
+  if(modalOverlay){
+    modalOverlay.addEventListener('click',e=>{
+      if(e.target===modalOverlay){
+        closeModal();
+      }
+    });
+  }
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(!$('modal-overlay').classList.contains('hidden')){
+      closeModal();
+    }
+  }
+  
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){
+    e.preventDefault();
+    const st=getState();
+    if(st){
+      saveState(st);
+      alert('Game saved');
+    }
+  }
+});
+
+window.DEV={
+  getState,
+  saveState,
+  addMoney:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.money+=amount;
+    saveState(st);
+    updateHeader(st);
+    console.log('Added '+fmtMoney(amount));
+  },
+  addRep:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.reputation+=amount;
+    saveState(st);
+    updateHeader(st);
+    console.log('Added '+amount+' reputation');
+  },
+  addFans:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.fans+=amount;
+    saveState(st);
+    updateHeader(st);
+    console.log('Added '+amount+' fans');
+  },
+  repairCar:()=>{
+    const st=getState();
+    if(!st)return;
+    Object.keys(st.carCondition).forEach(k=>st.carCondition[k]=100);
+    saveState(st);
+    console.log('Car repaired to 100%');
+  },
+  unlockAllPerks:()=>{
+    const st=getState();
+    if(!st)return;
+    st.driverPerks=DRIVER_PERKS.map(p=>p.id);
+    saveState(st);
+    console.log('All perks unlocked');
+  },
+  maxUpgrades:()=>{
+    const st=getState();
+    if(!st)return;
+    CAR_UPGRADES.forEach(u=>{
+      st.carUpgrades[u.id]=u.tiers.length;
+    });
+    saveState(st);
+    console.log('All upgrades maxed');
+  },
+  addAttrPoints:(amount)=>{
+    const st=getState();
+    if(!st)return;
+    st.driverAttrPoints=(st.driverAttrPoints||0)+amount;
+    saveState(st);
+    console.log('Added '+amount+' attribute points');
+  },
+  levelUp:()=>{
+    const st=getState();
+    if(!st)return;
+    st.wins+=5;
+    st.top5s+=5;
+    st.poles+=3;
+    const newLevel=calcDriverLevel(st);
+    st.driverLevel=newLevel;
+    saveState(st);
+    updateHeader(st);
+    console.log('Leveled up to '+newLevel);
+  },
+  completeRace:(seriesId,raceIdx)=>{
+    const st=getState();
+    if(!st)return;
+    const sched=st.schedules[seriesId];
+    if(!sched)return;
+    const race=sched[raceIdx];
+    if(!race||race.result)return;
+    
+    if(!race.qualifying){
+      const qualResult=simulateQualifying(st,seriesId,raceIdx);
+      race.qualifying=qualResult;
+      if(qualResult.pole)st.poles++;
+    }
+    
+    const raceResult=simulateRace(st,seriesId,raceIdx,race.qualifying.position);
+    const choiceResults=raceResult.scenarios.map(()=>({
+      posDelta:rand(-1,2),
+      dnfRisk:0.02,
+      fanBonus:rand(20,100),
+    }));
+    const finalResult=resolveRace(raceResult,choiceResults);
+    processRaceResultEnhanced(st,seriesId,raceIdx,finalResult);
+    
+    saveState(st);
+    updateHeader(st);
+    showPage('dashboard');
+    console.log('Race auto-completed: '+(!finalResult.dnf?'P'+finalResult.position:'DNF'));
+  },
+  simulateFullSeason:()=>{
+    const st=getState();
+    if(!st)return;
+    st.contracts.forEach(c=>{
+      const sched=st.schedules[c.seriesId]||[];
+      sched.forEach((r,idx)=>{
+        if(!r.result){
+          if(!r.qualifying){
+            const qualResult=simulateQualifying(st,c.seriesId,idx);
+            r.qualifying=qualResult;
+            if(qualResult.pole)st.poles++;
+          }
+          const raceResult=simulateRace(st,c.seriesId,idx,r.qualifying.position);
+          const choiceResults=raceResult.scenarios.map(()=>({
+            posDelta:rand(-1,2),
+            dnfRisk:0.02,
+            fanBonus:rand(20,100),
+          }));
+          const finalResult=resolveRace(raceResult,choiceResults);
+          processRaceResultEnhanced(st,c.seriesId,idx,finalResult);
+        }
+      });
+    });
+    saveState(st);
+    updateHeader(st);
+    showPage('dashboard');
+    console.log('Full season simulated');
+  },
+  viewLog:()=>{
+    const st=getState();
+    if(!st)return;
+    console.log('=== GAME LOG ===');
+    (st.log||[]).forEach(entry=>console.log(entry));
+  },
+  showTrackHistory:()=>{
+    const st=getState();
+    if(!st||!st.trackHistory)return;
+    console.log('=== TRACK HISTORY ===');
+    Object.entries(st.trackHistory).forEach(([track,data])=>{
+      console.log(`${track}: ${data.starts} starts, ${data.wins} wins, avg finish ${data.avgFinish}, best ${data.bestFinish}`);
+    });
+  },
+  addSponsor:(seriesId)=>{
+    const st=getState();
+    if(!st)return;
+    const sponsor=makeSponsor(seriesId||'mini_stock','primary',false);
+    if(!st.sponsors)st.sponsors=[];
+    st.sponsors.push(sponsor);
+    saveState(st);
+    console.log('Added sponsor: '+sponsor.brand);
+  },
+  reset:()=>{
+    if(confirm('Delete career permanently?')){
+      localStorage.removeItem('fullthrottle_sim_save');
+      location.reload();
+    }
+  },
+};
+
+window.openSimQualModal=openSimQualModalEnhanced;
+window.doSignContract=doSignContractEnhanced;
+
+console.log('Full Throttle v1.5.2-SIM loaded successfully');
+console.log('Type window.DEV in console for debug commands');
+console.log('Features: AI personalities, track history, sponsor goals, real schedules, callouts');
+</script>
+
+//PART 18
+
 </script>
 </body>
 </html>
+
+
