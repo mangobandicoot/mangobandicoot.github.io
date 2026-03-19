@@ -3193,3 +3193,305 @@ function showTutorial() {
 
 // Add tutorial button to dashboard (optional - can be called from settings)
 // showTutorial();
+// ═══════════════════════════════════════════════════════════════════════
+// SETTINGS & SAVE DATA VISIBILITY
+// ═══════════════════════════════════════════════════════════════════════
+
+function showSettings() {
+  const wrap = h('div', null);
+  wrap.appendChild(h('div', {className: 'modal-title'}, 'Settings'));
+  
+  // Save data location info
+  const saveCard = h('div', {style: {background: '#060A10', border: '1px solid #1E2433', borderRadius: '8px', padding: '14px', marginBottom: '12px'}});
+  saveCard.appendChild(h('div', {style: {fontSize: '14px', fontWeight: 700, marginBottom: '8px'}}, 'Save Data Location'));
+  saveCard.appendChild(h('div', {style: {fontSize: '13px', color: '#CBD5E1', marginBottom: '8px'}}, 
+    'Your save data is stored locally in your browser using localStorage.'
+  ));
+  saveCard.appendChild(h('div', {style: {fontSize: '12px', color: '#64748B', fontFamily: 'monospace', background: '#0B0F1A', padding: '8px', borderRadius: '4px', marginBottom: '8px'}}, 
+    'Key: ft_sim_save'
+  ));
+  saveCard.appendChild(h('div', {style: {fontSize: '12px', color: '#94A3B8', lineHeight: '1.5'}}, 
+    'To access: Open browser DevTools (F12) → Application/Storage tab → Local Storage → select this domain → find "ft_sim_save"'
+  ));
+  wrap.appendChild(saveCard);
+  
+  // Actions
+  const actionsCard = h('div', {style: {background: '#060A10', border: '1px solid #1E2433', borderRadius: '8px', padding: '14px', marginBottom: '12px'}});
+  actionsCard.appendChild(h('div', {style: {fontSize: '14px', fontWeight: 700, marginBottom: '8px'}}, 'Actions'));
+  actionsCard.appendChild(mkBtn('Export Save File', 'btn btn-secondary btn-full', () => {
+    exportSave();
+    showToast('Save file downloaded!', '#10B981');
+  }));
+  actionsCard.appendChild(h('div', {style: {height: '8px'}})); // spacer
+  actionsCard.appendChild(mkBtn('Show Tutorial', 'btn btn-secondary btn-full', () => {
+    closeModal();
+    showTutorial();
+  }));
+  actionsCard.appendChild(h('div', {style: {height: '8px'}})); // spacer
+  actionsCard.appendChild(mkBtn('Delete Save & Restart', 'btn btn-danger btn-full', () => {
+    if (confirm('Are you sure? This will delete your current save permanently.')) {
+      startNewGame();
+    }
+  }));
+  wrap.appendChild(actionsCard);
+  
+  // Game info
+  const infoCard = h('div', {style: {background: '#060A10', border: '1px solid #1E2433', borderRadius: '8px', padding: '14px', marginBottom: '12px'}});
+  infoCard.appendChild(h('div', {style: {fontSize: '14px', fontWeight: 700, marginBottom: '8px'}}, 'Game Info'));
+  infoCard.appendChild(h('div', {style: {fontSize: '13px', color: '#CBD5E1', marginBottom: '4px'}}, `Version: ${APP_VERSION}`));
+  infoCard.appendChild(h('div', {style: {fontSize: '13px', color: '#CBD5E1', marginBottom: '4px'}}, `Driver: ${G.driverName} (#${G.carNumber})`));
+  infoCard.appendChild(h('div', {style: {fontSize: '13px', color: '#CBD5E1', marginBottom: '4px'}}, `Origin: ${originLabel(G.homeState)}`));
+  infoCard.appendChild(h('div', {style: {fontSize: '13px', color: '#CBD5E1'}}, `Season: ${G.season}, Week: ${G.week}`));
+  wrap.appendChild(infoCard);
+  
+  wrap.appendChild(mkBtn('Close', 'btn btn-ghost btn-full', closeModal));
+  
+  openModal(wrap);
+}
+
+// Add settings to tabs
+TABS.push({id: 'settings', label: 'Settings'});
+
+// Update tab map in renderContent
+const originalRenderContent = renderContent;
+renderContent = function() {
+  const c = $('content');
+  c.innerHTML = '';
+  const page = h('div', {className: 'page'});
+  
+  const map = {
+    dashboard: renderDashboard,
+    contracts: renderContracts,
+    schedule: renderSchedule,
+    rivals: renderRivals,
+    standings: renderStandings,
+    business: renderBusiness,
+    drivers: renderDriverRPG,
+    garage: renderGarage,
+    log: renderLog,
+    settings: renderSettings
+  };
+  
+  if (map[activeTab]) page.appendChild(map[activeTab]());
+  c.appendChild(page);
+};
+
+function renderSettings() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div', {className: 'page-title'}, 'Settings'));
+  
+  // Save data location
+  const saveCard = h('div', {className: 'card'});
+  saveCard.appendChild(cardTitle('Save Data Location'));
+  saveCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '12px'}}, 
+    'Your save data is stored locally in your browser using localStorage.'
+  ));
+  saveCard.appendChild(h('div', {style: {fontSize: '12px', color: '#64748B', fontFamily: 'monospace', background: '#0B0F1A', padding: '10px', borderRadius: '6px', marginBottom: '12px'}}, 
+    'Key: ft_sim_save'
+  ));
+  saveCard.appendChild(h('div', {style: {fontSize: '13px', color: '#94A3B8', lineHeight: '1.6', marginBottom: '16px'}}, 
+    'To access manually: Open browser DevTools (F12) → Application/Storage tab → Local Storage → select this domain → find "ft_sim_save"'
+  ));
+  saveCard.appendChild(mkBtn('Export Save File', 'btn btn-secondary', () => {
+    exportSave();
+    showToast('Save file downloaded!', '#10B981');
+  }));
+  f.appendChild(saveCard);
+  
+  // Game actions
+  const actionsCard = h('div', {className: 'card'});
+  actionsCard.appendChild(cardTitle('Game Actions'));
+  actionsCard.appendChild(mkBtn('Show Tutorial', 'btn btn-secondary', showTutorial));
+  actionsCard.appendChild(h('div', {style: {height: '12px'}})); // spacer
+  actionsCard.appendChild(mkBtn('Delete Save & Restart', 'btn btn-danger', () => {
+    if (confirm('Are you sure? This will delete your current save permanently.')) {
+      startNewGame();
+    }
+  }));
+  f.appendChild(actionsCard);
+  
+  // Game info
+  const infoCard = h('div', {className: 'card'});
+  infoCard.appendChild(cardTitle('Game Info'));
+  infoCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Version: ${APP_VERSION}`));
+  infoCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Driver: ${G.driverName} (#${G.carNumber})`));
+  infoCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Origin: ${originLabel(G.homeState)}`));
+  infoCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Personality: ${getPersonality(G.driverName)}`));
+  infoCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1'}}, `Career: Season ${G.season}, Week ${G.week}`));
+  f.appendChild(infoCard);
+  
+  // Statistics
+  const statsCard = h('div', {className: 'card'});
+  statsCard.appendChild(cardTitle('Career Statistics'));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Total Starts: ${G.starts}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Total Wins: ${G.wins}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Total Top 5s: ${G.top5s}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Poles: ${G.poles}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Total Prize Money: ${fmtMoney(G.totalPrizeMoney)}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Total Merch Revenue: ${fmtMoney(G.totalMerchRevenue || 0)}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1', marginBottom: '6px'}}, `Driver Level: ${G.driverLevel}`));
+  statsCard.appendChild(h('div', {style: {fontSize: '14px', color: '#CBD5E1'}}, `Milestones: ${(G.milestones || []).length}`));
+  f.appendChild(statsCard);
+  
+  // Credits
+  const creditsCard = h('div', {className: 'card'});
+  creditsCard.appendChild(cardTitle('About'));
+  creditsCard.appendChild(h('div', {style: {fontSize: '13px', color: '#94A3B8', lineHeight: '1.6', marginBottom: '8px'}}, 
+    'Full Throttle SIM is a narrative-driven racing career simulation. Build your driver from the grassroots to the pinnacle of NASCAR, making choices that shape your career both on and off the track.'
+  ));
+  creditsCard.appendChild(h('div', {style: {fontSize: '13px', color: '#94A3B8', lineHeight: '1.6'}}, 
+    'Features: RPG driver progression, dynamic rivalries, personality-driven AI drivers, track performance tracking, sponsor management, and fully simulated racing via narrative choices.'
+  ));
+  f.appendChild(creditsCard);
+  
+  return f;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CAR NUMBER CONFLICT RESOLUTION
+// ═══════════════════════════════════════════════════════════════════════
+
+function getAvailableCarNumber(preferredNumber, seriesId, state) {
+  const takenNumbers = new Set();
+  
+  // Player's number
+  if (state.carNumber !== null && state.carNumber !== undefined) {
+    takenNumbers.add(state.carNumber);
+  }
+  
+  // AI drivers in same series tiers (mini, street, late, super late share numbers)
+  const playerSeries = (state.contracts || []).map(c => c.seriesId);
+  const sameTierSeries = ['mini_stock', 'street_stock', 'late_model_stock', 'super_late_model'];
+  
+  (state.drivers || []).forEach(d => {
+    // If player is in lower series, and this AI is in same tier, mark number as taken
+    const inSameTier = sameTierSeries.includes(d.currentSeriesId) && playerSeries.some(ps => sameTierSeries.includes(ps));
+    
+    if (inSameTier && d.carNumber !== null && d.carNumber !== undefined) {
+      if (typeof d.carNumber === 'number') {
+        takenNumbers.add(d.carNumber);
+      }
+    }
+  });
+  
+  // Try preferred number
+  if (!takenNumbers.has(preferredNumber)) {
+    return preferredNumber;
+  }
+  
+  // Try other numbers 0-99
+  for (let i = 0; i < 100; i++) {
+    if (!takenNumbers.has(i)) {
+      return i;
+    }
+  }
+  
+  // If all 0-99 taken, append letter
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let i = 0; i < letters.length; i++) {
+    const candidate = preferredNumber + letters[i];
+    if (!takenNumbers.has(candidate)) {
+      return candidate;
+    }
+  }
+  
+  // Fallback - should never reach here
+  return preferredNumber + 'X';
+}
+
+// Update assignCarNumbers to use conflict resolution
+function assignCarNumbers(state) {
+  const takenNumbers = new Set();
+  
+  // Player gets their chosen number first
+  if (state.carNumber !== null && state.carNumber !== undefined) {
+    takenNumbers.add(state.carNumber);
+  }
+  
+  // Assign numbers to AI drivers
+  (state.drivers || []).forEach(d => {
+    if (d.carNumber !== null && d.carNumber !== undefined) {
+      takenNumbers.add(d.carNumber);
+      return;
+    }
+    
+    let attempts = 0;
+    let num = rand(0, 99);
+    
+    while (takenNumbers.has(num) && attempts < 200) {
+      num = rand(0, 99);
+      attempts++;
+    }
+    
+    // If still taken after 200 attempts, append a letter
+    if (takenNumbers.has(num)) {
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      d.carNumber = num + letters[rand(0, letters.length - 1)];
+    } else {
+      d.carNumber = num;
+      takenNumbers.add(num);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// FINAL UTILITY EXPORTS & CLEANUP
+// ═══════════════════════════════════════════════════════════════════════
+
+// Expose key functions to window for debugging (optional)
+if (typeof window !== 'undefined') {
+  window.FullThrottle = {
+    version: APP_VERSION,
+    getState: () => G,
+    saveGame,
+    loadGame,
+    exportSave,
+    showTutorial,
+    showSettings,
+  };
+}
+
+// Auto-save every 30 seconds if game is loaded
+setInterval(() => {
+  if (G && G.driverName) {
+    saveGame();
+  }
+}, 30000);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  // Ctrl/Cmd + S to save
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    if (G) {
+      saveGame();
+      showToast('Game saved!', '#10B981');
+    }
+  }
+  
+  // Escape to close modal
+  if (e.key === 'Escape') {
+    const overlay = $('modal-overlay');
+    if (overlay && !overlay.classList.contains('hidden')) {
+      closeModal();
+    }
+  }
+  
+  // Ctrl/Cmd + E to export
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+    e.preventDefault();
+    if (G) {
+      exportSave();
+      showToast('Save exported!', '#10B981');
+    }
+  }
+});
+
+// Console welcome message
+console.log('%cFull Throttle SIM ' + APP_VERSION, 'font-size: 20px; font-weight: bold; color: #F59E0B;');
+console.log('%cSimulated racing career game', 'font-size: 12px; color: #94A3B8;');
+console.log('%cAccess game state: window.FullThrottle.getState()', 'font-size: 11px; color: #64748B;');
+
+</script>
+</body>
+</html>
