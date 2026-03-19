@@ -4594,22 +4594,17 @@ function getState() {
 //
 <script>
 // ═══════════════════════════════════════════════════════════════════════
-// BOOTSTRAP — Game initialization and setup
+// BOOTSTRAP — HEAVY DEBUG VERSION
 // ═══════════════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM loaded');
+  alert('Step 1: DOM loaded');
   
   // Populate state dropdown
   const sel = document.getElementById('driver-state-input');
-  console.log('State dropdown:', sel);
-  
   if (sel && sel.options.length === 0) {
     const usG = document.createElement('optgroup');
     usG.label = 'United States';
-    const iG = document.createElement('optgroup');
-    iG.label = 'International';
-    
     US_STATES.forEach(s => {
       const o = document.createElement('option');
       o.value = s;
@@ -4617,45 +4612,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (s === 'ME') o.selected = true;
       usG.appendChild(o);
     });
-    
-    INTL_REGIONS.forEach(s => {
-      const o = document.createElement('option');
-      o.value = s;
-      o.textContent = s;
-      iG.appendChild(o);
-    });
-    
     sel.appendChild(usG);
-    sel.appendChild(iG);
-    console.log('State dropdown populated');
   }
+  
+  alert('Step 2: Dropdown populated');
   
   // Check for existing save
   const existingSave = getState();
-  console.log('Existing save:', existingSave);
   
   if (existingSave) {
-    // Load existing career
+    alert('Found existing save, loading...');
     document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('app').style.display = 'flex';
-    
     updateHeader(existingSave);
     updateTabs(existingSave);
-    
-    // Check for pending drama
-    if (existingSave.dramaQueue && existingSave.dramaQueue.length > 0) {
-      processDramaQueue(existingSave);
-    } else {
-      showPage('dashboard');
-    }
+    showPage('dashboard');
   } else {
+    alert('Step 3: No save found, setting up form');
+    
     // New career setup
-    console.log('Setting up new career form');
     const setupForm = document.getElementById('setup-form');
-    console.log('Setup form:', setupForm);
+    
+    if (!setupForm) {
+      alert('ERROR: setup-form not found!');
+      return;
+    }
     
     setupForm.addEventListener('submit', e => {
-      console.log('Form submitted!');
+      alert('Step 4: Form submitted!');
       e.preventDefault();
       
       const driverName = document.getElementById('driver-name-input').value.trim();
@@ -4663,79 +4647,43 @@ document.addEventListener('DOMContentLoaded', () => {
       const driverNumber = driverNumberInput ? parseInt(driverNumberInput.value) : 0;
       const homeState = document.getElementById('driver-state-input').value;
       
-      console.log('Driver name:', driverName);
-      console.log('Driver number:', driverNumber);
-      console.log('Home state:', homeState);
+      alert('Name: ' + driverName + ', Number: ' + driverNumber + ', State: ' + homeState);
       
       if (!driverName) {
-        alert('Please enter your driver name');
+        alert('No name entered!');
         return;
       }
       
-      if (driverNumberInput && (isNaN(driverNumber) || driverNumber < 0 || driverNumber > 999)) {
-        alert('Please enter a valid car number (0-999)');
-        return;
-      }
+      alert('Step 5: Calling initState...');
       
-      console.log('Creating new state...');
-      
-      // Initialize new career
-      const newState = initState(driverName);
-      newState.homeState = homeState;
-      if (driverNumberInput) newState.carNumber = driverNumber;
-      
-      console.log('New state created:', newState);
-      
-      saveState(newState);
-      console.log('State saved');
-      
-      // Hide setup, show game
-      document.getElementById('setup-screen').classList.add('hidden');
-      document.getElementById('app').style.display = 'flex';
-      
-      console.log('Updating UI...');
-      updateHeader(newState);
-      updateTabs(newState);
-      showPage('dashboard');
-      
-      alert('Welcome to Full Throttle, ' + driverName + '!');
-    });
-  }
-  
-  // Import save from setup screen
-  const importInput = document.getElementById('import-setup');
-  if (importInput) {
-    importInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = evt => {
-        try {
-          const data = JSON.parse(evt.target.result);
-          localStorage.setItem('fullthrottle_sim_save', evt.target.result);
-          location.reload();
-        } catch (err) {
-          alert('Invalid save file');
-        }
-      };
-      reader.readAsText(file);
-    });
-  }
-  
-  // Modal overlay click to close
-  const modalOverlay = document.getElementById('modal-overlay');
-  if (modalOverlay) {
-    modalOverlay.addEventListener('click', e => {
-      if (e.target === modalOverlay) {
-        closeModal();
+      try {
+        const newState = initState(driverName);
+        alert('Step 6: initState returned successfully');
+        
+        newState.homeState = homeState;
+        if (driverNumberInput) newState.carNumber = driverNumber;
+        
+        alert('Step 7: Saving state...');
+        saveState(newState);
+        
+        alert('Step 8: Hiding setup, showing game...');
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('app').style.display = 'flex';
+        
+        alert('Step 9: Updating UI...');
+        updateHeader(newState);
+        updateTabs(newState);
+        showPage('dashboard');
+        
+        alert('SUCCESS: Game started!');
+      } catch (err) {
+        alert('ERROR: ' + err.message);
       }
     });
+    
+    alert('Form listener attached');
   }
 });
-
-console.log('Script loaded successfully');
 </script>
 </body>
 </html>
-
