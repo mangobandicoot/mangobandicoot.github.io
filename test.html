@@ -2807,4 +2807,2182 @@ function advanceSeason(state) {
 }
 
 </script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// UI RENDERING — Dashboard, Contracts, Sponsors, Rivals, Business
+// ═══════════════════════════════════════════════════════════════════════
 
+function renderDashboard(state) {
+  const activeSeries = [...new Set(state.contracts.map(c => c.seriesId))];
+  const upcomingRaces = [];
+  
+  activeSeries.forEach(seriesId => {
+    const sched = state.schedules[seriesId] || [];
+    const nextRace = sched.find(r => !r.result);
+    if (nextRace) {
+      upcomingRaces.push({
+        seriesId,
+        series: getSeries(seriesId),
+        race: nextRace,
+      });
+    }
+  });
+  
+  // Best/worst tracks
+  const bestTracks = getBestTracks(state, 3);
+  const worstTracks = getWorstTracks(state, 3);
+  
+  // Recent finishes strip (last 5 races across all series)
+  const recentFinishes = (state.raceHistory || [])
+    .slice(-5)
+    .reverse()
+    .map(rh => ({
+      track: rh.track,
+      pos: rh.dnf ? 'DNF' : 'P' + rh.position,
+      color: rh.dnf ? '#EF4444' : rh.position === 1 ? '#F59E0B' : rh.position <= 5 ? '#10B981' : '#64748B',
+    }));
+  
+  // Top rivals in current series
+  const topRivals = (state.rivals || [])
+    .sort((a, b) => (b.incidents + b.closeRaces) - (a.incidents + a.closeRaces))
+    .slice(0, 3);
+  
+  // Team status (if player owns a team)
+  const ownedContract = state.contracts.find(c => c.teammates && c.teammates.length > 0);
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Season ${state.season}, Week ${state.week}</div>
+      
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Career Stats</div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Starts</span><span class="sb-val">${state.starts}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">${state.wins}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">${state.top5s}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Poles</span><span class="sb-val">${state.poles}</span></div>
+          </div>
+          <div class="stat-bar">
+            <div class="sb-row"><span class="sb-lbl">Win Rate</span><span class="sb-val">${state.starts > 0 ? ((state.wins / state.starts) * 100).toFixed(1) : 0}%</span></div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Driver Level ${state.driverLevel || 0}</div>
+          ${(state.driverPerks || []).length > 0 ? `
+            <div style="margin-bottom:10px;font-size:13px;color:#94A3B8">Active Perks:</div>
+            ${(state.driverPerks || []).map(pId => {
+              const p = DRIVER_PERKS.find(pk => pk.id === pId);
+              return p ? `<div style="margin-bottom:6px"><span style="font-size:16px">${p.icon}</span> <span style="font-weight:700;color:#F9FAFB">${p.name}</span></div>` : '';
+            }).join('')}
+          ` : `<div style="font-size:13px;color:#64748B">No perks unlocked yet. Keep racing to level up.</div>`}
+          ${state.driverLevel < 30 ? `
+            <div style="margin-top:12px;font-size:12px;color:#64748B">
+              Next perk at Level ${DRIVER_PERKS.find(p => p.reqLvl > (state.driverLevel || 0))?.reqLvl || 30}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+      
+      ${recentFinishes.length > 0 ? `
+        <div class="card">
+          <div class="card-title">Recent Results</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${recentFinishes.map(rf => `
+              <div style="padding:6px 12px;background:${rf.color};color:#000;border-radius:6px;font-size:13px;font-weight:700">
+                ${rf.pos}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${bestTracks.length > 0 || worstTracks.length > 0 ? `
+        <div class="grid-2">
+          ${bestTracks.length > 0 ? `
+            <div class="card">
+              <div class="card-title">💪 Best Tracks</div>
+              ${bestTracks.map(t => `
+                <div class="row-item" style="margin-bottom:6px">
+                  <div style="flex:1">
+                    <div class="row-name">${t.name}</div>
+                    <div class="row-sub">Avg Finish: ${t.avgFinish}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${worstTracks.length > 0 ? `
+            <div class="card">
+              <div class="card-title">⚠️ Struggle Tracks</div>
+              ${worstTracks.map(t => `
+                <div class="row-item" style="margin-bottom:6px">
+                  <div style="flex:1">
+                    <div class="row-name">${t.name}</div>
+                    <div class="row-sub">Avg Finish: ${t.avgFinish} • ${t.dnfPct}% DNF</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+      
+      ${topRivals.length > 0 ? `
+        <div class="card">
+          <div class="card-title">Active Rivalries</div>
+          ${topRivals.map(r => {
+            const rel = relationship(r);
+            return `
+              <div class="row-item" style="margin-bottom:6px">
+                <div class="accent" style="background:${REL_COLOR[rel]}"></div>
+                <div style="flex:1">
+                  <div class="row-name">${r.name} ${REL_ICON[rel]}</div>
+                  <div class="row-sub">${r.incidents} incidents • ${r.closeRaces} close finishes</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+          <button class="btn btn-sm btn-ghost btn-full mt-8" onclick="showPage('rivals')">View All Rivals</button>
+        </div>
+      ` : ''}
+      
+      ${ownedContract ? `
+        <div class="card">
+          <div class="card-title">Team Performance</div>
+          <div style="font-size:13px;color:#94A3B8;margin-bottom:10px">${ownedContract.team}</div>
+          ${(ownedContract.teammates || []).filter(tm => tm).map(tm => `
+            <div class="row-item" style="margin-bottom:6px">
+              <div style="flex:1">
+                <div class="row-name">${tm.name}</div>
+                <div class="row-sub">${tm.wins || 0}W • ${tm.top5s || 0} Top-5s • ${tm.starts || 0} starts</div>
+              </div>
+            </div>
+          `).join('')}
+          <button class="btn btn-sm btn-ghost btn-full mt-8" onclick="showPage('team')">Manage Team</button>
+        </div>
+      ` : ''}
+      
+      ${upcomingRaces.length > 0 ? `
+        <div class="card">
+          <div class="card-title">Next Race${upcomingRaces.length > 1 ? 's' : ''}</div>
+          ${upcomingRaces.map(ur => {
+            const th = getTrackHistory(state, ur.race.track);
+            const homeCheck = isHomeRace(state, ur.race);
+            return `
+              <div class="row-item" style="margin-bottom:8px">
+                <div style="flex:1">
+                  <div class="row-name">${ur.race.track} ${homeCheck === 'player' ? '🏠' : ''}</div>
+                  <div class="row-sub">${ur.race.city}, ${ur.race.state} • ${ur.series.short}</div>
+                  ${th ? `<div class="row-sub2" style="color:#64748B;font-size:12px">Your history: ${th.wins}W, ${th.top5s} T5, Avg ${th.avgFinish}</div>` : ''}
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="openSimQualModal('${ur.seriesId}',${ur.race.round - 1})">Qualify</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `
+        <div class="card">
+          <div style="font-size:14px;color:#64748B;text-align:center;padding:20px">
+            No active races. Sign a contract to get started.
+          </div>
+        </div>
+      `}
+      
+      <div class="card">
+        <div class="card-title">Car Condition</div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Engine</span><span class="sb-val">${state.carCondition.engine}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.engine}%;background:${state.carCondition.engine > 70 ? '#10B981' : state.carCondition.engine > 40 ? '#F59E0B' : '#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Suspension</span><span class="sb-val">${state.carCondition.suspension}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.suspension}%;background:${state.carCondition.suspension > 70 ? '#10B981' : state.carCondition.suspension > 40 ? '#F59E0B' : '#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Chassis</span><span class="sb-val">${state.carCondition.chassis}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.chassis}%;background:${state.carCondition.chassis > 70 ? '#10B981' : state.carCondition.chassis > 40 ? '#F59E0B' : '#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Tires</span><span class="sb-val">${state.carCondition.tires}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.tires}%;background:${state.carCondition.tires > 70 ? '#10B981' : state.carCondition.tires > 40 ? '#F59E0B' : '#EF4444'}"></div></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Brakes</span><span class="sb-val">${state.carCondition.brakes}%</span></div>
+          <div class="sb-track"><div class="sb-fill" style="width:${state.carCondition.brakes}%;background:${state.carCondition.brakes > 70 ? '#10B981' : state.carCondition.brakes > 40 ? '#F59E0B' : '#EF4444'}"></div></div>
+        </div>
+        <button class="btn btn-ghost btn-full mt-8" onclick="showPage('garage')">Garage & Upgrades</button>
+      </div>
+    </div>
+  `;
+  
+  $('#content').innerHTML = html;
+}
+
+function renderContracts(state) {
+  const active = state.contracts.filter(c => c.seasonsCompleted < c.termSeasons);
+  const completed = state.contracts.filter(c => c.seasonsCompleted >= c.termSeasons);
+  const offers = state.pendingOffers || [];
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Contracts</div>
+      <div class="page-sub">Active rides and incoming offers</div>
+  `;
+  
+  if (active.length > 0) {
+    html += `<div class="card"><div class="card-title">Active Contracts</div>`;
+    active.forEach(c => {
+      const s = getSeries(c.seriesId);
+      const sched = state.schedules[c.seriesId] || [];
+      const nextRace = sched.find(r => !r.result);
+      html += `
+        <div class="row-item">
+          <div class="accent" style="background:${s.color}"></div>
+          <div style="flex:1">
+            <div class="row-name">${c.team}</div>
+            <div class="row-sub">${s.name} • Year ${c.seasonsCompleted + 1}/${c.termSeasons}</div>
+            <div class="row-sub2">${c.racesCompleted}/${c.races} races • ${fmtMoney(c.salary)} signing bonus • ${(c.prizeShare * 100).toFixed(0)}% prize share</div>
+            ${(c.teammates || []).filter(tm => tm).length > 0 ? `<div class="row-sub2">${c.teammates.length} teammate${c.teammates.length > 1 ? 's' : ''}</div>` : ''}
+          </div>
+          ${nextRace ? `<button class="btn btn-sm btn-primary" onclick="openSimQualModal('${c.seriesId}',${nextRace.round - 1})">Next Race</button>` : ''}
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  
+  if (offers.length > 0) {
+    html += `<div class="card"><div class="card-title">Contract Offers (${offers.length})</div>`;
+    offers.forEach(o => {
+      const s = getSeries(o.seriesId);
+      html += `
+        <div class="row-item">
+          <div class="accent" style="background:${s.color}"></div>
+          <div style="flex:1">
+            <div class="row-name">${o.team}</div>
+            <div class="row-sub">${s.name} • ${o.quality.toUpperCase()}</div>
+            <div class="row-sub2">${o.termSeasons} season${o.termSeasons > 1 ? 's' : ''} • ${fmtMoney(o.salary)} signing • ${(o.prizeShare * 100).toFixed(0)}% prize share</div>
+          </div>
+          <button class="btn btn-sm btn-success" onclick="doSignContract('${o.id}')">Sign</button>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  
+  if (completed.length > 0) {
+    html += `<div class="card"><div class="card-title">Completed Contracts</div>`;
+    completed.forEach(c => {
+      const s = getSeries(c.seriesId);
+      html += `
+        <div class="row-item">
+          <div style="flex:1">
+            <div class="row-name">${c.team}</div>
+            <div class="row-sub">${s.name} • ${c.seasonsCompleted} season${c.seasonsCompleted > 1 ? 's' : ''}</div>
+            <div class="row-sub2">${fmtMoney(c.earnings)} earned</div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  
+  if (active.length === 0 && offers.length === 0) {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No active contracts. Build reputation and fans to attract offers.
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+function renderSponsors(state) {
+  const active = (state.sponsors || []).filter(sp => sp.seasonsLeft > 0);
+  const offers = state.sponsorOffers || [];
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Sponsors</div>
+      <div class="page-sub">Current sponsors and available deals</div>
+  `;
+  
+  if (active.length > 0) {
+    html += `<div class="card"><div class="card-title">Active Sponsors</div>`;
+    active.forEach(sp => {
+      const st = SPONSOR_TYPES[sp.type];
+      const goalEval = evaluateSponsorGoal(sp);
+      html += `
+        <div class="row-item">
+          <div style="flex:1">
+            <div class="row-name">${sp.brand}</div>
+            <div class="row-sub">${st.label} • ${sp.seasonsLeft} season${sp.seasonsLeft > 1 ? 's' : ''} left • ${fmtMoney(sp.valuePerSeason)}/yr</div>
+            ${sp.sponsorGoal ? `<div class="row-sub2">Goal: ${sp.sponsorGoal.desc} — Progress: ${goalEval.pct}%</div>` : ''}
+            <div class="happy-wrap mt-4">
+              <div style="font-size:11px;color:#64748B;margin-bottom:2px">Happiness: ${sp.happiness}/100</div>
+              <div class="happy-bar">
+                <div class="happy-fill" style="width:${sp.happiness}%;background:${sp.happiness > 70 ? '#10B981' : sp.happiness > 40 ? '#F59E0B' : '#EF4444'}"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  
+  if (offers.length > 0) {
+    html += `<div class="card"><div class="card-title">Sponsor Offers</div>`;
+    offers.forEach(sp => {
+      const st = SPONSOR_TYPES[sp.type];
+      const s = getSeries(sp.seriesId);
+      html += `
+        <div class="row-item">
+          <div style="flex:1">
+            <div class="row-name">${sp.brand}</div>
+            <div class="row-sub">${st.label} • ${s.name} • ${sp.totalSeasons} season${sp.totalSeasons > 1 ? 's' : ''}</div>
+            <div class="row-sub2">${fmtMoney(sp.valuePerSeason)}/season • ${sp.sponsorGoal.desc}</div>
+          </div>
+          <button class="btn btn-sm btn-success" onclick="doSignSponsor('${sp.id}')">Sign</button>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+  
+  if (active.length === 0 && offers.length === 0) {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No sponsors yet. Win races to attract brands.
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+function renderRivals(state) {
+  const rivals = (state.rivals || []).sort((a, b) => (b.incidents + b.closeRaces) - (a.incidents + a.closeRaces));
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Rivals & Relationships</div>
+      <div class="page-sub">Track history with every driver you've battled</div>
+  `;
+  
+  if (rivals.length > 0) {
+    html += `<div class="card">`;
+    rivals.forEach(r => {
+      const rel = relationship(r);
+      html += `
+        <div class="row-item">
+          <div class="accent" style="background:${REL_COLOR[rel]}"></div>
+          <div style="flex:1">
+            <div class="row-name">${r.name} ${REL_ICON[rel]}</div>
+            <div class="row-sub">${REL_LABEL[rel]}</div>
+            <div class="row-sub2">${r.incidents || 0} incidents • ${r.closeRaces || 0} close races • ${r.cleanBattles || 0} clean battles</div>
+            ${r.preExisting ? `<div class="row-sub2" style="font-style:italic;color:#8B5CF6">${r.preExistingNote}</div>` : ''}
+            <div class="row-sub2" style="margin-top:4px;color:#64748B">${REL_DESC[rel]}</div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  } else {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No rivalries yet. Race more to build relationships.
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+function renderBusiness(state) {
+  const done = state.offTrackDone || [];
+  const available = OFF_TRACK.filter(a => !done.includes(a.id));
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Business & PR</div>
+      <div class="page-sub">Build reputation, fans, and sponsor relationships off the track</div>
+      
+      <div class="card">
+        <div class="card-title">Available This Week</div>
+        ${available.length > 0 ? available.map(a => `
+          <div class="row-item">
+            <div style="flex:1">
+              <div class="row-name">${a.label}</div>
+              <div class="row-sub">${a.desc}</div>
+              <div class="row-sub2">
+                ${a.cost > 0 ? fmtMoney(a.cost) + ' • ' : ''}
+                +${a.rep} rep • +${a.fans} fans • +${a.sponsorHappy} sponsor happiness
+              </div>
+            </div>
+            <button class="btn btn-sm ${a.cost > state.money ? 'btn-ghost' : 'btn-primary'}" 
+                    ${a.cost > state.money ? 'disabled' : ''} 
+                    onclick="doOffTrackAction('${a.id}')">
+              ${a.cost > 0 ? fmtMoney(a.cost) : 'Do It'}
+            </button>
+          </div>
+        `).join('') : `<div style="color:#64748B;text-align:center;padding:20px">All actions completed this week.</div>`}
+      </div>
+      
+      ${done.length > 0 ? `
+        <div class="card">
+          <div class="card-title">Completed This Week</div>
+          ${done.map(id => {
+            const a = OFF_TRACK.find(x => x.id === id);
+            return a ? `<div class="row-item"><div class="row-name">${a.label}</div></div>` : '';
+          }).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+  
+  $('#content').innerHTML = html;
+}
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// UI RENDERING — Standings, Team Management, Garage, Drivers Tab
+// ═══════════════════════════════════════════════════════════════════════
+
+function renderStandings(state) {
+  const activeSeries = [...new Set(state.contracts.map(c => c.seriesId))];
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Championship Standings</div>
+      <div class="page-sub">Season ${state.season} points</div>
+  `;
+  
+  activeSeries.forEach(seriesId => {
+    const s = getSeries(seriesId);
+    const pts = state.championshipPoints[seriesId] || {};
+    const standings = Object.entries(pts)
+      .map(([name, points]) => {
+        const d = (state.drivers || []).find(dr => dr.name === name);
+        const isPlayer = name === state.driverName;
+        // Get relationship for color coding (AI drivers only)
+        let relColor = null;
+        let relIcon = '';
+        if (!isPlayer) {
+          const rival = (state.rivals || []).find(r => r.name === name);
+          if (rival) {
+            const rel = relationship(rival);
+            relColor = REL_COLOR[rel];
+            relIcon = REL_ICON[rel];
+          }
+          // Check if teammate
+          const contract = state.contracts.find(c => c.seriesId === seriesId);
+          if (contract && contract.teammates) {
+            const isTm = contract.teammates.find(tm => tm && tm.name === name);
+            if (isTm) {
+              relColor = '#3B82F6'; // Blue for teammate
+              relIcon = '🤝';
+            }
+          }
+        }
+        return { name, points, isPlayer, homeState: d?.homeState, relColor, relIcon };
+      })
+      .sort((a, b) => b.points - a.points);
+    
+    html += `
+      <div class="card">
+        <div class="card-title">${s.name}</div>
+        <table class="stn-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Pos</th>
+              <th>Driver</th>
+              <th>Points</th>
+              <th>Behind</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${standings.map((st, idx) => {
+              const pos = idx + 1;
+              const behind = pos === 1 ? '---' : '-' + (standings[0].points - st.points);
+              const originLabel = st.homeState ? (ALL_ORIGIN_NAMES[st.homeState] || st.homeState) : '';
+              return `
+                <tr class="${st.isPlayer ? 'player-row' : ''}" style="${st.relColor ? 'border-left:3px solid ' + st.relColor : ''}">
+                  <td style="text-align:left;font-weight:700">${pos}</td>
+                  <td style="font-weight:${st.isPlayer ? '700' : '400'};color:${st.isPlayer ? '#F59E0B' : '#E2E8F0'}">
+                    ${st.name} ${st.relIcon}
+                    ${originLabel && !st.isPlayer ? `<span style="font-size:11px;color:#64748B;margin-left:4px">(${originLabel})</span>` : ''}
+                  </td>
+                  <td style="font-weight:${st.isPlayer ? '700' : '400'}">${st.points}</td>
+                  <td style="color:#94A3B8">${behind}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  });
+  
+  if (activeSeries.length === 0) {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No active championships. Sign a contract to compete.
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+function renderTeamOwnership(state) {
+  const ownedContract = state.contracts.find(c => c.teammates && c.teammates.length > 0);
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Team Management</div>
+      <div class="page-sub">Manage your teammates and team performance</div>
+  `;
+  
+  if (!ownedContract) {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          You don't currently own a team. Some elite contracts include team ownership with contracted teammates.
+        </div>
+      </div>
+    `;
+  } else {
+    const s = getSeries(ownedContract.seriesId);
+    html += `
+      <div class="card">
+        <div class="card-title">${ownedContract.team}</div>
+        <div class="row-sub" style="margin-bottom:14px">${s.name}</div>
+        
+        <div style="margin-bottom:20px">
+          <div style="font-size:13px;color:#94A3B8;margin-bottom:8px">TEAM ROSTER</div>
+          <div class="row-item" style="background:#1a1200;border-color:#F59E0B">
+            <div style="flex:1">
+              <div class="row-name">${state.driverName} (You)</div>
+              <div class="row-sub">${state.wins || 0}W • ${state.top5s || 0} Top-5s</div>
+            </div>
+          </div>
+          
+          ${(ownedContract.teammates || []).filter(tm => tm).map(tm => `
+            <div class="row-item">
+              <div style="flex:1">
+                <div class="row-name">${tm.name}</div>
+                <div class="row-sub">Skill: ${tm.skill}/100 • ${tm.wins || 0}W • ${tm.top5s || 0} Top-5s • ${tm.starts || 0} starts</div>
+                ${tm.homeState ? `<div class="row-sub2">${originLabel(tm.homeState)}</div>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="font-size:13px;color:#94A3B8;margin-bottom:8px">HEAD-TO-HEAD vs TEAMMATES</div>
+        ${(ownedContract.teammates || []).filter(tm => tm).map(tm => {
+          const playerWins = state.wins || 0;
+          const tmWins = tm.wins || 0;
+          const playerTop5s = state.top5s || 0;
+          const tmTop5s = tm.top5s || 0;
+          return `
+            <div class="row-item" style="margin-bottom:8px">
+              <div style="flex:1">
+                <div class="row-name">${state.driverName} vs ${tm.name}</div>
+                <div class="row-sub">Wins: ${playerWins} - ${tmWins} • Top-5s: ${playerTop5s} - ${tmTop5s}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+function renderGarage(state) {
+  const attrs = state.driverAttrs || {};
+  const upgrades = state.carUpgrades || {};
+  const attrPoints = state.driverAttrPoints || 0;
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Garage</div>
+      <div class="page-sub">Driver attributes, car upgrades, and repairs</div>
+      
+      <div class="card">
+        <div class="card-title">Driver Attributes</div>
+        ${attrPoints > 0 ? `
+          <div class="points-pool">
+            <div style="font-size:14px;font-weight:700;color:#F9FAFB">Available Points</div>
+            <div style="font-size:24px;font-weight:900;color:#F59E0B">${attrPoints}</div>
+          </div>
+        ` : ''}
+        
+        ${DRIVER_ATTRS.map(a => {
+          const val = attrs[a.id] || DRIVER_ATTR_DEFAULT;
+          const pct = ((val - 1) / (a.max - 1)) * 100;
+          return `
+            <div class="attr-row">
+              <div class="attr-name">${a.name}</div>
+              <div class="attr-desc">${a.desc}</div>
+              <div class="attr-val" style="color:${a.color}">${val}</div>
+              <div class="attr-bar-wrap">
+                <div class="attr-bar-fill" style="width:${pct}%;background:${a.color}"></div>
+              </div>
+              <div class="attr-controls">
+                <button class="btn btn-xs btn-ghost" ${val <= 1 || attrPoints <= 0 ? 'disabled' : ''} 
+                        onclick="adjustAttr('${a.id}',-1)">−</button>
+                <button class="btn btn-xs btn-primary" ${val >= a.max || attrPoints <= 0 ? 'disabled' : ''} 
+                        onclick="adjustAttr('${a.id}',1)">+</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Car Upgrades</div>
+        ${CAR_UPGRADES.map(u => {
+          const lvl = upgrades[u.id] || 0;
+          return `
+            <div class="upgrade-card">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="font-size:24px">${u.icon}</div>
+                <div style="flex:1">
+                  <div style="font-size:15px;font-weight:800;color:#F9FAFB">${u.name}</div>
+                  <div style="font-size:13px;color:#94A3B8">${u.desc}</div>
+                </div>
+              </div>
+              <div class="upgrade-tier">
+                ${u.tiers.map((t, idx) => {
+                  const tierIdx = idx + 1;
+                  const owned = lvl >= tierIdx;
+                  const available = lvl === tierIdx - 1 && state.money >= t.cost;
+                  const locked = lvl < tierIdx - 1 || (lvl === tierIdx - 1 && state.money < t.cost);
+                  return `
+                    <div class="upgrade-pip ${owned ? 'owned' : available ? 'available' : 'locked'}" 
+                         title="${t.name} - ${t.desc} - ${fmtMoney(t.cost)}"
+                         ${available ? `onclick="buyUpgrade('${u.id}',${tierIdx})"` : ''}>
+                      ${tierIdx}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              ${lvl < u.tiers.length ? `
+                <div style="margin-top:8px;font-size:12px;color:#64748B">
+                  Next: ${u.tiers[lvl].name} — ${fmtMoney(u.tiers[lvl].cost)}
+                </div>
+              ` : `
+                <div style="margin-top:8px;font-size:12px;color:#10B981">✓ Maxed Out</div>
+              `}
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Repairs</div>
+        <div style="font-size:13px;color:#94A3B8;margin-bottom:12px">
+          Repair all components to 100%. Cost scales with series tier.
+        </div>
+        ${Object.entries(state.carCondition).map(([part, val]) => {
+          const contract = state.contracts[0];
+          const tier = contract ? getSeries(contract.seriesId).tier : 1;
+          const repairCost = Math.floor((100 - val) * 50 * REPAIR_TIER_MULT[tier]);
+          return `
+            <div class="stat-bar">
+              <div class="sb-row">
+                <span class="sb-lbl">${part.charAt(0).toUpperCase() + part.slice(1)}</span>
+                <span class="sb-val">${val}%</span>
+              </div>
+              <div class="sb-track">
+                <div class="sb-fill" style="width:${val}%;background:${val > 70 ? '#10B981' : val > 40 ? '#F59E0B' : '#EF4444'}"></div>
+              </div>
+              ${val < 100 ? `
+                <button class="btn btn-xs btn-ghost mt-4" style="width:100%" 
+                        ${state.money < repairCost ? 'disabled' : ''} 
+                        onclick="repairPart('${part}')">
+                  Repair to 100% — ${fmtMoney(repairCost)}
+                </button>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+        
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1E2433">
+          <button class="btn btn-primary btn-full" 
+                  ${Object.values(state.carCondition).every(v => v === 100) || state.money < 1000 ? 'disabled' : ''} 
+                  onclick="repairAll()">
+            Repair Everything — ${fmtMoney(calculateTotalRepairCost(state))}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  $('#content').innerHTML = html;
+}
+
+function renderDrivers(state) {
+  const activeSeries = [...new Set(state.contracts.map(c => c.seriesId))];
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Driver Database</div>
+      <div class="page-sub">All active drivers across all series</div>
+  `;
+  
+  activeSeries.forEach(seriesId => {
+    const s = getSeries(seriesId);
+    const drivers = (state.drivers || [])
+      .filter(d => d.active && d.currentSeriesId === seriesId)
+      .sort((a, b) => (b.skill || 50) - (a.skill || 50));
+    
+    if (drivers.length === 0) return;
+    
+    html += `
+      <div class="card">
+        <div class="card-title">${s.name} (${drivers.length} drivers)</div>
+        ${drivers.map(d => {
+          const rival = (state.rivals || []).find(r => r.name === d.name);
+          const rel = rival ? relationship(rival) : null;
+          const relColor = rel ? REL_COLOR[rel] : null;
+          const relIcon = rel ? REL_ICON[rel] : '';
+          const bio = getDriverBio(d.name);
+          const personality = getPersonality(d.name);
+          const originDisplay = originLabel(d.homeState);
+          
+          // Check if teammate
+          const contract = state.contracts.find(c => c.seriesId === seriesId);
+          const isTeammate = contract && contract.teammates && contract.teammates.find(tm => tm && tm.name === d.name);
+          
+          return `
+            <div class="row-item" style="${relColor ? 'border-left:3px solid ' + relColor : ''}">
+              <div style="flex:1">
+                <div class="row-name">
+                  ${d.name} ${relIcon} ${isTeammate ? '🤝' : ''}
+                </div>
+                <div class="row-sub">
+                  ${d.currentTeam} • Skill ${d.skill}/100 • ${personality}
+                </div>
+                <div class="row-sub2">
+                  ${d.wins || 0}W • ${d.top5s || 0} Top-5s • ${fmtFans(d.fans || 0)} fans • ${originDisplay}
+                </div>
+                <div class="row-sub2" style="font-style:italic;color:#64748B;margin-top:4px">
+                  ${bio}
+                </div>
+                ${rel ? `
+                  <div class="row-sub2" style="margin-top:4px;color:${relColor};font-weight:600">
+                    ${REL_LABEL[rel]} — ${rival.incidents || 0} incidents, ${rival.closeRaces || 0} close races
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  });
+  
+  if (activeSeries.length === 0) {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          Sign a contract to see the driver field.
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+function renderSchedule(state) {
+  const activeSeries = [...new Set(state.contracts.map(c => c.seriesId))];
+  
+  let html = `
+    <div class="page">
+      <div class="page-title">Race Schedule</div>
+      <div class="page-sub">Season ${state.season} calendar</div>
+  `;
+  
+  activeSeries.forEach(seriesId => {
+    const s = getSeries(seriesId);
+    const sched = state.schedules[seriesId] || [];
+    
+    html += `
+      <div class="card">
+        <div class="card-title">${s.name}</div>
+        <table class="race-hist-table">
+          <thead>
+            <tr>
+              <th>Rnd</th>
+              <th>Track</th>
+              <th>Location</th>
+              <th>Result</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sched.map(r => {
+              const homeCheck = isHomeRace(state, r);
+              const homeIcon = homeCheck === 'player' ? '🏠' : '';
+              return `
+                <tr>
+                  <td style="font-weight:700">${r.round}</td>
+                  <td style="font-weight:600">${r.track} ${homeIcon}</td>
+                  <td>${r.city}, ${r.state}</td>
+                  <td style="font-weight:${r.result ? '700' : '400'};color:${r.result ? (r.result.dnf ? '#EF4444' : r.result.position === 1 ? '#F59E0B' : '#E2E8F0') : '#64748B'}">
+                    ${r.result ? (r.result.dnf ? 'DNF' : 'P' + r.result.position) : '—'}
+                  </td>
+                  <td style="color:#94A3B8">${r.result ? r.result.points : '—'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  });
+  
+  if (activeSeries.length === 0) {
+    html += `
+      <div class="card">
+        <div style="text-align:center;padding:30px;color:#64748B">
+          No active schedules. Sign a contract to see the calendar.
+        </div>
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  $('#content').innerHTML = html;
+}
+
+// Helper functions for garage actions
+function adjustAttr(attrId, delta) {
+  const st = getState();
+  const attrs = st.driverAttrs || {};
+  const attrDef = DRIVER_ATTRS.find(a => a.id === attrId);
+  if (!attrDef) return;
+  
+  const current = attrs[attrId] || DRIVER_ATTR_DEFAULT;
+  const newVal = current + delta;
+  
+  if (newVal < 1 || newVal > attrDef.max) return;
+  if (delta > 0 && st.driverAttrPoints <= 0) return;
+  
+  attrs[attrId] = newVal;
+  st.driverAttrPoints -= delta;
+  
+  saveState(st);
+  renderGarage(st);
+}
+
+function buyUpgrade(upgradeId, tier) {
+  const st = getState();
+  const upgrades = st.carUpgrades || {};
+  const upgDef = CAR_UPGRADES.find(u => u.id === upgradeId);
+  if (!upgDef) return;
+  
+  const currentLvl = upgrades[upgradeId] || 0;
+  if (currentLvl !== tier - 1) return;
+  
+  const tierDef = upgDef.tiers[tier - 1];
+  if (!tierDef || st.money < tierDef.cost) return;
+  
+  st.money -= tierDef.cost;
+  upgrades[upgradeId] = tier;
+  
+  addLog(st, `Purchased ${upgDef.name} ${tierDef.name} for ${fmtMoney(tierDef.cost)}`);
+  saveState(st);
+  renderGarage(st);
+  updateHeader(st);
+}
+
+function repairPart(part) {
+  const st = getState();
+  const contract = st.contracts[0];
+  const tier = contract ? getSeries(contract.seriesId).tier : 1;
+  const val = st.carCondition[part];
+  const cost = Math.floor((100 - val) * 50 * REPAIR_TIER_MULT[tier]);
+  
+  if (st.money < cost) return;
+  
+  st.money -= cost;
+  st.carCondition[part] = 100;
+  
+  addLog(st, `Repaired ${part} to 100% for ${fmtMoney(cost)}`);
+  saveState(st);
+  renderGarage(st);
+  updateHeader(st);
+}
+
+function calculateTotalRepairCost(state) {
+  const contract = state.contracts[0];
+  const tier = contract ? getSeries(contract.seriesId).tier : 1;
+  let total = 0;
+  Object.entries(state.carCondition).forEach(([part, val]) => {
+    total += Math.floor((100 - val) * 50 * REPAIR_TIER_MULT[tier]);
+  });
+  return total;
+}
+
+function repairAll() {
+  const st = getState();
+  const cost = calculateTotalRepairCost(st);
+  
+  if (st.money < cost) return;
+  
+  st.money -= cost;
+  Object.keys(st.carCondition).forEach(part => {
+    st.carCondition[part] = 100;
+  });
+  
+  addLog(st, `Repaired all components for ${fmtMoney(cost)}`);
+  saveState(st);
+  renderGarage(st);
+  updateHeader(st);
+}
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// SIMULATION MODALS — Qualifying and Race with scenario choices
+// ═══════════════════════════════════════════════════════════════════════
+
+function openSimQualModal(seriesId, raceIdx) {
+  const st = getState();
+  const s = getSeries(seriesId);
+  const sched = st.schedules[seriesId];
+  const race = sched[raceIdx];
+  
+  // Generate pre-race commentary
+  const commentary = generatePreRaceCommentary(st, seriesId, raceIdx);
+  
+  let html = `
+    <div class="modal-eyebrow">${s.short} • Round ${race.round}</div>
+    <div class="modal-title">Qualifying</div>
+    <div class="modal-sub">${race.track}<br>${race.city}, ${race.state}</div>
+    
+    ${commentary ? `
+      <div style="background:#060A10;border-left:3px solid #8B5CF6;padding:12px;margin:16px 0;border-radius:6px">
+        <div style="font-size:13px;color:#8B5CF6;font-weight:700;margin-bottom:4px">PRE-RACE INTEL</div>
+        <div style="font-size:14px;color:#CBD5E1;line-height:1.6">${commentary}</div>
+      </div>
+    ` : ''}
+    
+    <div class="modal-section">
+      <div style="font-size:13px;color:#94A3B8;margin-bottom:10px">
+        Qualifying is simulated based on your driver attributes, car upgrades, and crew package.
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="runQualifying('${seriesId}',${raceIdx})">Run Qualifying</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function runQualifying(seriesId, raceIdx) {
+  const st = getState();
+  const result = simulateQualifying(st, seriesId, raceIdx);
+  
+  // Store qualifying result
+  const sched = st.schedules[seriesId];
+  sched[raceIdx].qualifying = result;
+  
+  saveState(st);
+  
+  // Show result and prompt for race
+  const s = getSeries(seriesId);
+  const race = sched[raceIdx];
+  
+  let html = `
+    <div class="modal-eyebrow">${s.short} • Round ${race.round}</div>
+    <div class="modal-title">Qualifying Result</div>
+    <div class="modal-sub">${race.track}</div>
+    
+    <div class="modal-preview">
+      <div>
+        <div class="pv-lbl">Starting Position</div>
+        <div class="pv-val" style="color:${result.pole ? '#F59E0B' : result.position <= 5 ? '#10B981' : '#CBD5E1'}">
+          P${result.position}
+        </div>
+      </div>
+      <div>
+        <div class="pv-lbl">Field Size</div>
+        <div class="pv-val" style="color:#94A3B8">${result.fieldSize}</div>
+      </div>
+      ${result.pole ? `
+        <div>
+          <div class="pv-lbl">Pole</div>
+          <div class="pv-val" style="color:#F59E0B">🏁</div>
+        </div>
+      ` : ''}
+    </div>
+    
+    <div style="font-size:14px;color:#CBD5E1;text-align:center;margin:16px 0">
+      ${result.pole ? 'Pole position! You\'ll lead the field to green.' : 
+        result.position <= 5 ? 'Strong qualifying effort. Front of the pack.' :
+        result.position <= 10 ? 'Solid starting position.' :
+        'Mid-pack start. Work to do in the race.'}
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Save & Exit</button>
+      <button class="btn btn-primary" onclick="openSimRaceModal('${seriesId}',${raceIdx})">Start Race</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function openSimRaceModal(seriesId, raceIdx) {
+  const st = getState();
+  const s = getSeries(seriesId);
+  const sched = st.schedules[seriesId];
+  const race = sched[raceIdx];
+  const qualResult = race.qualifying || {position: Math.floor(SERIES_FIELD_SIZE[seriesId] * 0.5)};
+  
+  // Simulate race — returns pending state with scenarios
+  const raceResult = simulateRace(st, seriesId, raceIdx, qualResult.position);
+  
+  // Store pending race in temporary state
+  st._pendingRace = raceResult;
+  st._pendingRaceChoices = [];
+  st._currentScenarioIndex = 0;
+  saveState(st);
+  
+  // Show first scenario
+  showNextScenario(seriesId, raceIdx);
+}
+
+function showNextScenario(seriesId, raceIdx) {
+  const st = getState();
+  const pendingRace = st._pendingRace;
+  const currentIdx = st._currentScenarioIndex || 0;
+  
+  if (!pendingRace || !pendingRace.scenarios || currentIdx >= pendingRace.scenarios.length) {
+    // All scenarios complete — resolve race
+    finalizeRace(seriesId, raceIdx);
+    return;
+  }
+  
+  const scenarioData = pendingRace.scenarios[currentIdx];
+  const scenario = scenarioData.scenario;
+  const s = getSeries(seriesId);
+  const race = st.schedules[seriesId][raceIdx];
+  
+  // Build context for scenario rendering
+  const ctx = buildSimContext(st, seriesId, raceIdx, pendingRace.basePos, pendingRace.fieldSize, 5 + currentIdx * 3, s.races * 3);
+  const sceneText = typeof scenario.scene === 'function' ? scenario.scene(ctx) : scenario.scene;
+  
+  let html = `
+    <div class="modal-eyebrow">${s.short} • Round ${race.round}</div>
+    <div class="modal-title">${race.track}</div>
+    <div class="modal-sub">Race in Progress • Scenario ${currentIdx + 1}/${pendingRace.scenarios.length}</div>
+    
+    <div class="sim-scene">
+      <div class="sim-scene-label">⚡ RACE SITUATION</div>
+      <div class="sim-narrative">${sceneText}</div>
+      
+      <div class="sim-choices">
+        ${scenario.choices.map((choice, choiceIdx) => `
+          <button class="sim-choice-btn" onclick="makeRaceChoice(${currentIdx}, ${choiceIdx})">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">${choice.icon}</span>
+              <span style="flex:1">${choice.label}</span>
+            </div>
+            ${choice.narrativeResult ? `
+              <div style="font-size:11px;color:#64748B;margin-top:4px">${choice.risk || ''}</div>
+            ` : ''}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    
+    <div style="font-size:12px;color:#64748B;text-align:center;margin-top:12px">
+      Your choices affect the final result. Choose wisely.
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function makeRaceChoice(scenarioIdx, choiceIdx) {
+  const st = getState();
+  const pendingRace = st._pendingRace;
+  const scenarioData = pendingRace.scenarios[scenarioIdx];
+  const choice = scenarioData.scenario.choices[choiceIdx];
+  
+  // Determine outcome (good or bad based on probability)
+  const roll = Math.random();
+  const isGood = roll < 0.6; // 60% chance of good outcome
+  const outcomeText = isGood ? choice.narrativeResult.good : choice.narrativeResult.bad;
+  
+  // Calculate position delta
+  let posDelta = choice.posModifier || 0;
+  if (!isGood) posDelta = Math.floor(posDelta * -0.5); // Bad outcomes reverse half the gain
+  
+  // Store choice result
+  scenarioData.choiceMade = choiceIdx;
+  scenarioData.outcome = {
+    isGood,
+    narrativeResult: outcomeText,
+    posDelta,
+    dnfRisk: choice.dnfRisk || 0,
+    fanBonus: choice.fanBonus || 0,
+  };
+  
+  st._pendingRaceChoices.push({
+    posDelta,
+    dnfRisk: choice.dnfRisk || 0,
+    fanBonus: choice.fanBonus || 0,
+    incidentDriver: choice.rivalEffect === 'incident' ? scenarioData.scenario.scene(buildSimContext(st, pendingRace.seriesId, pendingRace.raceIdx, pendingRace.basePos, pendingRace.fieldSize, 5, 30)).match(/\b[A-Z][a-z]+ [A-Z][a-z]+/)?.[0] : null,
+  });
+  
+  // Show outcome then advance
+  showScenarioOutcome(scenarioIdx, choiceIdx, outcomeText, isGood, posDelta);
+}
+
+function showScenarioOutcome(scenarioIdx, choiceIdx, outcomeText, isGood, posDelta) {
+  const st = getState();
+  const pendingRace = st._pendingRace;
+  const scenarioData = pendingRace.scenarios[scenarioIdx];
+  const choice = scenarioData.scenario.choices[choiceIdx];
+  const s = getSeries(pendingRace.seriesId);
+  const race = st.schedules[pendingRace.seriesId][pendingRace.raceIdx];
+  
+  let html = `
+    <div class="modal-eyebrow">${s.short} • Round ${race.round}</div>
+    <div class="modal-title">${race.track}</div>
+    <div class="modal-sub">Race in Progress • Scenario ${scenarioIdx + 1}/${pendingRace.scenarios.length}</div>
+    
+    <div class="sim-scene">
+      <div class="sim-scene-label">⚡ YOUR CHOICE</div>
+      <div style="padding:12px;background:#0B0F1A;border-radius:6px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${choice.icon}</span>
+          <span style="font-weight:700;color:#F9FAFB">${choice.label}</span>
+        </div>
+      </div>
+      
+      <div class="sim-outcome ${isGood ? 'good' : 'bad'}">
+        <div class="sim-outcome-title">${isGood ? '✓ It Worked' : '✗ Didn\'t Go As Planned'}</div>
+        <div class="sim-outcome-desc">${outcomeText}</div>
+        ${posDelta !== 0 ? `
+          <div style="margin-top:8px;font-size:13px;font-weight:700;color:${posDelta > 0 ? '#10B981' : '#EF4444'}">
+            ${posDelta > 0 ? '+' : ''}${posDelta} position${Math.abs(posDelta) > 1 ? 's' : ''}
+          </div>
+        ` : ''}
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="advanceToNextScenario()">Continue</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function advanceToNextScenario() {
+  const st = getState();
+  st._currentScenarioIndex = (st._currentScenarioIndex || 0) + 1;
+  saveState(st);
+  
+  const pendingRace = st._pendingRace;
+  const seriesId = pendingRace.seriesId;
+  const raceIdx = pendingRace.raceIdx;
+  
+  showNextScenario(seriesId, raceIdx);
+}
+
+function finalizeRace(seriesId, raceIdx) {
+  const st = getState();
+  const pendingRace = st._pendingRace;
+  const choiceResults = st._pendingRaceChoices || [];
+  
+  // Calculate narrative delta (sum of all position deltas from choices)
+  const narrativeDelta = choiceResults.reduce((sum, cr) => sum + (cr.posDelta || 0), 0);
+  pendingRace.narrativeDelta = clamp(narrativeDelta, -3, 3); // Cap total swing at ±3
+  
+  // Resolve final race result
+  const result = resolveRace(pendingRace, choiceResults);
+  
+  // Generate race summary narrative
+  const summary = generateRaceSummary(st, seriesId, raceIdx, result, pendingRace.scenarios);
+  
+  // Process result
+  processRaceResult(st, seriesId, raceIdx, result);
+  
+  // Clean up pending state
+  delete st._pendingRace;
+  delete st._pendingRaceChoices;
+  delete st._currentScenarioIndex;
+  
+  saveState(st);
+  
+  // Show final result
+  showRaceResult(st, seriesId, raceIdx, result, summary);
+}
+
+function showRaceResult(state, seriesId, raceIdx, result, summary) {
+  const s = getSeries(seriesId);
+  const race = state.schedules[seriesId][raceIdx];
+  
+  let html = `
+    <div class="modal-eyebrow">${s.short} • Round ${race.round}</div>
+    <div class="modal-title">${result.dnf ? 'DNF' : ordinal(result.position) + ' Place'}</div>
+    <div class="modal-sub">${race.track}</div>
+    
+    <div class="modal-preview">
+      <div>
+        <div class="pv-lbl">Finish</div>
+        <div class="pv-val" style="color:${result.dnf ? '#EF4444' : result.position === 1 ? '#F59E0B' : result.position <= 5 ? '#10B981' : '#CBD5E1'}">
+          ${result.dnf ? 'DNF' : 'P' + result.position}
+        </div>
+      </div>
+      <div>
+        <div class="pv-lbl">Points</div>
+        <div class="pv-val" style="color:#94A3B8">${result.points}</div>
+      </div>
+      <div>
+        <div class="pv-lbl">Prize</div>
+        <div class="pv-val" style="color:#10B981">${fmtMoney(result.prize)}</div>
+      </div>
+    </div>
+    
+    ${result.dnf ? `
+      <div style="background:#130606;border:1px solid #EF4444;border-radius:8px;padding:14px;margin:16px 0">
+        <div style="font-size:14px;font-weight:700;color:#EF4444;margin-bottom:4px">DNF: ${result.dnfReason}</div>
+        <div style="font-size:13px;color:#CBD5E1">Race ended early. No points awarded.</div>
+      </div>
+    ` : ''}
+    
+    <div style="background:#060A10;border-left:3px solid #8B5CF6;padding:12px;margin:16px 0;border-radius:6px">
+      <div style="font-size:13px;color:#8B5CF6;font-weight:700;margin-bottom:6px">RACE SUMMARY</div>
+      <div style="font-size:14px;color:#CBD5E1;line-height:1.6">${summary}</div>
+    </div>
+    
+    ${result.lapsLed ? `<div style="font-size:13px;color:#F59E0B;text-align:center;margin-bottom:6px">⭐ Led laps</div>` : ''}
+    ${result.mostLaps ? `<div style="font-size:13px;color:#F59E0B;text-align:center;margin-bottom:6px">🏆 Led most laps (+3 bonus points)</div>` : ''}
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="closeModal();showPage('dashboard')">Continue</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+// Special events modal (existing functionality preserved)
+function openSimSpecialModal(eventId) {
+  const st = getState();
+  const evt = SPECIAL_EVENTS.find(e => e.id === eventId);
+  if (!evt) return;
+  
+  const canAfford = st.money >= (evt.entryCost + evt.travelCost);
+  const meetsReq = st.reputation >= evt.reqRep && st.fans >= evt.reqFans;
+  
+  let html = `
+    <div class="modal-eyebrow">SPECIAL EVENT</div>
+    <div class="modal-title">${evt.name}</div>
+    <div class="modal-sub">${evt.location}</div>
+    
+    <div class="modal-section">
+      <div style="font-size:14px;color:#CBD5E1;line-height:1.6;margin-bottom:14px">${evt.desc}</div>
+      
+      <div class="stat-bar">
+        <div class="sb-row"><span class="sb-lbl">Entry Fee</span><span class="sb-val">${fmtMoney(evt.entryCost)}</span></div>
+      </div>
+      <div class="stat-bar">
+        <div class="sb-row"><span class="sb-lbl">Travel Cost</span><span class="sb-val">${fmtMoney(evt.travelCost)}</span></div>
+      </div>
+      <div class="stat-bar">
+        <div class="sb-row"><span class="sb-lbl">Prize Pool</span><span class="sb-val">${fmtMoney(evt.prize)}</span></div>
+      </div>
+      <div class="stat-bar">
+        <div class="sb-row"><span class="sb-lbl">Fan Exposure</span><span class="sb-val">+${evt.fanGain}</span></div>
+      </div>
+      
+      ${!meetsReq ? `
+        <div style="background:#130606;border:1px solid #EF4444;border-radius:6px;padding:10px;margin-top:12px">
+          <div style="font-size:13px;color:#EF4444;font-weight:700">Requirements Not Met</div>
+          <div style="font-size:12px;color:#CBD5E1;margin-top:4px">
+            Need ${evt.reqRep} reputation (you have ${st.reputation}) and ${evt.reqFans} fans (you have ${st.fans})
+          </div>
+        </div>
+      ` : ''}
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" ${!canAfford || !meetsReq ? 'disabled' : ''} 
+              onclick="runSpecialEvent('${eventId}')">
+        Enter Event
+      </button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function runSpecialEvent(eventId) {
+  const st = getState();
+  const evt = SPECIAL_EVENTS.find(e => e.id === eventId);
+  if (!evt) return;
+  
+  // Deduct costs
+  st.money -= (evt.entryCost + evt.travelCost);
+  
+  // Simulate result (simplified — no scenarios for special events)
+  const fieldSize = 30;
+  const basePos = rand(1, fieldSize);
+  const skillMod = (st.reputation / 100) * 5;
+  const pos = clamp(Math.floor(basePos - skillMod), 1, fieldSize);
+  
+  const won = pos === 1;
+  const prize = won ? evt.prize : Math.floor(evt.prize * (1 - pos / fieldSize) * 0.6);
+  
+  st.money += prize;
+  st.fans += evt.fanGain;
+  st.reputation += won ? 15 : pos <= 5 ? 8 : 3;
+  
+  if (!st.specialResults) st.specialResults = [];
+  st.specialResults.push({
+    season: st.season,
+    eventId,
+    position: pos,
+    prize,
+  });
+  
+  addLog(st, `${evt.name} - P${pos} - ${fmtMoney(prize)}`);
+  
+  saveState(st);
+  
+  let html = `
+    <div class="modal-eyebrow">SPECIAL EVENT</div>
+    <div class="modal-title">${evt.name}</div>
+    <div class="modal-sub">${evt.location}</div>
+    
+    <div class="modal-preview">
+      <div>
+        <div class="pv-lbl">Finish</div>
+        <div class="pv-val" style="color:${won ? '#F59E0B' : pos <= 5 ? '#10B981' : '#CBD5E1'}">P${pos}</div>
+      </div>
+      <div>
+        <div class="pv-lbl">Prize</div>
+        <div class="pv-val" style="color:#10B981">${fmtMoney(prize)}</div>
+      </div>
+      <div>
+        <div class="pv-lbl">Fans</div>
+        <div class="pv-val" style="color:#3B82F6">+${evt.fanGain}</div>
+      </div>
+    </div>
+    
+    <div style="font-size:14px;color:#CBD5E1;text-align:center;margin:16px 0">
+      ${won ? 'Victory! You won the special event.' : 
+        pos <= 5 ? 'Strong performance in a competitive field.' :
+        'You finished the event. Solid experience.'}
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="closeModal();showPage('dashboard')">Continue</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// ACTION HANDLERS — User interactions, contract signing, sponsor management
+// ═══════════════════════════════════════════════════════════════════════
+
+function doSignContract(contractId) {
+  const st = getState();
+  const offer = st.pendingOffers.find(o => o.id === contractId);
+  if (!offer) return;
+  
+  // Deduct entry fee
+  if (st.money < offer.entryFee) {
+    showToast('Not enough money for entry fee', 'error');
+    return;
+  }
+  
+  st.money -= offer.entryFee;
+  
+  // Add to contracts
+  st.contracts.push(offer);
+  
+  // Remove from offers
+  st.pendingOffers = st.pendingOffers.filter(o => o.id !== contractId);
+  
+  // Generate schedule for this series
+  const s = getSeries(offer.seriesId);
+  st.schedules[offer.seriesId] = generateSchedule(offer.seriesId, st.trackPools);
+  
+  // Initialize championship points
+  if (!st.championshipPoints[offer.seriesId]) {
+    st.championshipPoints[offer.seriesId] = {};
+  }
+  st.championshipPoints[offer.seriesId][st.driverName] = 0;
+  
+  // Initialize field for this series
+  if (!st.seriesFields[offer.seriesId]) {
+    const fieldSize = SERIES_FIELD_SIZE[offer.seriesId] || 20;
+    const field = [];
+    for (let i = 0; i < fieldSize - 1; i++) {
+      const homeState = randomHomeState();
+      const isIntl = INTL_REGIONS.includes(homeState);
+      let name = isIntl ? generateAIName(homeState) : generateAIName();
+      // Ensure unique
+      let attempts = 0;
+      while ((field.find(d => d.name === name) || st.drivers.find(d => d.name === name)) && attempts++ < 20) {
+        name = isIntl ? generateAIName(homeState) : generateAIName();
+      }
+      field.push(createDriver(name, rand(30, 80), offer.seriesId, 'generated'));
+    }
+    st.seriesFields[offer.seriesId] = field;
+    // Add to global driver pool
+    st.drivers.push(...field);
+  }
+  
+  addLog(st, `Signed with ${offer.team} for ${s.name} (${offer.termSeasons} season${offer.termSeasons > 1 ? 's' : ''})`);
+  
+  saveState(st);
+  closeModal();
+  showToast(`Contract signed with ${offer.team}`, 'success');
+  showPage('contracts');
+}
+
+function doSignSponsor(sponsorId) {
+  const st = getState();
+  const offer = st.sponsorOffers.find(sp => sp.id === sponsorId);
+  if (!offer) return;
+  
+  // Add to active sponsors
+  st.sponsors.push(offer);
+  
+  // Remove from offers
+  st.sponsorOffers = st.sponsorOffers.filter(sp => sp.id !== sponsorId);
+  
+  addLog(st, `Signed sponsor: ${offer.brand} (${offer.totalSeasons} season${offer.totalSeasons > 1 ? 's' : ''}, ${fmtMoney(offer.valuePerSeason)}/yr)`);
+  
+  saveState(st);
+  closeModal();
+  showToast(`Sponsor signed: ${offer.brand}`, 'success');
+  showPage('sponsors');
+}
+
+function doOffTrackAction(actionId) {
+  const st = getState();
+  const action = OFF_TRACK.find(a => a.id === actionId);
+  if (!action) return;
+  
+  if (st.money < action.cost) {
+    showToast('Not enough money', 'error');
+    return;
+  }
+  
+  st.money -= action.cost;
+  st.reputation += action.rep;
+  st.fans += action.fans;
+  
+  // Apply sponsor happiness boost
+  (st.sponsors || []).forEach(sp => {
+    sp.happiness = Math.min(100, sp.happiness + action.sponsorHappy);
+  });
+  
+  // Mark as done this week
+  if (!st.offTrackDone) st.offTrackDone = [];
+  st.offTrackDone.push(actionId);
+  
+  addLog(st, `${action.label}: +${action.rep} rep, +${action.fans} fans, +${action.sponsorHappy} sponsor happiness`);
+  
+  saveState(st);
+  showToast(action.label + ' completed', 'success');
+  renderBusiness(st);
+  updateHeader(st);
+}
+
+function advanceWeek(state) {
+  state.week++;
+  
+  // Reset weekly actions
+  state.offTrackDone = [];
+  
+  // Check if all contracts complete for season
+  const allContractsComplete = state.contracts.every(c => {
+    const sched = state.schedules[c.seriesId] || [];
+    return sched.every(r => r.result !== null);
+  });
+  
+  if (allContractsComplete && state.contracts.length > 0) {
+    // Season complete — enter offseason
+    state.offseasonPhase = true;
+    advanceSeason(state);
+  }
+  
+  saveState(state);
+}
+
+function respondToCallout(calloutId, responseType) {
+  const st = getState();
+  const drama = st.dramaQueue.find(d => d.id === calloutId);
+  if (!drama || !drama.calloutData) return;
+  
+  const callout = drama.calloutData;
+  const response = CALLOUT_RESPONSE_OPTIONS[callout.type]?.find(r => r.effect === responseType);
+  if (!response) return;
+  
+  // Apply response effects
+  st.reputation += response.repCost || 0;
+  st.fans += response.fanGain || 0;
+  
+  // Update rivalry based on response
+  if (responseType === 'escalate') {
+    touchRival(st.rivals, callout.driverName, 'incident', false);
+  } else if (responseType === 'mutual') {
+    touchRival(st.rivals, callout.driverName, 'close', true);
+  }
+  
+  // Remove from drama queue
+  st.dramaQueue = st.dramaQueue.filter(d => d.id !== calloutId);
+  
+  addLog(st, `Responded to ${callout.driverName}'s callout: ${response.label}`);
+  
+  saveState(st);
+  closeModal();
+  showToast('Response posted', 'success');
+  showPage('dashboard');
+}
+
+function showCalloutModal(calloutId) {
+  const st = getState();
+  const drama = st.dramaQueue.find(d => d.id === calloutId);
+  if (!drama || !drama.calloutData) return;
+  
+  const callout = drama.calloutData;
+  const options = CALLOUT_RESPONSE_OPTIONS[callout.type] || [];
+  
+  let html = `
+    <div class="modal-eyebrow">${callout.type === 'incident' ? 'POST-RACE CALLOUT' : 'RESPECT EARNED'}</div>
+    <div class="modal-title">${callout.driverName}</div>
+    <div class="modal-sub">How do you respond?</div>
+    
+    <div style="background:#060A10;border-left:3px solid ${callout.type === 'incident' ? '#EF4444' : '#10B981'};padding:12px;margin:16px 0;border-radius:6px">
+      <div style="font-size:14px;color:#CBD5E1;line-height:1.6;font-style:italic">
+        "${callout.quote}"
+      </div>
+    </div>
+    
+    <div class="modal-section">
+      <div style="font-size:13px;color:#94A3B8;margin-bottom:10px">Choose your response:</div>
+      ${options.map(opt => `
+        <button class="sim-choice-btn" onclick="respondToCallout('${calloutId}','${opt.effect}')" style="margin-bottom:8px">
+          <div style="font-weight:700;margin-bottom:4px">${opt.label}</div>
+          <div style="font-size:12px;color:#64748B">${opt.desc}</div>
+          ${opt.repCost || opt.fanGain ? `
+            <div style="font-size:11px;color:#8B5CF6;margin-top:4px">
+              ${opt.repCost ? (opt.repCost > 0 ? '+' : '') + opt.repCost + ' rep' : ''}
+              ${opt.fanGain ? ' • +' + opt.fanGain + ' fans' : ''}
+            </div>
+          ` : ''}
+        </button>
+      `).join('')}
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+// Drama queue handler
+function processDramaQueue(state) {
+  if (!state.dramaQueue || state.dramaQueue.length === 0) return;
+  
+  const drama = state.dramaQueue[0];
+  
+  if (drama.effect === 'callout') {
+    showCalloutModal(drama.id);
+  } else if (drama.effect === 'sponsor_warning') {
+    showDramaModal(drama);
+  } else if (drama.effect === 'championship') {
+    showDramaModal(drama);
+  } else if (drama.effect === 'milestone') {
+    showDramaModal(drama);
+  } else if (drama.effect === 'perk') {
+    showDramaModal(drama);
+  } else {
+    // Generic drama
+    showDramaModal(drama);
+  }
+}
+
+function showDramaModal(drama) {
+  const st = getState();
+  
+  let html = `
+    <div class="modal-eyebrow">${drama.effect === 'championship' ? '🏆 CHAMPIONSHIP' : drama.effect === 'milestone' ? '⭐ MILESTONE' : drama.effect === 'perk' ? '🎯 PERK UNLOCKED' : 'NEWS'}</div>
+    <div class="modal-title">${drama.title}</div>
+    
+    <div style="background:#060A10;border-left:3px solid ${drama.valence === 'positive' ? '#10B981' : drama.valence === 'negative' ? '#EF4444' : '#8B5CF6'};padding:14px;margin:16px 0;border-radius:6px">
+      <div style="font-size:14px;color:#CBD5E1;line-height:1.6">${drama.desc}</div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-full" onclick="dismissDrama('${drama.id}')">Continue</button>
+    </div>
+  `;
+  
+  showModal(html);
+}
+
+function dismissDrama(dramaId) {
+  const st = getState();
+  st.dramaQueue = st.dramaQueue.filter(d => d.id !== dramaId);
+  saveState(st);
+  closeModal();
+  
+  // Process next drama if any
+  if (st.dramaQueue.length > 0) {
+    processDramaQueue(st);
+  } else {
+    showPage('dashboard');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS — UI utilities, modal management, state persistence
+// ═══════════════════════════════════════════════════════════════════════
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+function showModal(html) {
+  $('modal-box').innerHTML = html;
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal() {
+  $('modal-overlay').classList.add('hidden');
+  $('modal-box').innerHTML = '';
+}
+
+function showToast(msg, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  toast.style.borderLeft = '3px solid ' + (type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6');
+  
+  const container = $('toast-container');
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function updateHeader(state) {
+  const driverLevel = calcDriverLevel(state);
+  
+  $('header').innerHTML = `
+    <div>
+      <div class="driver-sub">SEASON ${state.season}</div>
+      <div class="driver-name">${state.driverName}</div>
+    </div>
+    <div class="hdr-stats">
+      <div class="hdr-stat">
+        <div class="val text-green">${fmtMoney(state.money)}</div>
+        <div class="lbl">Money</div>
+      </div>
+      <div class="hdr-stat">
+        <div class="val">${state.reputation}</div>
+        <div class="lbl">Reputation</div>
+      </div>
+      <div class="hdr-stat">
+        <div class="val text-purple">${fmtFans(state.fans)}</div>
+        <div class="lbl">Fans</div>
+      </div>
+      <div class="hdr-stat">
+        <div class="val text-gold">Lvl ${driverLevel}</div>
+        <div class="lbl">Driver</div>
+      </div>
+    </div>
+  `;
+}
+
+function updateTabs(state) {
+  const contractCount = (state.pendingOffers || []).length;
+  const sponsorCount = (state.sponsorOffers || []).length;
+  const dramaCount = (state.dramaQueue || []).length;
+  
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', badge: null },
+    { id: 'contracts', label: 'Contracts', badge: contractCount > 0 ? contractCount : null },
+    { id: 'sponsors', label: 'Sponsors', badge: sponsorCount > 0 ? sponsorCount : null },
+    { id: 'rivals', label: 'Rivals', badge: null },
+    { id: 'standings', label: 'Standings', badge: null },
+    { id: 'schedule', label: 'Schedule', badge: null },
+    { id: 'drivers', label: 'Drivers', badge: null },
+    { id: 'team', label: 'Team', badge: null },
+    { id: 'garage', label: 'Garage', badge: null },
+    { id: 'business', label: 'Business', badge: null },
+    { id: 'settings', label: 'Settings', badge: null },
+  ];
+  
+  $('tabs').innerHTML = tabs.map(t => `
+    <button class="tab ${currentPage === t.id ? 'active' : ''}" onclick="showPage('${t.id}')">
+      ${t.label}
+      ${t.badge ? `<span class="tab-badge">${t.badge}</span>` : ''}
+    </button>
+  `).join('');
+}
+
+let currentPage = 'dashboard';
+
+function showPage(page) {
+  currentPage = page;
+  const st = getState();
+  
+  updateTabs(st);
+  
+  switch (page) {
+    case 'dashboard': renderDashboard(st); break;
+    case 'contracts': renderContracts(st); break;
+    case 'sponsors': renderSponsors(st); break;
+    case 'rivals': renderRivals(st); break;
+    case 'standings': renderStandings(st); break;
+    case 'schedule': renderSchedule(st); break;
+    case 'drivers': renderDrivers(st); break;
+    case 'team': renderTeamOwnership(st); break;
+    case 'garage': renderGarage(st); break;
+    case 'business': renderBusiness(st); break;
+    case 'settings': renderSettings(st); break;
+    default: renderDashboard(st);
+  }
+}
+
+function renderSettings(state) {
+  let html = `
+    <div class="page">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">Game version ${APP_VERSION}</div>
+      
+      <div class="card">
+        <div class="card-title">Save & Export</div>
+        <button class="btn btn-primary btn-full mb-8" onclick="exportSave()">Download Save File</button>
+        <button class="btn btn-ghost btn-full" onclick="importSavePrompt()">Import Save File</button>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Career Stats</div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Total Prize Money</span><span class="sb-val">${fmtMoney(state.totalPrizeMoney)}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Total Merch Revenue</span><span class="sb-val">${fmtMoney(state.totalMerchRevenue)}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Career Starts</span><span class="sb-val">${state.starts}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Career Wins</span><span class="sb-val">${state.wins}</span></div>
+        </div>
+        <div class="stat-bar">
+          <div class="sb-row"><span class="sb-lbl">Win Rate</span><span class="sb-val">${state.starts > 0 ? ((state.wins / state.starts) * 100).toFixed(1) : 0}%</span></div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Milestones Unlocked (${(state.milestones || []).length}/${MILESTONE_DEFS.length})</div>
+        ${MILESTONE_DEFS.map(m => {
+          const unlocked = (state.milestones || []).includes(m.id);
+          return `
+            <div class="row-item" style="opacity:${unlocked ? 1 : 0.4}">
+              <div style="font-size:24px;margin-right:10px">${unlocked ? m.icon : '🔒'}</div>
+              <div style="flex:1">
+                <div class="row-name">${m.label}</div>
+                <div class="row-sub">${m.desc}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Danger Zone</div>
+        <button class="btn btn-danger btn-full" onclick="confirmRestart()">Restart Career</button>
+      </div>
+    </div>
+  `;
+  
+  $('#content').innerHTML = html;
+}
+
+function exportSave() {
+  const st = getState();
+  const json = JSON.stringify(st, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `fullthrottle_save_s${st.season}_${st.driverName.replace(/\s/g, '_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Save file downloaded', 'success');
+}
+
+function importSavePrompt() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        localStorage.setItem('fullthrottle_sim_save', evt.target.result);
+        location.reload();
+      } catch (err) {
+        showToast('Invalid save file', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function confirmRestart() {
+  if (!confirm('Are you sure? This will delete your current career permanently.')) return;
+  localStorage.removeItem('fullthrottle_sim_save');
+  location.reload();
+}
+
+function saveState(state) {
+  localStorage.setItem('fullthrottle_sim_save', JSON.stringify(state));
+}
+
+function getState() {
+  const raw = localStorage.getItem('fullthrottle_sim_save');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// BOOTSTRAP — Game initialization and setup
+// ═══════════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Check for existing save
+  const existingSave = getState();
+  
+  if (existingSave) {
+    // Load existing career
+    $('setup-screen').classList.add('hidden');
+    $('app').style.display = 'flex';
+    
+    updateHeader(existingSave);
+    updateTabs(existingSave);
+    
+    // Check for pending drama
+    if (existingSave.dramaQueue && existingSave.dramaQueue.length > 0) {
+      processDramaQueue(existingSave);
+    } else {
+      showPage('dashboard');
+    }
+  } else {
+    // New career setup
+    const setupForm = $('setup-form');
+    setupForm.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const driverName = $('driver-name-input').value.trim();
+      const homeState = $('driver-state-input').value;
+      
+      if (!driverName) {
+        showToast('Please enter your driver name', 'error');
+        return;
+      }
+      
+      // Initialize new career
+      const newState = initState(driverName);
+      newState.homeState = homeState;
+      
+      saveState(newState);
+      
+      // Hide setup, show game
+      $('setup-screen').classList.add('hidden');
+      $('app').style.display = 'flex';
+      
+      updateHeader(newState);
+      updateTabs(newState);
+      showPage('dashboard');
+      
+      showToast(`Welcome to Full Throttle, ${driverName}!`, 'success');
+    });
+  }
+  
+  // Import save from setup screen
+  $('import-setup').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        localStorage.setItem('fullthrottle_sim_save', evt.target.result);
+        location.reload();
+      } catch (err) {
+        showToast('Invalid save file', 'error');
+      }
+    };
+    reader.readAsText(file);
+  });
+  
+  // Modal overlay click to close
+  $('modal-overlay').addEventListener('click', e => {
+    if (e.target === $('modal-overlay')) {
+      closeModal();
+    }
+  });
+  
+  // Populate state/region dropdown (already done inline in HTML, but double-check)
+  const sel = $('driver-state-input');
+  if (sel && sel.options.length === 0) {
+    const usG = document.createElement('optgroup');
+    usG.label = 'United States';
+    const iG = document.createElement('optgroup');
+    iG.label = 'International';
+    
+    US_STATES.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s;
+      o.textContent = US_STATE_NAMES[s] || s;
+      if (s === 'ME') o.selected = true;
+      usG.appendChild(o);
+    });
+    
+    INTL_REGIONS.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s;
+      o.textContent = s;
+      iG.appendChild(o);
+    });
+    
+    sel.appendChild(usG);
+    sel.appendChild(iG);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', e => {
+  // ESC to close modal
+  if (e.key === 'Escape') {
+    if (!$('modal-overlay').classList.contains('hidden')) {
+      closeModal();
+    }
+  }
+  
+  // Ctrl/Cmd + S to save (prevent default)
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    const st = getState();
+    if (st) {
+      saveState(st);
+      showToast('Game saved', 'success');
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// DEVELOPMENT HELPERS (comment out for production)
+// ═══════════════════════════════════════════════════════════════════════
+
+// Expose to console for debugging
+window.DEV = {
+  getState,
+  saveState,
+  addMoney: (amount) => {
+    const st = getState();
+    if (!st) return;
+    st.money += amount;
+    saveState(st);
+    updateHeader(st);
+    showToast(`Added ${fmtMoney(amount)}`, 'success');
+  },
+  addRep: (amount) => {
+    const st = getState();
+    if (!st) return;
+    st.reputation += amount;
+    saveState(st);
+    updateHeader(st);
+    showToast(`Added ${amount} reputation`, 'success');
+  },
+  addFans: (amount) => {
+    const st = getState();
+    if (!st) return;
+    st.fans += amount;
+    saveState(st);
+    updateHeader(st);
+    showToast(`Added ${amount} fans`, 'success');
+  },
+  repairCar: () => {
+    const st = getState();
+    if (!st) return;
+    Object.keys(st.carCondition).forEach(k => st.carCondition[k] = 100);
+    saveState(st);
+    showToast('Car repaired to 100%', 'success');
+  },
+  skipToOffseason: () => {
+    const st = getState();
+    if (!st) return;
+    st.contracts.forEach(c => {
+      const sched = st.schedules[c.seriesId] || [];
+      sched.forEach(r => {
+        if (!r.result) {
+          r.result = {
+            position: rand(1, 10),
+            dnf: false,
+            points: 30,
+            prize: 5000,
+            fieldSize: 20,
+          };
+        }
+      });
+    });
+    advanceSeason(st);
+    saveState(st);
+    showPage('dashboard');
+    showToast('Advanced to offseason', 'success');
+  },
+  unlockAllPerks: () => {
+    const st = getState();
+    if (!st) return;
+    st.driverPerks = DRIVER_PERKS.map(p => p.id);
+    saveState(st);
+    showToast('All perks unlocked', 'success');
+  },
+  maxUpgrades: () => {
+    const st = getState();
+    if (!st) return;
+    CAR_UPGRADES.forEach(u => {
+      st.carUpgrades[u.id] = u.tiers.length;
+    });
+    saveState(st);
+    showToast('All upgrades maxed', 'success');
+  },
+  viewLog: () => {
+    const st = getState();
+    if (!st) return;
+    console.log('=== GAME LOG ===');
+    (st.log || []).forEach(entry => console.log(entry));
+  },
+  clearDrama: () => {
+    const st = getState();
+    if (!st) return;
+    st.dramaQueue = [];
+    saveState(st);
+    closeModal();
+    showToast('Drama queue cleared', 'success');
+  },
+  testCallout: (type = 'incident') => {
+    const st = getState();
+    if (!st) return;
+    const drivers = st.drivers.filter(d => d.active);
+    if (!drivers.length) return;
+    const d = drivers[rand(0, drivers.length - 1)];
+    const quote = getPersonalityCallout(d.name, type).replace(/{name}/g, d.name).replace(/{player}/g, st.driverName);
+    st.dramaQueue.push({
+      id: 'test_callout_' + uid(),
+      title: type === 'incident' ? 'Post-Race Callout' : 'Respect Earned',
+      effect: 'callout',
+      calloutData: { fired: true, driverName: d.name, quote, type },
+      desc: quote,
+      valence: type === 'incident' ? 'negative' : 'positive',
+    });
+    saveState(st);
+    processDramaQueue(st);
+  },
+  simulateFullSeason: () => {
+    const st = getState();
+    if (!st) return;
+    st.contracts.forEach(c => {
+      const sched = st.schedules[c.seriesId] || [];
+      sched.forEach((r, idx) => {
+        if (!r.result) {
+          const qualResult = simulateQualifying(st, c.seriesId, idx);
+          r.qualifying = qualResult;
+          
+          const raceResult = simulateRace(st, c.seriesId, idx, qualResult.position);
+          const choiceResults = raceResult.scenarios.map(() => ({
+            posDelta: rand(-2, 2),
+            dnfRisk: 0.02,
+            fanBonus: rand(20, 100),
+          }));
+          const narrativeDelta = choiceResults.reduce((sum, cr) => sum + cr.posDelta, 0);
+          raceResult.narrativeDelta = clamp(narrativeDelta, -3, 3);
+          
+          const finalResult = resolveRace(raceResult, choiceResults);
+          processRaceResult(st, c.seriesId, idx, finalResult);
+        }
+      });
+    });
+    saveState(st);
+    showPage('dashboard');
+    showToast('Full season simulated', 'success');
+  },
+};
+
+console.log('Full Throttle SIM loaded. Type window.DEV in console for debug commands.');
+
+</script>
+</body>
+</html>
