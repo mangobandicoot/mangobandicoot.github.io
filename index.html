@@ -1,73 +1,1493 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Race Sim RPG</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="container">
-        <div id="setup" class="card">
-            <h2 style="margin-bottom: 20px;">Driver Registration</h2>
-            
-            <div class="input-group">
-                <label>Full Name</label>
-                <input type="text" id="driverName" placeholder="e.g. Dale Earnhardt">
-            </div>
-            
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <div style="flex: 1;">
-                    <label>Car #</label>
-                    <input type="number" id="driverNum" placeholder="3">
-                </div>
-                <div style="flex: 2;">
-                    <label>Home State</label>
-                    <input type="text" id="driverState" placeholder="North Carolina">
-                </div>
-            </div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle v1.5.2-SIM — Simulated Career RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:#04060E;color:#E2E8F0;font-size:16px;line-height:1.45}
+input,textarea,select,button{font-family:inherit;font-size:15px}
+input,textarea,select{background:#131822;border:1px solid #64748B;border-radius:6px;color:#F9FAFB;padding:8px 11px}
+input:focus,textarea:focus,select:focus{outline:2px solid #D97706;outline-offset:1px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0B0F1A}
+::-webkit-scrollbar-thumb{background:#64748B;border-radius:3px}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#setup-screen{position:fixed;inset:0;background:#04060E;display:flex;align-items:center;justify-content:center;z-index:999}
+#setup-screen.hidden{display:none}
+#header{background:#080C14;border-bottom:2px solid #1E2433;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-shrink:0}
+.driver-name{font-size:22px;font-weight:900;color:#F59E0B;line-height:1}
+.driver-sub{font-size:12​​​​​​​​​​​​​​​​
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════
 
-            <button class="btn-primary" style="margin-top: 25px;" onclick="startGame()">
-                Begin Career
-            </button>
-        </div>
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-        <div id="app" class="hidden" style="flex-direction: column; height: 100%;">
-            <nav id="navbar">
-                <button onclick="showTab('dashboard')">Dashboard</button>
-                <button onclick="showTab('race')">Next Race</button>
-                <button onclick="showTab('garage')">Garage</button>
-            </nav>
+function randF(min, max) {
+  return Math.random() * (max - min) + min;
+}
 
-            <div id="main-content"></div>
-        </div>
-    </div>
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+}
 
-    <div id="modal-overlay" class="hidden">
-        <div id="modal-content" class="card">
-            </div>
-    </div>
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
 
-    <script src="game.js"></script>
-    
-    <script src="src/renderer.js"></script>
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-    <script>
-        // When the page finishes loading, check for a save file
-        window.onload = async () => {
-            try {
-                const hasSave = await loadGame();
-                if (hasSave && G) {
-                    // If a save exists, skip registration and go to Dashboard
-                    document.getElementById('setup').classList.add('hidden');
-                    document.getElementById('app').classList.remove('hidden');
-                    document.getElementById('app').style.display = 'flex';
-                    showTab('dashboard');
-                }
-            } catch (e) {
-                console.error("Initialization failed. Check if data.json exists.", e);
-            }
-        };
-    </script>
+function fmtMoney(n) {
+  return '$' + n.toLocaleString();
+}
+
+function fmtFans(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toString();
+}
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function getAttrBonus(attrs, id) {
+  const val = (attrs[id] || DRIVER_ATTR_DEFAULT) - DRIVER_ATTR_DEFAULT;
+  return val;
+}
+
+function getUpgradeBonus(upgrades, bonusType) {
+  let total = 0;
+  CAR_UPGRADES.forEach(upg => {
+    const lvl = upgrades[upg.id] || 0;
+    if (lvl > 0) {
+      const tier = upg.tiers[lvl - 1];
+      total += tier.bonus[bonusType] || 0;
+    }
+  });
+  return total;
+}
+
+function findOrCreateDriver(state, name) {
+  let d = (state.drivers || []).find(dr => dr.name === name);
+  if (!d) {
+    d = createDriver(name, rand(40, 75), null, 'known');
+    state.drivers.push(d);
+  }
+  return d;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// GAME CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════
+
+const APP_VERSION = 'v1.5.2-SIM';
+const DRIVER_ATTR_DEFAULT = 3;
+const DRIVER_ATTR_POINTS_START = 15;
+
+const SERIES_FIELD_SIZE = {
+  mini_stock: 18,
+  street_stock: 20,
+  late_model_stock: 22,
+  super_late_model: 24,
+  arca_menards: 26,
+  nascar_trucks: 32,
+  nascar_xfinity: 36,
+  nascar_cup: 40,
+};
+
+const REPAIR_TIER_MULT = {1: 1, 2: 1.2, 3: 1.5, 4: 2, 5: 3, 6: 4.5, 7: 6};
+
+const TROPHY_TIERS = [
+  {minPos: 1, label: 'Champion', icon: '🏆', color: '#F59E0B'},
+  {minPos: 2, label: 'Runner-up', icon: '🥈', color: '#CBD5E1'},
+  {minPos: 3, label: 'Third Place', icon: '🥉', color: '#CD7F32'},
+  {minPos: 5, label: 'Top 5', icon: '⭐', color: '#10B981'},
+  {minPos: 10, label: 'Top 10', icon: '✓', color: '#3B82F6'},
+  {minPos: 999, label: 'Competed', icon: '—', color: '#64748B'},
+];
+
+const CONDITIONS = [
+  {id: 'clear', label: 'Clear', icon: '☀️', color: '#F59E0B', tireWear: 1.0},
+  {id: 'light_rain', label: 'Light Rain', icon: '🌧️', color: '#3B82F6', tireWear: 0.7},
+  {id: 'heavy_rain', label: 'Heavy Rain', icon: '⛈️', color: '#1E3A8A', tireWear: 0.5},
+  {id: 'hot_slick', label: 'Hot & Slick', icon: '🔥', color: '#EF4444', tireWear: 1.4},
+  {id: 'night', label: 'Night', icon: '🌙', color: '#8B5CF6', tireWear: 1.0},
+];
+
+function rollCondition() {
+  const r = Math.random();
+  if (r < 0.60) return 'clear';
+  if (r < 0.75) return 'hot_slick';
+  if (r < 0.85) return 'night';
+  if (r < 0.95) return 'light_rain';
+  return 'heavy_rain';
+}
+
+const IRACING_PTS = Array.from({length:50},(_,i)=>Math.max(1,43-i));
+
+const US_STATES = [
+  'AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY',
+  'LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM',
+  'NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA',
+  'WI','WV','WY','DC',
+];
+
+const US_STATE_NAMES = {
+  AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',
+  CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',
+  ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',
+  LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',
+  MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',
+  ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',
+  NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',
+  RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',
+  UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',
+  WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.',
+};
+
+const INTL_REGIONS = ['Europe','Africa','Asia','South America','Central America','Australia'];
+
+const INTL_REGION_NAMES = {
+  Europe:'Europe',Africa:'Africa',Asia:'Asia',
+  'South America':'South America','Central America':'Central America',Australia:'Australia',
+};
+
+const ALL_ORIGINS = [...US_STATES, ...INTL_REGIONS];
+const ALL_ORIGIN_NAMES = {...US_STATE_NAMES, ...INTL_REGION_NAMES};
+
+function isIntlRegion(origin) { return INTL_REGIONS.includes(origin); }
+function originLabel(origin) { return ALL_ORIGIN_NAMES[origin] || origin; }
+
+const HOME_STATE_POOL = [
+  ...Array(8).fill('NC'),...Array(7).fill('VA'),...Array(7).fill('TN'),
+  ...Array(6).fill('GA'),...Array(6).fill('SC'),...Array(5).fill('FL'),
+  ...Array(5).fill('OH'),...Array(5).fill('IN'),...Array(4).fill('KY'),
+  ...Array(4).fill('WI'),...Array(4).fill('IL'),...Array(3).fill('TX'),
+  ...Array(3).fill('PA'),...Array(3).fill('MI'),...Array(3).fill('MO'),
+  ...Array(2).fill('AL'),...Array(2).fill('AR'),...Array(2).fill('MS'),
+  ...Array(2).fill('NY'),...Array(2).fill('CA'),...Array(2).fill('MN'),
+  ...Array(1).fill('WV'),...Array(1).fill('LA'),...Array(1).fill('OK'),
+  ...Array(1).fill('KS'),...Array(1).fill('NE'),...Array(1).fill('IA'),
+  ...Array(1).fill('Europe'),...Array(1).fill('Australia'),
+];
+
+function randomHomeState(intlBias=false){
+  const pool = intlBias ? HOME_STATE_POOL : HOME_STATE_POOL;
+  return pool[rand(0,pool.length-1)];
+}
+
+const INTL_FIRST_NAMES = {
+  Europe: ['Marco','Luca','Jan','Sven','Pierre','Mikael','Tom','Nico','Erik','Felix',
+           'Romain','Carlos','David','Kevin','Mika','Jari','Rubens','Timo','Sebastian','Max'],
+  Africa: ['Khalid','Moses','Emmanuel','Dayo','Ade','Chukwu','Sipho','Thabo','Kofi','Kwame',
+           'Ahmed','Omar','Yusuf','Ibrahim','Hassan','Abebe','Tariq','Nabil','Karim','Jamal'],
+  Asia: ['Hiroshi','Takashi','Wei','Jin','Sung','Park','Kenji','Ryo','Taro','Yuki',
+         'Naoto','Kazuki','Daiki','Hayato','Sho','Li','Chen','Zhang','Liang','Feng'],
+  'South America': ['Diego','Gabriel','Matheus','Lucas','Felipe','Gustavo','Bruno','Rafael',
+                    'Andre','Rodrigo','Paulo','Emilio','Sebastian','Nicolas','Alejandro','Luis'],
+  'Central America': ['Miguel','Carlos','Juan','Jose','Ernesto','Roberto','Mario','Fernando',
+                      'Ricardo','Alejandro','Hector','Andres','Antonio','Manuel','Javier','Eduardo'],
+  Australia: ['Jack','Liam','Noah','Connor','Dylan','Riley','Lachlan','Cody','Jayden','Blake',
+              'Kyle','Brody','Corey','Tyson','Mitchell','Cameron','Nathan','Rhys','Scott','Dean'],
+};
+
+const INTL_LAST_NAMES = {
+  Europe: ['Mueller','Leclerc','Verstappen','Bottas','Sainz','Norris','Alonso','Hulkenberg',
+           'Magnussen','Vandoorne','Wehrlein','Auer','Eriksson','Lindqvist','Bergmann','Fischer'],
+  Africa: ['Okonkwo','Mensah','Diallo','Traore','Osei','Boateng','Zuma','Dlamini','Okafor','Nwosu',
+           'Hassan','Khalil','Rashid','Abdulla','Yilmaz','Petros','Tekle','Haile','Bekele','Tadesse'],
+  Asia: ['Yamamoto','Tanaka','Suzuki','Kobayashi','Nakajima','Sato','Ito','Watanabe','Kimura','Matsuda',
+         'Zhang','Wang','Liu','Chen','Yang','Huang','Zhou','Wu','Xu','Sun'],
+  'South America': ['Silva','Santos','Oliveira','Souza','Lima','Pereira','Costa','Alves','Ferreira',
+                    'Rodrigues','Barbosa','Figueiredo','Barrichello','Piquet','Massa','Senna'],
+  'Central America': ['Rodriguez','Martinez','Lopez','Gonzalez','Hernandez','Perez','Torres','Flores',
+                      'Rivera','Morales','Gutierrez','Ramirez','Castillo','Vargas','Cruz','Reyes'],
+  Australia: ['Smith','Jones','Williams','Brown','Wilson','Taylor','Anderson','Thomas','Jackson','White',
+              'Harris','Martin','Thompson','Garcia','Martinez','Robinson','Clark','Lewis','Lee','Walker'],
+};
+
+function generateIntlName(region) {
+  const firsts = INTL_FIRST_NAMES[region] || INTL_FIRST_NAMES['Europe'];
+  const lasts  = INTL_LAST_NAMES[region]  || INTL_LAST_NAMES['Europe'];
+  return firsts[rand(0,firsts.length-1)] + ' ' + lasts[rand(0,lasts.length-1)];
+}
+
+const AI_FIRST = [
+  'Kyle','Jimmy','Dale','Bobby','Ronnie','Chase','Tyler','Rick','Austin','Sammy',
+  'Devin','Nate','Cole','Brady','Zach','Marcus','Joey','Pete','Garrett','Hank',
+  'Luke','Cody','Ray','Brent','Travis','Dustin','Mitch','Greg','Aaron','Vince',
+  'Drew','Lenny','Stan','Wayne','Danny','Trent','Seth','Ricky','Caleb','Wade',
+  'Jason','Connor','Mike','Phil','Gary','Dave','Shawn','Curt','Neil','Vance',
+  'Brett','Derek','Shane','Lance','Todd','Denny','Clint','Regan','David','Matt',
+  'Blake','Carson','Hunter','Logan','Mason','Carter','Parker','Wyatt','Colton','Reid',
+];
+
+const AI_LAST = [
+  'McAllister','Hayes','Whitfield','Tremont','Stacks','Duvall','Boone','Cantrell','Phelps','Gross',
+  'Hargrove','Wicker','Farris','Holt','Tunnell','Deen','Ruiz','Slade','Finch','Dillon',
+  'Farber','Marsh','Sutton','Holloway','Yount','Falk','Pruitt','Sable','Tull','Corley',
+  'Paxson','Hobbs','Cutler','Rideout','Kowalski','Malone','Voss','Firth','Lehr','Bale',
+  'Denton','Arnett','Odom','Kissel','Tully','Ingram','Bassett','Pulliam','Dawson','Hensley',
+  'Cope','Speed','Bodine','Wallace','Nemechek','Green','Kenseth','Keller','Waltrip','Labonte',
+];
+
+function generateAIName(region) {
+  if (region && typeof INTL_REGIONS !== 'undefined' && INTL_REGIONS.includes(region)) {
+    return generateIntlName(region);
+  }
+  const first = AI_FIRST[rand(0, AI_FIRST.length-1)];
+  const last  = AI_LAST[rand(0,  AI_LAST.length-1)];
+  const name  = first + ' ' + last;
+  return Math.random() < 0.12 ? name + ' Jr.' : name;
+}
+
+const DRIVER_BIO_LINES = [
+  "Grew up watching his dad run late models every Saturday night. Never left.",
+  "Started karting at eight and hasn't stopped since. Skipped college for this.",
+  "Works a day job through the week and races on weekends. Has for twelve years.",
+  "Won three consecutive track championships before anyone in a higher series noticed.",
+  "His engine builder is also his uncle. The arrangement has outlasted two marriages.",
+];
+
+function generateDriverBio() {
+  return DRIVER_BIO_LINES[rand(0, DRIVER_BIO_LINES.length - 1)];
+}
+
+function getDriverBio(name) {
+  return generateDriverBio();
+}
+
+const SERIES = [
+  {id:'mini_stock',name:'Mini Stock Series',short:'Mini Stock',tier:1,races:10,pay:120,winBonus:600,reqRep:0,reqFans:0,color:'#8B5CF6',maxTerm:1,maxTm:1,fee:120,desc:'Four cylinders, 200 horses, zero dignity. Everyone starts here.'},
+  {id:'street_stock',name:'Street Stock Series',short:'Street Stock',tier:2,races:12,pay:280,winBonus:1200,reqRep:35,reqFans:200,color:'#3B82F6',maxTerm:1,maxTm:1,fee:250,desc:'A step up. Same chaos, slightly more horsepower.'},
+  {id:'late_model_stock',name:'Late Model Stock Tour',short:'Late Model',tier:3,races:16,pay:1800,winBonus:7000,reqRep:80,reqFans:800,color:'#10B981',maxTerm:1,maxTm:2,fee:1000,desc:'500hp V8, real money, real sponsor pressure.'},
+  {id:'super_late_model',name:'Super Late Model Tour',short:'Super Late',tier:3,races:14,pay:2800,winBonus:10000,reqRep:65,reqFans:500,color:'#F97316',maxTerm:1,maxTm:2,fee:800,desc:'Full-fendered asphalt rockets. The step between street stock and the big money.'},
+  {id:'arca_menards',name:'ARCA Menards Series',short:'ARCA',tier:4,races:20,pay:12000,winBonus:35000,reqRep:130,reqFans:3000,color:'#F59E0B',maxTerm:2,maxTm:2,fee:4000,desc:'National TV. NASCAR scouts in the grandstands.'},
+  {id:'nascar_trucks',name:'NASCAR Craftsman Truck Series',short:'Trucks',tier:5,races:23,pay:25000,winBonus:90000,reqRep:180,reqFans:12000,color:'#EF4444',maxTerm:2,maxTm:3,fee:15000,desc:"NASCAR proper. Don't blow it on a lapped car."},
+  {id:'nascar_xfinity',name:'NASCAR Xfinity Series',short:'Xfinity',tier:6,races:33,pay:75000,winBonus:250000,reqRep:240,reqFans:55000,color:'#06B6D4',maxTerm:3,maxTm:3,fee:35000,desc:'One rung from the Cup. Every lap is an audition.'},
+  {id:'nascar_cup',name:'NASCAR Cup Series',short:'Cup Series',tier:7,races:36,pay:200000,winBonus:1000000,reqRep:320,reqFans:200000,color:'#EC4899',maxTerm:3,maxTm:3,fee:80000,desc:"The pinnacle."},
+];
+
+function getSeries(id){return SERIES.find(s=>s.id===id);}
+
+const FREE_TRACKS = [
+  {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+  {name:'Langley Speedway',city:'Hampton',state:'VA'},
+  {name:'USA International Speedway',city:'Lakeland',state:'FL'},
+  {name:'Southern National Motorsports Park',city:'Kenly',state:'NC'},
+  {name:'South Boston Speedway',city:'South Boston',state:'VA'},
+  {name:'Concord Speedway',city:'Concord',state:'NC'},
+  {name:'Oxford Plains Speedway',city:'Oxford',state:'ME'},
+  {name:'Slinger Speedway',city:'Slinger',state:'WI',fig8:true},
+];
+
+const PAID_TRACKS = [
+  {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+  {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+  {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+  {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+  {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+];
+
+const TEAMS = {
+  mini_stock:["Pawlowski's Auto Body","Earl's Speed Shop","Backwoods Motorsports"],
+  street_stock:['Barnyard Racing',"Cousin's Garage",'Rural Route Racing'],
+  late_model_stock:['Southern Speed Racing','Appalachian Motorsports'],
+  super_late_model:['Carolina Asphalt Racing','Ridgeline Motorsports'],
+  arca_menards:['Pinnacle Motorsports','Elevation Racing'],
+  nascar_trucks:['Frontier Truck Racing','Wildfire Motorsports'],
+  nascar_xfinity:['Silver Arrow Racing','Criterion Motorsports'],
+  nascar_cup:['Titan Motorsports','Crown Racing'],
+};
+
+const SPONSOR_BRANDS = {
+  mini_stock:["Earl's Auto Parts","Bud's Tire World"],
+  street_stock:['Midwest Auto Supply','Thunder Ridge Fuel'],
+  late_model_stock:['Summit Racing','Holley Performance'],
+  super_late_model:['Comp Cams','Edelbrock'],
+  arca_menards:['Menards','NAPA Auto Parts'],
+  nascar_trucks:['Camping World','DeWalt'],
+  nascar_xfinity:['Xfinity',"Hellmann's"],
+  nascar_cup:['Monster Energy','Coca-Cola'],
+};
+
+const SPONSOR_TYPES = {
+  primary:{label:'Primary',mult:1.0,dur:[1,2],decay:8,gain:12},
+  associate:{label:'Associate',mult:0.3,dur:[1,1],decay:5,gain:8},
+  contingency:{label:'Contingency',mult:0.1,dur:[1,3],decay:2,gain:4},
+};
+
+const CREW_PACKAGES = [
+  {id:'basic',name:'Basic',cost:0,qualBonus:0,desc:'Standard setup. Gets you to the grid.'},
+  {id:'club',name:'Club',cost:5000,qualBonus:2,desc:'Experienced engineer. Qualifying improves.'},
+  {id:'pro',name:'Pro',cost:20000,qualBonus:4,desc:'Full-time crew chief, proper data.'},
+  {id:'elite',name:'Elite',cost:75000,qualBonus:7,desc:'Best in the business.'},
+];
+
+const OFF_TRACK = [
+  {id:'hospital',label:'Hospital Visit',cost:0,rep:6,fans:200,sponsorHappy:5,desc:'Visit patients at a hospital.'},
+  {id:'school',label:'School Visit',cost:0,rep:5,fans:150,sponsorHappy:4,desc:'Talk to kids about racing.'},
+  {id:'sponsor_dinner',label:'Sponsor Dinner',cost:500,rep:2,fans:50,sponsorHappy:15,desc:'Schmooze with the people who write the checks.'},
+  {id:'media',label:'Media Appearance',cost:0,rep:8,fans:500,sponsorHappy:8,desc:'Interview, podcast, or local TV spot.'},
+];
+
+const DRAMA = [
+  {id:'rival_media',weight:3,title:'Rival Trash Talk',effect:'rep_hit',value:-4,fans:-150,desc:'A rival went to the media and questioned your ability. It got picked up.'},
+  {id:'performance_bonus',weight:2,title:'Sponsor Bonus',effect:'money',value:5000,desc:'Your sponsor loved the last result. Unexpected bonus.'},
+];
+
+const SPECIAL_EVENTS = [
+  {id:'wgl_invitational',name:'Watkins Glen Invitational',track:'Watkins Glen International',location:'Watkins Glen, NY',travelCost:0,entryCost:2000,fanGain:500,prize:3000,reqRep:30,reqFans:0,sponsorChance:0.05,carType:'NASCAR Stock Car',desc:'A classic road course weekend.'},
+];
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// DRIVER ATTRIBUTES & PERKS
+// ═══════════════════════════════════════════════════════════════════════
+
+const DRIVER_ATTRS = [
+  {id:'qualifying',name:'Qualifying',desc:'Better starting positions',color:'#8B5CF6',max:10},
+  {id:'consistency',name:'Consistency',desc:'Lower DNF risk, steadier finishes',color:'#10B981',max:10},
+  {id:'aggression',name:'Aggression',desc:'Position gains, risky moves pay off',color:'#EF4444',max:10},
+  {id:'restarts',name:'Restarts',desc:'Late-race scenarios, restart battles',color:'#F59E0B',max:10},
+  {id:'fuel_mgmt',name:'Fuel Mgmt',desc:'Strategy scenarios favor you',color:'#3B82F6',max:10},
+  {id:'wet_weather',name:'Wet Weather',desc:'Rain/slick conditions bonus',color:'#06B6D4',max:10},
+];
+
+const DRIVER_PERKS = [
+  {id:'clutch',name:'Clutch Factor',desc:'Qualifying and late-race bonus when it matters most',icon:'🎯',reqLvl:5},
+  {id:'crowd_pleaser',name:'Crowd Pleaser',desc:'+25% fan gains from all races',icon:'👥',reqLvl:10},
+  {id:'sponsor_magnet',name:'Sponsor Magnet',desc:'Sponsor happiness decays 30% slower',icon:'💼',reqLvl:15},
+  {id:'iron_will',name:'Iron Will',desc:'20% lower DNF risk when car condition is critical',icon:'💪',reqLvl:20},
+  {id:'rain_master',name:'Rain Master',desc:'Wet weather attribute bonus doubled',icon:'🌧️',reqLvl:25},
+  {id:'legend',name:'Legend Status',desc:'30% more reputation from all sources',icon:'👑',reqLvl:30},
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// CAR UPGRADES
+// ═══════════════════════════════════════════════════════════════════════
+
+const CAR_UPGRADES = [
+  {
+    id:'engine',
+    name:'Engine',
+    icon:'🔥',
+    desc:'Raw speed and acceleration',
+    tiers:[
+      {name:'Stage 1',cost:2000,desc:'Basic hop-up',bonus:{speedBonus:2,dnfReduce:0.02}},
+      {name:'Stage 2',cost:5000,desc:'Blueprinted build',bonus:{speedBonus:4,dnfReduce:0.03}},
+      {name:'Stage 3',cost:12000,desc:'Full race motor',bonus:{speedBonus:7,dnfReduce:0.05}},
+    ]
+  },
+  {
+    id:'chassis',
+    name:'Chassis',
+    icon:'🏗️',
+    desc:'Handling and position gains',
+    tiers:[
+      {name:'Stage 1',cost:1500,desc:'Stiffer setup',bonus:{posBonus:1,consistencyBonus:1}},
+      {name:'Stage 2',cost:4000,desc:'Custom geometry',bonus:{posBonus:2,consistencyBonus:2}},
+      {name:'Stage 3',cost:10000,desc:'Pro-level platform',bonus:{posBonus:3,consistencyBonus:3}},
+    ]
+  },
+  {
+    id:'aero',
+    name:'Aero',
+    icon:'💨',
+    desc:'Late-race and overtaking',
+    tiers:[
+      {name:'Stage 1',cost:1800,desc:'Basic spoiler',bonus:{lateRaceBonus:1,overtakeBonus:2}},
+      {name:'Stage 2',cost:4500,desc:'Wind tunnel tested',bonus:{lateRaceBonus:2,overtakeBonus:4}},
+      {name:'Stage 3',cost:11000,desc:'CFD optimized',bonus:{lateRaceBonus:4,overtakeBonus:6}},
+    ]
+  },
+  {
+    id:'tires',
+    name:'Tires',
+    icon:'⚫',
+    desc:'Grip and tire wear',
+    tiers:[
+      {name:'Stage 1',cost:800,desc:'Better compound',bonus:{wearReduce:0.10,trafficBonus:2}},
+      {name:'Stage 2',cost:2000,desc:'Race-spec rubber',bonus:{wearReduce:0.18,trafficBonus:4}},
+      {name:'Stage 3',cost:5000,desc:'Custom compound',bonus:{wearReduce:0.25,trafficBonus:6}},
+    ]
+  },
+  {
+    id:'pit_crew',
+    name:'Pit Crew',
+    icon:'⚙️',
+    desc:'Pit stop speed and strategy',
+    tiers:[
+      {name:'Stage 1',cost:3000,desc:'Experienced crew',bonus:{pitBonus:1,strategyBonus:1}},
+      {name:'Stage 2',cost:8000,desc:'Pro pit team',bonus:{pitBonus:2,strategyBonus:2}},
+      {name:'Stage 3',cost:18000,desc:'Elite crew',bonus:{pitBonus:4,strategyBonus:3}},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// MILESTONES
+// ═══════════════════════════════════════════════════════════════════════
+
+const MILESTONE_DEFS = [
+  {id:'first_win',label:'First Win',icon:'🏁',desc:'Win your first race',check:s=>s.wins>=1},
+  {id:'five_wins',label:'5 Wins',icon:'🔥',desc:'Win 5 races',check:s=>s.wins>=5},
+  {id:'ten_wins',label:'10 Wins',icon:'⚡',desc:'Win 10 races',check:s=>s.wins>=10},
+  {id:'first_pole',label:'First Pole',icon:'🎯',desc:'Qualify on pole',check:s=>s.poles>=1},
+  {id:'rep_100',label:'100 Reputation',icon:'⭐',desc:'Reach 100 reputation',check:s=>s.reputation>=100},
+  {id:'fans_10k',label:'10K Fans',icon:'👥',desc:'Reach 10,000 fans',check:s=>s.fans>=10000},
+  {id:'millionaire',label:'Millionaire',icon:'💰',desc:'Earn $1M total prize money',check:s=>s.totalPrizeMoney>=1000000},
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// RIVALRY SYSTEM
+// ═══════════════════════════════════════════════════════════════════════
+
+function touchRival(rivals, name, type, clean=true) {
+  let r = rivals.find(x => x.name === name);
+  if (!r) { r={name,incidents:0,closeRaces:0,cleanBattles:0}; rivals.push(r); }
+  if (type==='incident') r.incidents++;
+  if (type==='close') { r.closeRaces++; if(clean) r.cleanBattles=(r.cleanBattles||0)+1; }
+}
+
+function relationship(r) {
+  const i=r.incidents||0, c=r.closeRaces||0, cb=r.cleanBattles||0;
+  if (r.chosen==='chosen_rival') return 'chosen_rival';
+  if (r.chosen==='chosen_friend') return 'chosen_friend';
+  if (i>=3&&c>=4) return 'frenemy';
+  if (i>=3) return 'rival';
+  if (c>=4) return cb>=c*0.7 ? 'racing_rival' : 'friend';
+  return 'acquaintance';
+}
+
+const REL_COLOR={rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8',chosen_rival:'#DC2626',chosen_friend:'#059669'};
+const REL_LABEL={rival:'RIVAL',friend:'FRIEND',frenemy:'FRENEMY',racing_rival:'RACING RIVAL',acquaintance:'',chosen_rival:'CHOSEN RIVAL',chosen_friend:'CHOSEN FRIEND'};
+const REL_ICON={rival:'😤',frenemy:'🫤',racing_rival:'🏎️',friend:'🤝',acquaintance:'👀',chosen_rival:'🔥',chosen_friend:'🫡'};
+const REL_DESC={
+  rival:'History of incidents. This one is personal.',
+  friend:'Good, clean racing. Mutual respect built over time.',
+  frenemy:"Race great together and also hate each other. It's complicated.",
+  racing_rival:'Consistent clean battles. The best kind of enemy.',
+  acquaintance:"You've shared a track.",
+  chosen_rival:'You called them out. They know it. The paddock knows it.',
+  chosen_friend:"You reached out. Mutual respect agreed upon.",
+};
+
+const DRIVER_PERSONALITIES=['hothead','veteran','joker','ice_cold','showman','grinder'];
+
+function getPersonality(name){
+  let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffffffff;
+  return DRIVER_PERSONALITIES[Math.abs(h)%DRIVER_PERSONALITIES.length];
+}
+
+function maybeFireCallout(state, driverName, type) {
+  if (!driverName || !driverName.trim()) return;
+  const existing = (state.rivals||[]).find(r=>r.name===driverName);
+  const isChosen = existing && (existing.chosen==='chosen_rival'||existing.chosen==='chosen_friend');
+  const chance = type==='incident' ? (isChosen ? 0.65 : 0.45) : (isChosen ? 0.50 : 0.30);
+  if (Math.random() > chance) return;
+
+  const lines = type==='incident' 
+    ? [driverName+" went straight to social media after the race. \"That move was completely unnecessary.\""]
+    : ["In victory lane, "+driverName+" pointed across the track at you. \"That's the one to watch.\""];
+  const line = lines[0].replace(/{name}/g, driverName).replace(/{player}/g, state.driverName);
+
+  state.dramaQueue.push({
+    id: 'callout_' + uid(),
+    title: type==='incident' ? driverName+' Calls You Out' : driverName+' Gives You Props',
+    effect: 'none',
+    desc: line,
+    valence: type==='incident' ? 'bad' : 'good',
+    _isCallout: true,
+    _calloutType: type,
+    _calloutDriver: driverName,
+  });
+}
+
+const CALLOUT_RESPONSES = {
+  incident: [
+    {label: "Stay Professional",btnClass: "btn-secondary",rep: 4, fans: 100,rivalEffect: null,log: "Kept it professional publicly.",flavor: "You told reporters you race hard and move on. The paddock respects the composure."},
+    {label: "Fire Back",btnClass: "btn-danger",rep: -2, fans: 350,rivalEffect: "incident",log: "Fired back publicly. Fans loved it.",flavor: "You put out a statement. It was pointed. Fans are hyped. The rivalry just got a name."},
+  ],
+  close: [
+    {label: "Return the Respect",btnClass: "btn-success",rep: 4, fans: 250,rivalEffect: "close_clean",log: "Returned the compliment publicly.",flavor: "You went on the broadcast and said the same thing back. Good story arc."},
+    {label: "Stay Quiet",btnClass: "btn-ghost",rep: 0, fans: -60,rivalEffect: null,log: "Said nothing.",flavor: "You did not respond. Some fans thought it was dismissive."},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// SIMULATION SCENARIOS
+// ═══════════════════════════════════════════════════════════════════════
+
+const QUALI_SCENARIOS = [
+  {
+    scene: "You are on your out-lap with two minutes left in the session. The track is rubbering up fast on the bottom.",
+    choices: [
+      {label:"Take the bottom — rubber is key",modifier:1.12,icon:"📉",risk:"High reward if timed right."},
+      {label:"Work the top — your comfort zone",modifier:1.02,icon:"📈",risk:"Consistent but not the fastest line."},
+      {label:"Mix it up — best of both sectors",modifier:1.07,icon:"🔀",risk:"Unproven combination."},
+    ]
+  },
+  {
+    scene: "Traffic is heavy. A lapped car is slow through the middle right as you start your hot lap.",
+    choices: [
+      {label:"Abort and wait for a clean lap",modifier:0.95,icon:"⏱️",risk:"Safe. Keep your banker."},
+      {label:"Thread the gap — stay on it",modifier:1.10,icon:"⚡",risk:"Risky in traffic but you stay in rhythm."},
+    ]
+  },
+];
+
+const RACE_SCENARIOS = [
+  {
+    id: 'opening_laps',
+    when: ctx => ctx.lap <= 3,
+    weight: 3,
+    scene: ctx => "Lap " + ctx.lap + ". The field is stacked from the start. Cars are squeezing three-wide.",
+    choices: [
+      {label:"Be aggressive — claim your spot",icon:"💥",posModifier:2,dnfRisk:0.10,fanBonus:60,rivalEffect:'incident',narrativeResult:{good:"You establish yourself early. Three spots gained.",bad:"Three-wide goes wrong. Contact drops you back."}},
+      {label:"Be patient — let the dust settle",icon:"⏳",posModifier:0,dnfRisk:0.01,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Smart. The chaos clears and you pick up spots.",bad:"Too patient. The field gaps out."}},
+    ]
+  },
+  {
+    id: 'restart_battle',
+    when: ctx => ctx.lap > 3,
+    weight: 4,
+    scene: ctx => "Green flag flies. The car ahead gets a jump. You are P" + ctx.pos + ".",
+    choices: [
+      {label:"Dive to the inside — take the spot",icon:"⚡",posModifier:2,dnfRisk:0.08,fanBonus:80,rivalEffect:'incident',narrativeResult:{good:"You thread the needle perfectly.",bad:"Contact. You both lose positions."}},
+      {label:"Stay patient — protect your line",icon:"🛡️",posModifier:0,dnfRisk:0.01,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Clean restart. You hold your line.",bad:"You hesitate and get squeezed back."}},
+    ]
+  },
+  {
+    id: 'fuel_decision',
+    when: ctx => ctx.lapsLeft > 0 && ctx.lapsLeft <= 5,
+    weight: 2,
+    scene: ctx => "Fuel is getting tight. " + ctx.lapsLeft + " laps left.",
+    choices: [
+      {label:"Trust the math — go to the end",icon:"🎲",posModifier:3,dnfRisk:0.12,fanBonus:100,rivalEffect:null,narrativeResult:{good:"You make it on fumes.",bad:"You run out on the last lap."}},
+      {label:"Pit for a splash — play it safe",icon:"⛽",posModifier:-3,dnfRisk:0.02,fanBonus:0,rivalEffect:null,narrativeResult:{good:"Smart call. You come out clean.",bad:"You lost spots in the pit cycle."}},
+    ]
+  },
+  {
+    id: 'late_battle',
+    when: ctx => ctx.lapsLeft <= 5 && ctx.lapsLeft > 0,
+    weight: 4,
+    scene: ctx => (ctx.lapsLeft) + " laps to go. A fast car is right on your bumper.",
+    choices: [
+      {label:"Make the move — door to door",icon:"⚡",posModifier:2,dnfRisk:0.07,fanBonus:150,rivalEffect:'close',narrativeResult:{good:"You squeeze alongside and make it stick.",bad:"Contact. You lose the spot."}},
+      {label:"Keep it smooth — consistent laps",icon:"✅",posModifier:1,dnfRisk:0.02,fanBonus:60,rivalEffect:'close',narrativeResult:{good:"Consistent laps do the job.",bad:"You are giving up ground every lap."}},
+    ]
+  },
+];
+
+function rollD100(){return Math.random()*100;}
+function rollD20(){return rand(1,20);}
+
+function buildSimContext(state, seriesId, raceIdx, currentPos, fieldSize, lapNum, totalLaps) {
+  const sched = state.schedules[seriesId]||[];
+  const race = sched[raceIdx]||{};
+  const topRival = (state.rivals||[]).sort((a,b)=>(b.incidents+b.closeRaces)-(a.incidents+a.closeRaces))[0];
+  return {
+    lap: lapNum,
+    pos: currentPos,
+    fieldSize,
+    lapsLeft: totalLaps - lapNum,
+    condition: race.condition||'clear',
+    rival: topRival?.name||null,
+    driverAttrs: state.driverAttrs||{},
+    carUpgrades: state.carUpgrades||{},
+    seriesId,
+  };
+}
+
+function pickScenarios(ctx, count, pool) {
+  const eligible = pool.filter(s => s.when(ctx));
+  if (!eligible.length) return [];
+  const picked = [];
+  const used = new Set();
+  let attempts = 0;
+  while (picked.length < count && attempts < 50) {
+    attempts++;
+    const total = eligible.reduce((s,e) => used.has(e.id)?s:s+e.weight, 0);
+    let r = Math.random() * total;
+    for (const s of eligible) {
+      if (used.has(s.id)) continue;
+      r -= s.weight;
+      if (r <= 0) { picked.push(s); used.add(s.id); break; }
+    }
+  }
+  return picked;
+}
+
+function simulateQualifying(state, seriesId, raceIdx) {
+  const s = getSeries(seriesId);
+  const fieldSize = SERIES_FIELD_SIZE[seriesId]||20;
+  const attrs = state.driverAttrs||{};
+  const upgrades = state.carUpgrades||{};
+
+  let baseRoll = rollD100();
+  const qualAttr = getAttrBonus(attrs, 'qualifying');
+  baseRoll += qualAttr * 4;
+  baseRoll += getUpgradeBonus(upgrades, 'speedBonus') * 0.4;
+  baseRoll += (state.confidence||0) * 3;
+
+  const contract = (state.contracts||[]).find(c=>c.seriesId===seriesId);
+  const crewPkg = CREW_PACKAGES.find(p=>p.id===(contract?.crewPackage||'basic'));
+  if (crewPkg) baseRoll += crewPkg.qualBonus * 2;
+
+  baseRoll = clamp(baseRoll, 1, 115);
+  const pctile = baseRoll / 115;
+  const rawPos = Math.round(fieldSize * (1 - pctile * 0.95)) + 1;
+  const position = clamp(rawPos, 1, fieldSize);
+  const pole = position === 1;
+
+  return { position, pole, fieldSize };
+}
+
+function resolveRace(pendingRace, choiceResults) {
+  const {basePos, fieldSize, dnfRoll, dnfProb, baseSkill, lateRaceBonus, condBonus, qualPosition, seriesId, raceIdx, narrativeDelta} = pendingRace;
+  const s = getSeries(seriesId);
+
+  let totalPosDelta = 0;
+  let extraDNFRisk = 0;
+  let extraFanBonus = 0;
+  const incidentDrivers = [];
+
+  choiceResults.forEach(cr => {
+    totalPosDelta += cr.posDelta||0;
+    extraDNFRisk += cr.dnfRisk||0;
+    extraFanBonus += cr.fanBonus||0;
+    if (cr.incidentDriver) incidentDrivers.push(cr.incidentDriver);
+  });
+
+  if (narrativeDelta) totalPosDelta += narrativeDelta;
+  const skillDrift = baseSkill * randF(0.5, 1.5);
+  totalPosDelta += skillDrift;
+  totalPosDelta += lateRaceBonus * randF(0.5, 1.5);
+  totalPosDelta += condBonus;
+
+  const finalDNFProb = dnfProb + extraDNFRisk;
+  const isDNF = (dnfRoll + (extraDNFRisk * 0.5)) < finalDNFProb;
+
+  if (isDNF) {
+    const dnfReasons = ['engine failure','crash damage','fuel issue'];
+    const dnfReason = dnfReasons[rand(0,dnfReasons.length-1)];
+    return {
+      position: fieldSize,
+      dnf: true,
+      dnfReason,
+      fieldSize,
+      points: 0,
+      prize: 0,
+      pole: false,
+      lapsLed: false,
+      mostLaps: false,
+      closeFinishes: [],
+      incidentDrivers,
+    };
+  }
+
+  let finalPos = basePos - Math.round(totalPosDelta);
+  finalPos = clamp(finalPos, 1, fieldSize);
+
+  const lapsLed = finalPos <= 5 && Math.random() < 0.4;
+  const mostLaps = finalPos === 1 && Math.random() < 0.5;
+  const closeFinishes = [];
+
+  const points = calcPoints(seriesId, finalPos, finalPos===1, lapsLed, mostLaps);
+  const prize = calcPrize(seriesId, finalPos, fieldSize);
+
+  return {
+    position: finalPos,
+    dnf: false,
+    dnfReason: null,
+    fieldSize,
+    points,
+    prize,
+    pole: qualPosition === 1,
+    lapsLed,
+    mostLaps,
+    closeFinishes,
+    incidentDrivers,
+  };
+}
+
+function calcPoints(seriesId,pos,pole,lapsLed,mostLaps){
+  return (IRACING_PTS[Math.max(0,pos-1)]||1)+(pole?1:0)+(lapsLed?1:0)+(mostLaps?3:0);
+}
+
+function calcPrize(seriesId,pos,fs){
+  const s=getSeries(seriesId);
+  if(pos===1)return s.pay+s.winBonus;
+  const pct=Math.max(0.10,0.70-((pos-2)/(fs-2))*0.60);
+  return Math.floor(s.pay*pct);
+}
+
+function buildFinishOrder(state, seriesId, playerPos, fieldSize) {
+  const drivers = (state.drivers||[]).filter(d=>d.currentSeriesId===seriesId&&d.active).slice(0, fieldSize-1);
+  const order = [];
+  for (let i=1; i<=fieldSize; i++) {
+    if (i === playerPos) {
+      order.push({name: state.driverName, isPlayer: true, gap: i===1?'---':'-'+(i*0.3).toFixed(3)});
+    } else {
+      const d = drivers[i > playerPos ? i-2 : i-1];
+      if (d) order.push({name: d.name, isPlayer: false, gap: i===1?'---':'-'+(i*0.3).toFixed(3)});
+    }
+  }
+  return order;
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// CORE GAME LOGIC
+// ═══════════════════════════════════════════════════════════════════════
+
+function generateSchedule(seriesId,trackPools){
+  const s=getSeries(seriesId);
+  const isFree=seriesId==='mini_stock'||seriesId==='street_stock'||seriesId==='super_late_model';
+  const pool=trackPools?(isFree?trackPools.free:trackPools.paid):(isFree?FREE_TRACKS:PAID_TRACKS);
+  const slinger=isFree?pool.find(t=>t.fig8):null;
+  const rest=slinger?pool.filter(t=>!t.fig8):pool;
+  const mainCount=s.races-(slinger?1:0);
+  const shuffled=shuffle(rest);
+  const picks=[];
+  while(picks.length<mainCount)shuffled.forEach(t=>{if(picks.length<mainCount)picks.push(t);});
+  if(slinger)picks.push(slinger);
+  return picks.map((t,i)=>({
+    round:i+1,track:t.name,city:t.city,state:t.state,fig8:!!t.fig8,
+    qualifying:null,result:null,bonusResult:null,condition:rollCondition(),
+  }));
+}
+
+function makeContract(seriesId,quality){
+  const s=getSeries(seriesId);
+  const teamList=TEAMS[seriesId]||['Independent Racing'];
+  const team=teamList[rand(0,teamList.length-1)];
+  const mult={poor:0.7,average:1.0,good:1.3,elite:1.7}[quality];
+  const termSeasons=rand(1,s.maxTerm);
+  const tmCount=rand(0,Math.min(s.maxTm,quality==='elite'?3:quality==='good'?2:1));
+  const prizeShare=s.tier<=3?{poor:0.60,average:0.70,good:0.78,elite:0.85}[quality]:{poor:0.70,average:0.80,good:0.88,elite:0.95}[quality];
+  const signingBonus=s.tier>=4?Math.floor(s.pay*s.races*mult*randF(0.2,0.4)):0;
+  return {
+    id:uid(),team,seriesId,quality,salary:signingBonus,prizeShare,entryFee:s.fee,
+    termSeasons,seasonsCompleted:0,winBonus:Math.floor(s.winBonus*mult*randF(0.5,0.9)),
+    races:s.races,racesCompleted:0,earnings:0,missedFinishWarnings:0,
+    reqFinish:quality==='elite'?8:quality==='good'?12:18,penaltyRate:0.35,buyoutRate:0.50,
+    teammates:new Array(tmCount).fill(null),crewPackage:'basic',indie:false,
+  };
+}
+
+function generateOffers(rep,fans){
+  const offers=[];
+  SERIES.forEach(s=>{
+    if(rep>=s.reqRep-10&&fans>=s.reqFans*0.5){
+      const q=rep>=s.reqRep+50?'good':rep>=s.reqRep+20?'average':'poor';
+      if(Math.random()<(rep>=s.reqRep?0.65:0.25))offers.push(makeContract(s.id,q));
+    }
+  });
+  if(!offers.length)offers.push(makeContract('mini_stock','poor'));
+  return shuffle(offers).slice(0,4);
+}
+
+function makeSponsor(seriesId,type='primary',international=false){
+  const brands=international?['Pirelli','Red Bull']:(SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock);
+  const brand=brands[rand(0,brands.length-1)];
+  const st=SPONSOR_TYPES[international?'primary':type];
+  const s=getSeries(seriesId);
+  const base=Math.floor(s.pay*(type==='primary'?3:type==='associate'?0.8:0.3)*randF(0.8,1.3));
+  const seasons=rand(st.dur[0],st.dur[1]);
+  return {id:uid(),brand,type:international?'international':type,seriesId,valuePerSeason:base,seasonsLeft:seasons,totalSeasons:seasons,happiness:75,winBonus:Math.floor(base*0.15),top5Bonus:Math.floor(base*0.05),minHappy:25,international};
+}
+
+function createDriver(name,skill=null,seriesId=null,source='generated'){
+  const tier=seriesId?(getSeries(seriesId)?.tier||1):1;
+  const homeState=randomHomeState();
+  return {
+    id:uid(),name,source,skill:skill!==null?skill:rand(30,75),
+    currentSeriesId:seriesId||'mini_stock',
+    currentTeam:(()=>{const tl=TEAMS[seriesId||'mini_stock']||[''];return tl[rand(0,tl.length-1)];})(),
+    rep:rand(0,Math.max(0,(tier-1)*30)),fans:rand(0,Math.max(0,(tier-1)*500)),
+    money:rand(1000,5000*tier),wins:0,top5s:0,starts:0,seasonPoints:0,seasonWins:0,
+    active:true,homeState,bio:generateDriverBio(),
+  };
+}
+
+function generateInitialDriverPool(){
+  const drivers=[];
+  SERIES.forEach(s=>{
+    const count=SERIES_FIELD_SIZE[s.id]||20;
+    for(let i=0;i<count;i++){
+      const homeState=randomHomeState();
+      const isIntl=typeof INTL_REGIONS!=='undefined'&&INTL_REGIONS.includes(homeState);
+      let name=isIntl?generateAIName(homeState):generateAIName();
+      let attempts=0;
+      while(drivers.find(d=>d.name===name)&&attempts++<20){
+        name=isIntl?generateAIName(homeState):generateAIName();
+      }
+      const d=createDriver(name,rand(25,85),s.id,'generated');
+      d.homeState=homeState;
+      drivers.push(d);
+    }
+  });
+  return drivers;
+}
+
+function calcMerchRevenue(fans){
+  if(!fans)return 0;
+  if(fans<1000)return Math.floor(fans*0.5);
+  if(fans<10000)return Math.floor(500+(fans-1000)*0.3);
+  if(fans<100000)return Math.floor(3200+(fans-10000)*0.15);
+  return Math.floor(16700+(fans-100000)*0.08);
+}
+
+function addLog(state,msg){
+  state.log.push('[S'+state.season+' W'+state.week+'] '+msg);
+  if(state.log.length>200)state.log=state.log.slice(-200);
+}
+
+function initDriverAttrs(){
+  const attrs={};
+  DRIVER_ATTRS.forEach(a=>{attrs[a.id]=DRIVER_ATTR_DEFAULT;});
+  return attrs;
+}
+
+function initCarUpgrades(){
+  const ups={};
+  CAR_UPGRADES.forEach(u=>{ups[u.id]=0;});
+  return ups;
+}
+
+function calcDriverLevel(state){
+  return Math.floor((state.wins*3+state.top5s+state.poles*2)/5);
+}
+
+function initState(name){
+  const drivers = generateInitialDriverPool();
+  const state = {
+    driverName:name, homeState:'ME', season:1, week:1,
+    money:5000, reputation:0, fans:0,
+    wins:0, top5s:0, starts:0, poles:0,
+    totalPrizeMoney:0, totalMerchRevenue:0,
+    contracts:[], pendingOffers:generateOffers(0,0),
+    schedules:{}, championshipPoints:{}, seriesFields:{},
+    sponsors:[], sponsorOffers:[], rivals:[], teammates:[],
+    offTrackDone:[], dramaQueue:[],
+    seasonGoals:[], goalHistory:[], seasonHistory:[],
+    confidence:0, spotter:null, milestones:[],
+    offseasonOffers:[], offseasonPhase:false,
+    carCondition:{engine:100,suspension:100,chassis:100,tires:100,brakes:100},
+    specialResults:[], raceHistory:[],
+    trackPools:{free:JSON.parse(JSON.stringify(FREE_TRACKS)),paid:JSON.parse(JSON.stringify(PAID_TRACKS))},
+    drivers,
+    log:['Season 1. $5,000, a dream, and a simulated engine. Let\'s go.'],
+    settings:{},
+    driverAttrs: initDriverAttrs(),
+    driverAttrPoints: DRIVER_ATTR_POINTS_START - DRIVER_ATTRS.length * DRIVER_ATTR_DEFAULT,
+    driverPerks: [],
+    carUpgrades: initCarUpgrades(),
+    driverLevel: 0,
+    trackHistory: {},
+  };
+  return state;
+}
+
+function processRaceResult(state,seriesId,raceIdx,result){
+  const sched=state.schedules[seriesId];
+  const race=sched[raceIdx];
+  const s=getSeries(seriesId);
+  const contract=state.contracts.find(c=>c.seriesId===seriesId);
+
+  race.result=result;
+  if(!result.dnf&&!result.finishOrder){result.finishOrder=buildFinishOrder(state,seriesId,result.position,result.fieldSize||18);}
+  const entryFee=contract?(contract.entryFee||s.fee):s.fee;
+  state.money-=entryFee;
+  addLog(state,`Entry fee @ ${race.track}: -${fmtMoney(entryFee)}`);
+
+  const prizeShare=(contract&&!contract.indie&&contract.prizeShare)?contract.prizeShare:1.0;
+  const driverPrize=Math.floor((result.prize||0)*prizeShare);
+  state.money+=driverPrize;
+  state.totalPrizeMoney+=driverPrize;
+  state.starts++;
+  state.week++;
+
+  const pts=result.points||0;
+  state.championshipPoints[seriesId]=(state.championshipPoints[seriesId]||0)+pts;
+
+  if(!result.dnf&&!result.dq){
+    if(result.position===1)state.wins++;
+    if(result.position<=5)state.top5s++;
+  }
+  if(result.pole)state.poles++;
+
+  const repGain=result.dq?-rand(3,6):result.position===1?rand(5,9):result.position<=3?rand(2,5):result.position<=10?rand(0,2):result.dnf?-2:-1;
+  state.reputation=Math.max(0,state.reputation+repGain);
+
+  let fanGain=0;
+  if(result.dq)fanGain=-rand(20,60);
+  else if(result.position===1)fanGain=rand(200,500);
+  else if(result.position<=5)fanGain=rand(50,200);
+  else if(!result.dnf)fanGain=rand(0,30);
+  else fanGain=-rand(0,20);
+  if(result.pole)fanGain+=rand(30,80);
+
+  state.fans=Math.max(0,state.fans+fanGain);
+
+  if(!result.isFig8Bonus&&race.track){
+    if(!state.trackHistory)state.trackHistory={};
+    if(!state.trackHistory[race.track])state.trackHistory[race.track]={starts:0,wins:0,top5s:0,dnfs:0,positions:[],bestPos:null};
+    const th=state.trackHistory[race.track];
+    th.starts++;
+    if(!result.dnf&&!result.dq){
+      th.positions.push(result.position);
+      if(result.position===1)th.wins++;
+      if(result.position<=5)th.top5s++;
+      if(th.bestPos===null||result.position<th.bestPos)th.bestPos=result.position;
+    } else { th.dnfs++; }
+  }
+
+  state.sponsors=state.sponsors.map(sp=>{
+    let h=sp.happiness;
+    if(result.dnf)h-=5;
+    else if(result.position===1)h+=10;
+    else if(result.position<=5)h+=4;
+    return {...sp,happiness:clamp(h,0,100)};
+  });
+
+  state.sponsors.forEach(sp=>{
+    if(result.position===1&&sp.winBonus){state.money+=sp.winBonus;state.totalPrizeMoney+=sp.winBonus;}
+  });
+
+  state.sponsors=state.sponsors.filter(sp=>{
+    if(sp.happiness<=sp.minHappy){
+      addLog(state,`${sp.brand} pulled sponsorship.`);
+      return false;
+    }
+    return true;
+  });
+
+  const closeFinishes=result.closeFinishes||[];
+  closeFinishes.forEach(cf=>{
+    touchRival(state.rivals,cf.name,'close',true);
+    if(Math.random()<0.25)maybeFireCallout(state,cf.name,'close');
+  });
+  (result.incidentDrivers||[]).forEach(name=>{
+    if(name.trim()){
+      touchRival(state.rivals,name.trim(),'incident',false);
+      if(Math.random()<0.40)maybeFireCallout(state,name.trim(),'incident');
+    }
+  });
+
+  if(!state.seriesFields[seriesId])state.seriesFields[seriesId]={};
+  const field=state.seriesFields[seriesId];
+  (result.finishOrder||[]).forEach((entry,idx)=>{
+    if(!entry.name||entry.isPlayer)return;
+    const clean=entry.name.trim();if(!clean)return;
+    if(!field[clean])field[clean]={points:0,wins:0,top5s:0,starts:0};
+    const p=idx+1;
+    field[clean].points+=IRACING_PTS[idx]||1;
+    field[clean].starts++;
+    if(p===1)field[clean].wins++;
+    if(p===5)field[clean].top5s++;
+  });
+
+  const rivalName=(state.rivals||[]).filter(r=>['rival','frenemy','racing_rival'].includes(relationship(r))).map(r=>r.name)[0]||null;
+  const summary = "P"+result.position+" at "+race.track+". "+fmtMoney(result.prize||0)+" earned.";
+
+  state.raceHistory.push({
+    season:state.season,week:state.week-1,seriesId,seriesShort:s.short,
+    pos:result.position,fs:result.fieldSize,points:pts,prize:result.prize||0,
+    track:race.track,dnf:result.dnf,dq:result.dq||false,fans:fanGain,repGain,
+    closeFinishes:closeFinishes.length,summary,
+  });
+  race.result.summary=summary;
+  if(state.raceHistory.length>500)state.raceHistory=state.raceHistory.slice(-500);
+
+  if(contract){
+    contract.racesCompleted++;
+    contract.earnings+=driverPrize;
+  }
+
+  const cc=state.carCondition||{engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  const hardRace=result.position<=5;
+  const incidentRace=(result.incidentDrivers||[]).length>0||result.dnf;
+  state.carCondition.tires=clamp(cc.tires-rand(8,14)-(hardRace?5:0),0,100);
+  state.carCondition.brakes=clamp(cc.brakes-rand(4,8)-(hardRace?4:0),0,100);
+  state.carCondition.engine=clamp(cc.engine-rand(3,7)-(result.dnf?40:0),0,100);
+  state.carCondition.chassis=clamp(cc.chassis-rand(2,5)-(incidentRace?rand(8,15):0),0,100);
+  state.carCondition.suspension=clamp(cc.suspension-rand(3,7)-(incidentRace?rand(10,20):0),0,100);
+
+  if(Math.random()<0.10){
+    const d=DRAMA[rand(0,DRAMA.length-1)];
+    state.dramaQueue.push({...d,id:d.id+uid()});
+  }
+
+  if(state.week%6===0){
+    const fresh=generateOffers(state.reputation,state.fans);
+    fresh.forEach(o=>{if(!state.pendingOffers.find(p=>p.seriesId===o.seriesId))state.pendingOffers.push(o);});
+  }
+
+  checkMilestones(state);
+  state.driverLevel=calcDriverLevel(state);
+
+  const posStr=result.dq?'DQ':result.dnf?'DNF':`P${result.position}/${result.fieldSize}`;
+  addLog(state,`${s.short} R${race.round} @ ${race.track}: ${posStr} | +${pts}pts | ${fmtMoney(result.prize||0)}`);
+}
+
+function checkMilestones(state){
+  if(!state.milestones)state.milestones=[];
+  MILESTONE_DEFS.forEach(def=>{
+    if(state.milestones.find(m=>m.id===def.id))return;
+    try{if(def.check(state)){
+      state.milestones.push({id:def.id,season:state.season,week:state.week});
+      state.dramaQueue.push({id:'ms_'+def.id,title:`🏅 ${def.label}`,effect:'none',desc:`Milestone: ${def.label}. ${def.desc}`,valence:'good'});
+      addLog(state,`Milestone: ${def.label}`);
+    }}catch(e){}
+  });
+}
+
+function advanceSeason(state){
+  const merch=calcMerchRevenue(state.fans);
+  state.money+=merch;state.totalMerchRevenue=(state.totalMerchRevenue||0)+merch;
+  if(merch>0)addLog(state,`Season merch revenue: ${fmtMoney(merch)}`);
+
+  state.sponsors=state.sponsors.map(sp=>({...sp,seasonsLeft:sp.seasonsLeft-1})).filter(sp=>{
+    if(sp.seasonsLeft<=0){addLog(state,`${sp.brand} sponsorship ended.`);return false;}return true;
+  });
+
+  state.contracts.forEach(c=>{c.seasonsCompleted++;c.racesCompleted=0;c.earnings=0;c.missedFinishWarnings=0;});
+  state.contracts=state.contracts.filter(c=>{
+    if(c.seasonsCompleted>=c.termSeasons){addLog(state,`${getSeries(c.seriesId).short} contract with ${c.team} expired.`);return false;}return true;
+  });
+
+  state.season++;state.week=1;state.schedules={};state.championshipPoints={};state.seriesFields={};
+  state.sponsorOffers=[];state.offTrackDone=[];
+
+  Object.keys(state.carCondition||{}).forEach(k=>{state.carCondition[k]=Math.min(100,(state.carCondition[k]||0)+35);});
+
+  state.offseasonOffers=generateOffers(state.reputation,state.fans).map(o=>({...o,expiresIn:3,freeAgency:true}));
+  state.offseasonPhase=true;state.pendingOffers=[];
+  state.driverAttrPoints=(state.driverAttrPoints||0)+1;
+  state.driverLevel=calcDriverLevel(state);
+
+  checkMilestones(state);
+  addLog(state,`--- Season ${state.season} begins. ---`);
+}
+
+function buildSeasonSummary(state){
+  const championships=[];
+  Object.entries(state.championshipPoints||{}).forEach(([sid,myPts])=>{
+    const s=getSeries(sid);if(!s)return;
+    const field=state.seriesFields[sid]||{};
+    const rows=[{name:state.driverName,points:myPts,isPlayer:true},...Object.entries(field).map(([n,d])=>({name:n,points:d.points}))].sort((a,b)=>b.points-a.points);
+    const pos=rows.findIndex(r=>r.isPlayer)+1;
+    const trophy=TROPHY_TIERS.find(t=>pos<=t.minPos)||TROPHY_TIERS[TROPHY_TIERS.length-1];
+    championships.push({seriesId:sid,seriesName:s.name,seriesColor:s.color,position:pos,points:myPts,fieldSize:rows.length,trophy});
+  });
+  let totalRaces=0,wins=0,top5s=0,totalPrize=0;
+  state.raceHistory.filter(r=>r.season===state.season).forEach(r=>{totalRaces++;if(!r.dnf&&!r.dq&&r.pos===1)wins++;if(!r.dnf&&!r.dq&&r.pos<=5)top5s++;totalPrize+=r.prize||0;});
+  return {championships,totalRaces,wins,top5s,totalPrize,season:state.season,rep:state.reputation,fans:state.fans,money:state.money};
+}
+
+function generateSeasonNarrative(state) {
+  return "Season "+state.season+" complete. Review your results above.";
+}
+
+function saveGame(){if(G)localStorage.setItem('ft_sim_save',JSON.stringify(G));}
+function loadGame(){
+  const raw=localStorage.getItem('ft_sim_save');
+  if(raw){
+    try{
+      G=JSON.parse(raw);
+      if(!G.driverAttrs)G.driverAttrs=initDriverAttrs();
+      if(G.driverAttrPoints===undefined)G.driverAttrPoints=0;
+      if(!G.driverPerks)G.driverPerks=[];
+      if(!G.carUpgrades)G.carUpgrades=initCarUpgrades();
+      if(G.driverLevel===undefined)G.driverLevel=0;
+      if(!G.carCondition)G.carCondition={engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+      if(!G.milestones)G.milestones=[];
+      if(!G.seasonHistory)G.seasonHistory=[];
+      return true;
+    }catch(e){}
+  }
+  return false;
+}
+
+function exportSave(){
+  const blob=new Blob([JSON.stringify(G,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ft-sim-s${G.season}.json`;a.click();
+}
+
+function importSave(file){
+  const r=new FileReader();
+  r.onload=e=>{try{G=JSON.parse(e.target.result);saveGame();showGame();}catch(e){alert('Invalid save file.');}};
+  r.readAsText(file);
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// UI RENDERING & MODALS
+// ═══════════════════════════════════════════════════════════════════════
+
+let G = null;
+let activeTab = 'dashboard';
+
+function h(tag,attrs,...children){
+  const el=document.createElement(tag);
+  if(attrs){for(const[k,v]of Object.entries(attrs)){if(v==null)continue;if(k==='style'&&typeof v==='object')Object.assign(el.style,v);else if(k.startsWith('on'))el.addEventListener(k.slice(2).toLowerCase(),v);else if(k==='className')el.className=v;else if(k==='disabled')el.disabled=!!v;else if(k==='value')el.value=v;else if(k==='placeholder')el.placeholder=v;else if(k==='type')el.type=v;else el.setAttribute(k,v);}}
+  for(const c of children.flat()){if(c==null||c===false)continue;el.appendChild(typeof c==='string'||typeof c==='number'?document.createTextNode(String(c)):c);}
+  return el;
+}
+const $=id=>document.getElementById(id);
+const frag=(...nodes)=>{const f=document.createDocumentFragment();nodes.flat().forEach(n=>n&&f.appendChild(n));return f;};
+
+function badge(text,color){color=color||'#64748B';return h('span',{className:'badge',style:{color,borderColor:color+'55',background:color+'20'}},text);}
+function mkBtn(text,cls,onClick,disabled){return h('button',{className:'btn '+cls,onClick,disabled:!!disabled},text);}
+function statBar(label,value,max,color){max=max||100;color=color||'#F59E0B';const pct=Math.min(100,Math.round((value/max)*100));return h('div',{className:'stat-bar'},h('div',{className:'sb-row'},h('span',{className:'sb-lbl'},label),h('span',{className:'sb-val'},Math.round(value))),h('div',{className:'sb-track'},h('div',{className:'sb-fill',style:{width:pct+'%',background:color}})));}
+function cardTitle(text){return h('div',{className:'card-title'},text);}
+function accent(color){return h('div',{className:'accent',style:{background:color}});}
+function miniStatBox(label,value,color){return h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'12px',border:'1px solid #1E2433'}},h('div',{style:{fontSize:'12px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.08em'}},label),h('div',{style:{fontSize:'22px',fontWeight:900,color:color||'#E5E7EB',marginTop:'3px'}},value));}
+
+function showToast(msg, color){
+  const c=$('toast-container');
+  const t=h('div',{className:'toast',style:{borderLeftColor:color||'#F59E0B',borderLeftWidth:'3px'}},msg);
+  c.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+
+const TABS = [
+  {id:'dashboard',label:'Dashboard'},
+  {id:'contracts',label:'Contracts'},
+  {id:'schedule',label:'Schedule'},
+  {id:'rivals',label:'Rivals'},
+  {id:'standings',label:'Standings'},
+  {id:'business',label:'Business'},
+  {id:'drivers',label:'Driver RPG'},
+  {id:'tracks',label:'Car Upgrades'},
+  {id:'log',label:'Log'},
+];
+
+function renderTabs(){
+  const c=$('tabs');c.innerHTML='';
+  TABS.forEach(t=>{
+    let bc=0;
+    if(t.id==='contracts')bc=(G.pendingOffers||[]).length+(G.offseasonOffers||[]).length;
+    if(t.id==='business')bc=(G.dramaQueue||[]).length+(G.sponsorOffers||[]).length;
+    if(t.id==='drivers')bc=G.driverAttrPoints>0?G.driverAttrPoints:0;
+    const tab=h('button',{className:'tab'+(activeTab===t.id?' active':''),onClick:()=>setTab(t.id)},t.label,bc>0?h('span',{className:'tab-badge'},bc):null);
+    c.appendChild(tab);
+  });
+}
+
+function setTab(id){activeTab=id;renderTabs();renderContent();}
+
+function renderHeader(){
+  $('header').innerHTML='';
+  $('header').appendChild(frag(
+    h('div',null,
+      h('div',{className:'driver-sub'},'Full Throttle SIM · '+APP_VERSION),
+      h('div',{className:'driver-name'},G.driverName),
+    ),
+    h('div',{className:'hdr-stats'},
+      ...[['Season',G.season],['Week',G.week],['Money',fmtMoney(G.money)],['Fans',fmtFans(G.fans)],['Rep',G.reputation]]
+        .map(([l,v])=>h('div',{className:'hdr-stat'},h('div',{className:'val'},v),h('div',{className:'lbl'},l)))
+    )
+  ));
+}
+
+function render(){renderHeader();renderTabs();renderContent();}
+
+function renderContent(){
+  const c=$('content');c.innerHTML='';
+  const page=h('div',{className:'page'});
+  const map={dashboard:renderDashboard,contracts:renderContracts,schedule:renderSchedule,rivals:renderRivals,standings:renderStandings,business:renderBusiness,drivers:renderDriverRPG,tracks:renderCarUpgrades,log:renderLog};
+  if(map[activeTab])page.appendChild(map[activeTab]());
+  c.appendChild(page);
+}
+
+function renderDashboard(){
+  const f=document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Dashboard'));
+  
+  const card=h('div',{className:'card'});
+  card.appendChild(h('div',{style:{fontSize:'18px',fontWeight:800,marginBottom:'12px'}},'Welcome to Full Throttle SIM'));
+  card.appendChild(h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'8px'}},'Season: '+G.season+' | Week: '+G.week));
+  card.appendChild(h('div',{style:{fontSize:'14px',color:'#94A3B8'}},'Money: '+fmtMoney(G.money)+' | Fans: '+fmtFans(G.fans)+' | Rep: '+G.reputation));
+  
+  if(G.contracts.length){
+    card.appendChild(h('div',{style:{marginTop:'16px',fontSize:'14px',fontWeight:700}},'Active Contracts:'));
+    G.contracts.forEach(c=>{
+      const s=getSeries(c.seriesId);
+      card.appendChild(h('div',{style:{fontSize:'13px',color:'#94A3B8',marginTop:'4px'}},s.short+' - '+c.team));
+    });
+  }
+  
+  f.appendChild(card);
+  return f;
+}
+
+function renderContracts(){
+  const f=document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Contracts'));
+  f.appendChild(h('div',{className:'page-sub'},'Sign contracts or run independent.'));
+  
+  if(!G.pendingOffers.length){
+    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'28px',color:'#94A3B8'}},'No offers right now.'));
+  }
+  
+  return f;
+}
+
+function renderSchedule(){
+  const f=document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Schedule'));
+  
+  if(!G.contracts.length){
+    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'24px',color:'#94A3B8'}},'No active contracts.'));
+  } else {
+    G.contracts.forEach(contract=>{
+      const s=getSeries(contract.seriesId);
+      const sched=G.schedules[contract.seriesId]||[];
+      const nextIdx=sched.findIndex(r=>!r.result);
+      const nextRace=nextIdx>=0?sched[nextIdx]:null;
+      
+      const card=h('div',{className:'card'});
+      card.appendChild(h('div',{style:{fontSize:'18px',fontWeight:800,marginBottom:'8px'}},s.name));
+      
+      if(nextRace){
+        card.appendChild(h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'12px'}},'Next: '+nextRace.track));
+        card.appendChild(mkBtn('Race →','btn btn-success',()=>openSimRaceModal(contract.seriesId,nextIdx)));
+      } else {
+        card.appendChild(h('div',{style:{fontSize:'14px',color:'#10B981'}},'Season complete!'));
+      }
+      
+      f.appendChild(card);
+    });
+  }
+  
+  return f;
+}
+
+function renderRivals(){const f=document.createDocumentFragment();f.appendChild(h('div',{className:'page-title'},'Rivals'));return f;}
+function renderStandings(){const f=document.createDocumentFragment();f.appendChild(h('div',{className:'page-title'},'Standings'));return f;}
+function renderBusiness(){const f=document.createDocumentFragment();f.appendChild(h('div',{className:'page-title'},'Business'));return f;}
+function renderDriverRPG(){const f=document.createDocumentFragment();f.appendChild(h('div',{className:'page-title'},'Driver RPG'));return f;}
+function renderCarUpgrades(){const f=document.createDocumentFragment();f.appendChild(h('div',{className:'page-title'},'Car Upgrades'));return f;}
+function renderLog(){const f=document.createDocumentFragment();f.appendChild(h('div',{className:'page-title'},'Log'));return f;}
+
+function openModal(content){
+  const box=$('modal-box');
+  box.innerHTML='';
+  box.appendChild(content);
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal(){
+  $('modal-overlay').classList.add('hidden');
+  $('modal-box').innerHTML='';
+}
+
+function openSimQualModal(seriesId, raceIdx){
+  const s=getSeries(seriesId);
+  const sched=G.schedules[seriesId]||[];
+  const race=sched[raceIdx];
+  const fieldSize=SERIES_FIELD_SIZE[seriesId]||20;
+  const scenario=QUALI_SCENARIOS[rand(0,QUALI_SCENARIOS.length-1)];
+
+  let selectedModifier=null;
+  let selectedChoice=null;
+
+  function build(){
+    const wrap=h('div',null);
+    wrap.appendChild(h('div',{className:'modal-title'},'Qualifying'));
+    wrap.appendChild(h('div',{className:'modal-sub'},race.track));
+
+    const scene=h('div',{className:'sim-scene'});
+    scene.appendChild(h('div',{className:'sim-narrative'},scenario.scene));
+
+    if(selectedChoice===null){
+      const choiceWrap=h('div',{className:'sim-choices'});
+      scenario.choices.forEach((choice,i)=>{
+        const btn=h('button',{className:'sim-choice-btn',onClick:()=>{
+          selectedModifier=choice.modifier;
+          selectedChoice=i;
+          build();
+        }},choice.icon+' '+choice.label);
+        choiceWrap.appendChild(btn);
+      });
+      scene.appendChild(choiceWrap);
+    } else {
+      const result=simulateQualifying(G,seriesId,raceIdx);
+      const adjustedPos=clamp(Math.round(result.position*(2-selectedModifier)),1,fieldSize);
+      
+      scene.appendChild(h('div',{style:{fontSize:'18px',fontWeight:800,color:'#F59E0B',marginTop:'12px'}},'P'+adjustedPos));
+      
+      const saveBtn=mkBtn('Confirm — P'+adjustedPos,'btn btn-primary',()=>{
+        sched[raceIdx].qualifying={position:adjustedPos,pole:adjustedPos===1};
+        if(adjustedPos===1)G.poles++;
+        saveGame();
+        closeModal();
+        render();
+      });
+      scene.appendChild(saveBtn);
+    }
+
+    wrap.appendChild(scene);
+    const box=$('modal-box');box.innerHTML='';box.appendChild(wrap);
+  }
+  build();
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function openSimRaceModal(seriesId, raceIdx){
+  const s=getSeries(seriesId);
+  const sched=G.schedules[seriesId]||[];
+  const race=sched[raceIdx];
+  const fieldSize=SERIES_FIELD_SIZE[seriesId]||20;
+  const qualPos=race.qualifying?.position||Math.floor(fieldSize*0.5);
+
+  const numScenarios = rand(2,4);
+  const ctx = buildSimContext(G, seriesId, raceIdx, qualPos, fieldSize, 1, numScenarios+1);
+  const scenarios=pickScenarios(ctx,numScenarios,RACE_SCENARIOS);
+
+  let narrativeDelta = 0;
+  let currentScenario=0;
+  let choiceResults=[];
+  let currentPos=qualPos;
+
+  function buildScenarioUI(){
+    const wrap=h('div',null);
+    wrap.appendChild(h('div',{className:'modal-title'},'Race: '+race.track));
+
+    if(currentScenario<scenarios.length){
+      const sc=scenarios[currentScenario];
+      const ctxNow=buildSimContext(G,seriesId,raceIdx,currentPos,fieldSize,currentScenario+1,scenarios.length+1);
+      const sceneText=typeof sc.scene==='function'?sc.scene(ctxNow):sc.scene;
+
+      const sceneEl=h('div',{className:'sim-scene'});
+      sceneEl.appendChild(h('div',{className:'sim-narrative'},sceneText));
+      const choiceWrap=h('div',{className:'sim-choices'});
+
+      sc.choices.forEach((choice,i)=>{
+        const btn=h('button',{className:'sim-choice-btn',onClick:()=>{
+          const isGood=Math.random()>0.4;
+          const posDelta=isGood?Math.abs(choice.posModifier):-Math.abs(choice.posModifier);
+          currentPos=clamp(currentPos-posDelta,1,fieldSize);
+          
+          const narrative=isGood?choice.narrativeResult.good:choice.narrativeResult.bad;
+          choiceResults.push({posDelta,dnfRisk:isGood?0:choice.dnfRisk,fanBonus:isGood?choice.fanBonus:0,narrative,isGood});
+          narrativeDelta += isGood ? Math.abs(posDelta||1) : -(Math.abs(posDelta||1)+1);
+
+          currentScenario++;
+          buildScenarioUI();
+        }},choice.icon+' '+choice.label);
+        choiceWrap.appendChild(btn);
+      });
+
+      sceneEl.appendChild(choiceWrap);
+      wrap.appendChild(sceneEl);
+    } else {
+      const finalResult=resolveRace({
+        basePos:qualPos,fieldSize,dnfRoll:Math.random(),
+        dnfProb:0.10,baseSkill:5,lateRaceBonus:0,condBonus:0,
+        narrativeDelta:clamp(Math.round(narrativeDelta*0.4),-3,3),
+        qualPosition:currentPos,seriesId,raceIdx,
+      },choiceResults);
+
+      const pc=finalResult.dnf?'#EF4444':finalResult.position===1?'#F59E0B':'#CBD5E1';
+      const label=finalResult.dnf?'DNF':'P'+finalResult.position;
+
+      wrap.appendChild(h('div',{style:{fontSize:'48px',fontWeight:900,color:pc,textAlign:'center',marginBottom:'16px'}},label));
+      wrap.appendChild(mkBtn('Confirm','btn btn-primary',()=>{
+        processRaceResult(G,seriesId,raceIdx,finalResult);
+        saveGame();
+        closeModal();
+        render();
+      }));
+    }
+
+    const box=$('modal-box');box.innerHTML='';box.appendChild(wrap);
+  }
+
+  buildScenarioUI();
+  $('modal-overlay').classList.remove('hidden');
+}
+
+function openSeasonEndModal(){
+  const wrap=h('div',null);
+  wrap.appendChild(h('div',{className:'modal-title'},'Season '+G.season+' Complete'));
+  wrap.appendChild(mkBtn('Advance to Season '+(G.season+1),'btn btn-primary',()=>{
+    advanceSeason(G);saveGame();closeModal();render();
+  }));
+  openModal(wrap);
+}
+
+function doGoIndependent(seriesId){
+  const s=getSeries(seriesId);
+  const contract={id:uid(),team:'Independent',seriesId,indie:true,entryFee:s.fee,prizeShare:1.0,termSeasons:1,seasonsCompleted:0,races:s.races,racesCompleted:0,earnings:0,crewPackage:'basic',teammates:[]};
+  G.contracts.push(contract);
+  if(!G.schedules[seriesId])G.schedules[seriesId]=generateSchedule(seriesId,G.trackPools);
+  saveGame();render();
+}
+
+function doSignContract(offer){
+  G.contracts.push(offer);
+  if(!G.schedules[offer.seriesId])G.schedules[offer.seriesId]=generateSchedule(offer.seriesId,G.trackPools);
+  G.pendingOffers=G.pendingOffers.filter(o=>o.id!==offer.id);
+  saveGame();render();
+}
+
+function startNewGame(){
+  localStorage.removeItem('ft_sim_save');
+  location.reload();
+}
+
+function showGame(){
+  $('setup-screen').classList.add('hidden');
+  $('app').style.display='flex';
+  render();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const sel=$('driver-state-input');
+  if(sel&&sel.options.length===0){
+    US_STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=US_STATE_NAMES[s]||s;if(s==='NC')o.selected=true;sel.appendChild(o);});
+  }
+
+  if(loadGame()){showGame();return;}
+
+  const form=$('setup-form');
+  if(form){
+    form.addEventListener('submit',e=>{
+      e.preventDefault();
+      const name=($('driver-name-input').value||'').trim();
+      const state=($('driver-state-input').value)||'NC';
+      if(!name)return;
+      G=initState(name);
+      G.homeState=state;
+      G.driverAttrPoints=DRIVER_ATTR_POINTS_START-DRIVER_ATTRS.length*DRIVER_ATTR_DEFAULT;
+      saveGame();
+      showGame();
+    });
+  }
+
+  $('modal-overlay').addEventListener('click',e=>{if(e.target===$('modal-overlay'))closeModal();});
+});
+</script>
 </body>
 </html>
