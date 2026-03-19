@@ -1,43 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Setup Test</title>
+<title>Full Throttle Test</title>
 <style>
 body{background:#000;color:#fff;font-family:Arial;padding:20px}
-input,select,button{display:block;width:100%;margin:10px 0;padding:10px;font-size:16px}
-button{background:#f90;color:#000;border:none;font-weight:bold}
+input,select,button{display:block;width:100%;margin:10px 0;padding:15px;font-size:18px}
+button{background:#f90;color:#000;border:none;font-weight:bold;cursor:pointer}
+#app{display:none}
 </style>
 </head>
 <body>
-<h1>Setup Test</h1>
+<div id="setup-screen">
+<h1>Full Throttle</h1>
 <form id="setup-form">
-  <input id="driver-name" type="text" placeholder="Name" required>
-  <input id="driver-number" type="number" placeholder="Number" min="0" max="999" required>
-  <select id="driver-state">
-    <option value="ME">Maine</option>
-    <option value="NC">North Carolina</option>
-  </select>
-  <button type="submit">START</button>
+<input id="driver-name-input" type="text" placeholder="Driver Name" required>
+<input id="driver-number-input" type="number" placeholder="Car Number (0-999)" min="0" max="999" required>
+<select id="driver-state-input">
+<option value="ME">Maine</option>
+<option value="NC">North Carolina</option>
+<option value="CA">California</option>
+</select>
+<button type="submit">START CAREER</button>
 </form>
-<div id="result"></div>
+</div>
+
+<div id="app">
+<h2>GAME STARTED!</h2>
+<div id="info"></div>
+</div>
 
 <script>
-document.getElementById('setup-form').addEventListener('submit', function(e) {
-  e.preventDefault();
+// Minimal functions
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+
+function initState(name){
+  return {
+    driverName:name,
+    homeState:'ME',
+    carNumber:0,
+    season:1,
+    week:1,
+    money:5000,
+    reputation:0,
+    fans:0,
+    wins:0,
+    top5s:0,
+    starts:0,
+    poles:0,
+  };
+}
+
+function saveState(state){
+  localStorage.setItem('fullthrottle_test_save', JSON.stringify(state));
+}
+
+function getState(){
+  const raw = localStorage.getItem('fullthrottle_test_save');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const existingSave = getState();
   
-  const name = document.getElementById('driver-name').value;
-  const number = document.getElementById('driver-number').value;
-  const state = document.getElementById('driver-state').value;
-  
-  document.getElementById('result').innerHTML = 
-    '<h2>Success!</h2>' +
-    '<p>Name: ' + name + '</p>' +
-    '<p>Number: ' + number + '</p>' +
-    '<p>State: ' + state + '</p>';
-  
-  alert('Form submitted: ' + name);
+  if (existingSave) {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('info').innerHTML = 
+      '<p>Driver: ' + existingSave.driverName + '</p>' +
+      '<p>Number: ' + existingSave.carNumber + '</p>' +
+      '<p>State: ' + existingSave.homeState + '</p>' +
+      '<p>Money: $' + existingSave.money + '</p>';
+  } else {
+    const setupForm = document.getElementById('setup-form');
+    
+    setupForm.addEventListener('submit', e => {
+      e.preventDefault();
+      
+      const driverName = document.getElementById('driver-name-input').value.trim();
+      const driverNumber = parseInt(document.getElementById('driver-number-input').value);
+      const homeState = document.getElementById('driver-state-input').value;
+      
+      if (!driverName) {
+        alert('Please enter your driver name');
+        return;
+      }
+      
+      if (isNaN(driverNumber) || driverNumber < 0 || driverNumber > 999) {
+        alert('Please enter a valid car number (0-999)');
+        return;
+      }
+      
+      const newState = initState(driverName);
+      newState.homeState = homeState;
+      newState.carNumber = driverNumber;
+      
+      saveState(newState);
+      
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('info').innerHTML = 
+        '<p>Driver: ' + newState.driverName + '</p>' +
+        '<p>Number: ' + newState.carNumber + '</p>' +
+        '<p>State: ' + newState.homeState + '</p>' +
+        '<p>Money: $' + newState.money + '</p>';
+    });
+  }
 });
 </script>
 </body>
