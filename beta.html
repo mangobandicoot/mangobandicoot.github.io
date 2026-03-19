@@ -98,9 +98,11 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 </div>
 <div id="modal-overlay" class="hidden"><div id="modal-box"></div></div>
 
+<script>
+
 //PART 2
 
-<script>
+
 const APP_VERSION = 'v1.5.2-SIM';
 
 const US_STATES = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
@@ -219,11 +221,11 @@ function addLog(state,msg){state.log.push('[S'+state.season+' W'+state.week+'] '
 function initDriverAttrs(){const attrs={};DRIVER_ATTRS.forEach(a=>{attrs[a.id]=DRIVER_ATTR_DEFAULT});return attrs}
 
 function initCarUpgrades(){const ups={};CAR_UPGRADES.forEach(u=>{ups[u.id]=0});return ups}
-</script>
+
 
 //PART 3
 
-<script>
+
 const QUALI_SCENARIOS = [
   {scene:"You are on your out-lap with two minutes left in the session. The track is rubbering up fast on the bottom. Do you go for the bottom or commit to the top?",choices:[
     {label:"Take the bottom — rubber is key",modifier:1.12,icon:"📉"},
@@ -401,11 +403,11 @@ function resolveRace(pendingRace,choiceResults){
   
   return{position:finalPos,dnf:false,dnfReason:null,fieldSize,points,prize,pole:qualPosition===1,lapsLed,mostLaps,closeFinishes,incidentDrivers,qualPosition};
 }
-</script>
+
 
 // PART 4
 
-<script>
+
 function makeContract(seriesId,quality){
   const s=getSeries(seriesId);
   const teamList=TEAMS[seriesId]||['Independent Racing'];
@@ -653,11 +655,11 @@ function getState(){
     return null;
   }
 }
-</script>
+
 
 //PART 5
 
-<script>
+
 function $(id){return document.getElementById(id)}
 
 function showModal(html){
@@ -860,11 +862,11 @@ function renderDashboard(state){
   
   $('content').innerHTML=html;
 }
-</script>
+
 
 //PART 6
 
-<script>
+
 function renderContracts(state){
   const active=state.contracts.filter(c=>c.seasonsCompleted<c.termSeasons);
   const completed=state.contracts.filter(c=>c.seasonsCompleted>=c.termSeasons);
@@ -1068,11 +1070,11 @@ function doSignContract(contractId){
   closeModal();
   showPage('contracts');
 }
-</script>
+
 
 //PART 7
 
-<script>
+
 function renderGarage(state){
   const attrs=state.driverAttrs||{};
   const upgrades=state.carUpgrades||{};
@@ -1274,11 +1276,11 @@ function confirmRestart(){
   localStorage.removeItem('fullthrottle_sim_save');
   location.reload();
 }
-</script>
+
 
 //PART 8
 
-<script>
+
 let pendingQualResult=null;
 let pendingRaceResult=null;
 let currentRaceChoices=[];
@@ -1491,11 +1493,11 @@ function finishRace(seriesId,raceIdx){
   
   updateHeader(st);
 }
-</script>
+
 
 //PART 10
 
-<script>
+
 document.addEventListener('DOMContentLoaded',()=>{
   const stateSelect=$('driver-state-input');
   if(stateSelect&&stateSelect.options.length===0){
@@ -1732,11 +1734,9 @@ window.DEV={
 
 console.log('Full Throttle v1.5.2-SIM loaded successfully');
 console.log('Type window.DEV in console for debug commands');
-</script>
 
 //PART 10
 
-<script>
 const DRIVER_PERSONALITIES=['hothead','veteran','joker','ice_cold','showman','grinder'];
 
 function getPersonality(name){
@@ -1895,11 +1895,11 @@ function evolveAIRelationships(state){
     }
   });
 }
-</script>
+
 
 //PART 11
 
-<script>
+
 function generateStartingRivals(drivers){
   const rivals=[];
   const pool=(drivers||[]).filter(d=>d.currentSeriesId==='mini_stock'||d.currentSeriesId==='street_stock');
@@ -1956,7 +1956,7 @@ const REL_LABEL={rival:'RIVAL',friend:'FRIEND',f​​​​​​​​​​�
 
 //PART 12
 
-<script>
+
 const SPONSOR_BRANDS={
   mini_stock:['Local Auto Parts','County Towing','Main Street Garage','Family Diner','Hardware Co.'],
   street_stock:['Regional Tools','State Farm Supply','Tri-County Motors','Valley Tire','Mountain Auto'],
@@ -2146,11 +2146,11 @@ function advanceSponsors(state){
   
   state.sponsorOffers=generateSponsorOffers(state);
 }
-</script>
+
 
 //PART 13
 
-<script>
+
 function generateTeammates(state,contract){
   const teammates=[];
   const tmCount=contract.teammates.length;
@@ -2313,11 +2313,11 @@ function advanceOwnedTeams(state){
     });
   });
 }
-</script>
+
 
 //PART 14
 
-<script>
+
 const REAL_SCHEDULES={
   arca_menards:[
     {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
@@ -2500,11 +2500,9 @@ function generateScheduleWithRealTracks(seriesId){
     condition:'clear',
   }));
 }
-</script>
 
 //PART 15
 
-<script>
 function processRaceResultEnhanced(state,seriesId,raceIdx,result){
   const s=getSeries(seriesId);
   const sched=state.schedules[seriesId];
@@ -2721,11 +2719,11 @@ function finishRaceEnhanced(seriesId,raceIdx){
   
   updateHeader(st);
 }
-</script>
+
 
 //PART 16
 
-<script>
+
 function initStateComplete(name,carNumber,homeState){
   const drivers=generateInitialDriverPool();
   
@@ -3006,11 +3004,9 @@ function makeRaceChoiceEnhanced(seriesId,raceIdx,scenarioIdx,choiceIdx){
   
   showModal(html);
 }
-</script>
 
 //PART 17
 
-<script>
 document.addEventListener('DOMContentLoaded',()=>{
   const stateSelect=$('driver-state-input');
   if(stateSelect&&stateSelect.options.length===0){
@@ -3268,7 +3264,7 @@ window.doSignContract=doSignContractEnhanced;
 console.log('Full Throttle v1.5.2-SIM loaded successfully');
 console.log('Type window.DEV in console for debug commands');
 console.log('Features: AI personalities, track history, sponsor goals, real schedules, callouts');
-</script>
+
 
 //PART 18
 
