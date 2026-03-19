@@ -1877,3 +1877,934 @@ function initState(name){
   seedAIDriverRelationships(drivers);
   return state;
 }
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// CALLOUT SYSTEM — Drivers publicly respond to incidents and close finishes
+// ═══════════════════════════════════════════════════════════════════════
+
+// Check if a callout should fire after this race
+// Returns {fired: bool, driverName, quote, type} or null
+function maybeFireCallout(state, raceResult, seriesId) {
+  if (!raceResult || raceResult.dnf) return null;
+  
+  // Incident callout — someone involved in the incident speaks out
+  if (raceResult.incidentDrivers && raceResult.incidentDrivers.length > 0) {
+    if (Math.random() < 0.6) { // 60% chance someone calls you out
+      const d = raceResult.incidentDrivers[rand(0, raceResult.incidentDrivers.length-1)];
+      const quote = getPersonalityCallout(d, 'incident').replace(/{name}/g, d).replace(/{player}/g, state.driverName);
+      return {fired:true, driverName:d, quote, type:'incident'};
+    }
+  }
+  
+  // Close finish callout — competitive battle recognized
+  if (raceResult.position <= 5 && raceResult.closeFinishes && raceResult.closeFinishes.length > 0) {
+    if (Math.random() < 0.4) { // 40% chance of a callout after close racing
+      const d = raceResult.closeFinishes[rand(0, raceResult.closeFinishes.length-1)];
+      const quote = getPersonalityCallout(d, 'close').replace(/{name}/g, d).replace(/{player}/g, state.driverName);
+      return {fired:true, driverName:d, quote, type:'close'};
+    }
+  }
+  
+  return null;
+}
+
+// Alternative callout lines for variety (used in incident/close finish drama cards)
+const CALLOUT_INCIDENT_LINES = [
+  "{name} didn't hold back in the garage. The quote got picked up everywhere.",
+  "Post-race, {name} went on the record about the incident. It wasn't subtle.",
+  "{name}'s crew chief had to hold him back after the race. The broadcast caught most of it.",
+  "The look on {name}'s face in the cool-down area said everything before the interview.",
+  "{name} posted on social before the hauler even left the track. The paddock is talking.",
+];
+
+const CALLOUT_CLOSE_LINES = [
+  "{name} gave you a nod in the garage area after the race. Respect earned.",
+  "In the broadcast booth, {name} called it one of the best battles all season.",
+  "{name}'s spotter radioed over after the checkered. 'Tell {player} that was a hell of a race.'",
+  "Post-race, {name} made a point of finding you. Handshake. No cameras. The kind that matters.",
+];
+
+const CALLOUT_RESPONSE_OPTIONS = {
+  incident: [
+    {label:"Fire back publicly",effect:'escalate',repCost:-3,fanGain:200,desc:"You respond on social. The beef is now official."},
+    {label:"Let it go — focus on next week",effect:'ignore',repCost:0,fanGain:0,desc:"No response. Professional silence."},
+    {label:"Acknowledge it, move forward",effect:'defuse',repCost:2,fanGain:50,desc:"Mature response. Take accountability where due, but don't escalate."},
+  ],
+  close: [
+    {label:"Return the respect publicly",effect:'mutual',repCost:0,fanGain:100,desc:"Post about the battle. Good for both drivers."},
+    {label:"Keep it quiet",effect:'ignore',repCost:0,fanGain:0,desc:"You know what happened. That's enough."},
+  ],
+};
+
+// ── TRACK HISTORY SYSTEM ──────────────────────────────────────────────
+// Track player's performance at each track across career
+// trackHistory: { "track_name": {starts, wins, top5s, dnfs, bestFinish, avgFinish} }
+
+function updateTrackHistory(state, trackName, position, dnf) {
+  if (!state.trackHistory) state.trackHistory = {};
+  if (!state.trackHistory[trackName]) {
+    state.trackHistory[trackName] = {starts:0, wins:0, top5s:0, dnfs:0, bestFinish:999, totalFinish:0};
+  }
+  const th = state.trackHistory[trackName];
+  th.starts++;
+  if (dnf) {
+    th.dnfs++;
+  } else {
+    if (position === 1) th.wins++;
+    if (position <= 5) th.top5s++;
+    if (position < th.bestFinish) th.bestFinish = position;
+    th.totalFinish += position;
+  }
+}
+
+function getTrackHistory(state, trackName) {
+  if (!state.trackHistory || !state.trackHistory[trackName]) return null;
+  const th = state.trackHistory[trackName];
+  const avgFinish = th.starts > th.dnfs ? (th.totalFinish / (th.starts - th.dnfs)).toFixed(1) : '---';
+  return {...th, avgFinish};
+}
+
+function getBestTracks(state, limit=3) {
+  if (!state.trackHistory) return [];
+  const tracks = Object.entries(state.trackHistory)
+    .filter(([name, th]) => th.starts >= 2) // must have run it at least twice
+    .map(([name, th]) => ({
+      name,
+      winPct: (th.wins / th.starts * 100).toFixed(0),
+      avgFinish: th.starts > th.dnfs ? (th.totalFinish / (th.starts - th.dnfs)).toFixed(1) : 999,
+    }))
+    .sort((a,b) => parseFloat(a.avgFinish) - parseFloat(b.avgFinish));
+  return tracks.slice(0, limit);
+}
+
+function getWorstTracks(state, limit=3) {
+  if (!state.trackHistory) return [];
+  const tracks = Object.entries(state.trackHistory)
+    .filter(([name, th]) => th.starts >= 2)
+    .map(([name, th]) => ({
+      name,
+      dnfPct: (th.dnfs / th.starts * 100).toFixed(0),
+      avgFinish: th.starts > th.dnfs ? (th.totalFinish / (th.starts - th.dnfs)).toFixed(1) : 999,
+    }))
+    .sort((a,b) => parseFloat(b.avgFinish) - parseFloat(a.avgFinish));
+  return tracks.slice(0, limit);
+}
+
+// ── HOME RACE DETECTION ───────────────────────────────────────────────
+function isHomeRace(state, race) {
+  // Player's home race
+  if (race.state === state.homeState) return 'player';
+  // Check if any AI drivers in field are from this state
+  const field = (state.drivers||[]).filter(d => d.active && d.currentSeriesId === state.currentSeriesId);
+  const localDrivers = field.filter(d => d.homeState === race.state);
+  if (localDrivers.length > 0) return localDrivers[0].name; // return name of one local driver
+  return null;
+}
+
+// ── FAN SCALING BY SERIES TIER ────────────────────────────────────────
+const FAN_GAIN_BY_TIER = {
+  1: {win:[50,200],   top5:[20,80],   top10:[10,40],   finish:[5,20]},    // Mini Stock
+  2: {win:[100,400],  top5:[40,150],  top10:[20,70],   finish:[10,30]},   // Street Stock
+  3: {win:[300,800],  top5:[100,300], top10:[50,150],  finish:[20,60]},   // Late Model/Super Late
+  4: {win:[1000,3000],top5:[400,1200],top10:[200,600], finish:[50,200]},  // ARCA
+  5: {win:[5000,15000],top5:[2000,6000],top10:[1000,3000],finish:[200,800]}, // Trucks
+  6: {win:[20000,60000],top5:[8000,25000],top10:[4000,12000],finish:[1000,4000]}, // Xfinity
+  7: {win:[100000,500000],top5:[40000,150000],top10:[20000,60000],finish:[5000,20000]}, // Cup
+};
+
+function calcFanGain(seriesId, position, dnf, fieldSize) {
+  const s = getSeries(seriesId);
+  const tier = s.tier;
+  const ranges = FAN_GAIN_BY_TIER[tier] || FAN_GAIN_BY_TIER[1];
+  
+  if (dnf) return 0;
+  if (position === 1) return rand(ranges.win[0], ranges.win[1]);
+  if (position <= 5) return rand(ranges.top5[0], ranges.top5[1]);
+  if (position <= 10) return rand(ranges.top10[0], ranges.top10[1]);
+  return rand(ranges.finish[0], ranges.finish[1]);
+}
+
+// AI driver fan counts — scaled realistically by tier and performance
+function assignAIFans(drivers) {
+  drivers.forEach(d => {
+    if (d.source === 'player') return; // skip player
+    const s = getSeries(d.currentSeriesId);
+    const tier = s.tier;
+    
+    // Base fan count by tier
+    const baseFans = {
+      1: rand(0, 500),
+      2: rand(200, 2000),
+      3: rand(500, 5000),
+      4: rand(2000, 20000),
+      5: rand(10000, 80000),
+      6: rand(40000, 300000),
+      7: rand(150000, 2000000),
+    }[tier] || 0;
+    
+    // Performance modifier
+    const winMult = 1 + (d.wins||0) * 0.15;
+    const top5Mult = 1 + (d.top5s||0) * 0.05;
+    
+    d.fans = Math.floor(baseFans * winMult * top5Mult);
+  });
+}
+
+// ── SPONSOR GOAL TRACKING ─────────────────────────────────────────────
+function updateSponsorGoal(sponsor, position, dnf, fieldSize) {
+  if (!sponsor.sponsorGoal) return;
+  const goal = sponsor.sponsorGoal;
+  goal.racesTracked = (goal.racesTracked||0) + 1;
+  
+  if (goal.type === 'top5_pct' && !dnf && position <= 5) {
+    goal.racesAchieved = (goal.racesAchieved||0) + 1;
+  } else if (goal.type === 'wins' && position === 1) {
+    goal.racesAchieved = (goal.racesAchieved||0) + 1;
+  } else if (goal.type === 'finish_pct' && !dnf) {
+    goal.racesAchieved = (goal.racesAchieved||0) + 1;
+  }
+}
+
+function evaluateSponsorGoal(sponsor) {
+  if (!sponsor.sponsorGoal) return {met:true, pct:100};
+  const goal = sponsor.sponsorGoal;
+  if (goal.racesTracked === 0) return {met:true, pct:100};
+  
+  if (goal.type === 'wins') {
+    const met = (goal.racesAchieved||0) >= goal.target;
+    return {met, pct: Math.min(100, ((goal.racesAchieved||0) / goal.target * 100).toFixed(0))};
+  } else {
+    // top5_pct or finish_pct
+    const pct = ((goal.racesAchieved||0) / goal.racesTracked * 100).toFixed(0);
+    const met = parseFloat(pct) >= goal.target;
+    return {met, pct};
+  }
+}
+
+// ── TEAM OWNERSHIP HELPERS ────────────────────────────────────────────
+function simulateTeammateRace(state, contract, raceIdx, fieldSize) {
+  if (!contract.teammates || contract.teammates.length === 0) return [];
+  
+  const results = [];
+  contract.teammates.forEach(tm => {
+    if (!tm || !tm.name) return;
+    
+    // Simulate teammate finish based on their skill
+    const skill = tm.skill || 50;
+    const basePos = Math.floor(fieldSize * (1 - skill/100));
+    const variance = rand(-5, 5);
+    const pos = clamp(basePos + variance, 1, fieldSize);
+    const dnfChance = 0.15 - (skill/100) * 0.10;
+    const dnf = Math.random() < dnfChance;
+    
+    results.push({
+      name: tm.name,
+      position: dnf ? fieldSize : pos,
+      dnf,
+    });
+    
+    // Update teammate stats
+    tm.starts = (tm.starts||0) + 1;
+    if (!dnf) {
+      if (pos === 1) tm.wins = (tm.wins||0) + 1;
+      if (pos <= 5) tm.top5s = (tm.top5s||0) + 1;
+      if (pos <= 10) tm.top10s = (tm.top10s||0) + 1;
+    }
+  });
+  
+  return results;
+}
+
+// ── PRE-RACE COMMENTARY GENERATION ────────────────────────────────────
+function generatePreRaceCommentary(state, seriesId, raceIdx) {
+  const race = (state.schedules[seriesId]||[])[raceIdx];
+  if (!race) return null;
+  
+  const lines = [];
+  
+  // Track history
+  const th = getTrackHistory(state, race.track);
+  if (th && th.starts >= 2) {
+    if (th.wins >= 2) {
+      lines.push(`You've won here ${th.wins} times. This track owes you nothing and you know it.`);
+    } else if (th.bestFinish <= 3) {
+      lines.push(`Strong history at ${race.track}. Best finish: P${th.bestFinish}.`);
+    } else if (th.dnfs >= 2) {
+      lines.push(`${race.track} has not been kind. ${th.dnfs} DNFs in ${th.starts} starts.`);
+    }
+  }
+  
+  // Home race
+  const homeCheck = isHomeRace(state, race);
+  if (homeCheck === 'player') {
+    lines.push(`Home race. The local crowd knows your name.`);
+  } else if (homeCheck) {
+    lines.push(`${homeCheck} is racing in their home state. Expect them to be motivated.`);
+  }
+  
+  // Rival presence
+  const topRival = (state.rivals||[]).sort((a,b)=>(b.incidents+b.closeRaces)-(a.incidents+a.closeRaces))[0];
+  if (topRival && Math.random() < 0.5) {
+    const rel = relationship(topRival);
+    if (rel === 'rival' || rel === 'chosen_rival') {
+      lines.push(`${topRival.name} is in the field. You know how that usually goes.`);
+    } else if (rel === 'friend' || rel === 'racing_rival') {
+      lines.push(`${topRival.name} is here. Always a good battle with them.`);
+    }
+  }
+  
+  // Championship situation
+  const pts = (state.championshipPoints[seriesId]||{})[state.driverName]||0;
+  const standings = Object.entries(state.championshipPoints[seriesId]||{})
+    .map(([name,p])=>({name,points:p}))
+    .sort((a,b)=>b.points-a.points);
+  const playerPos = standings.findIndex(s=>s.name===state.driverName) + 1;
+  
+  if (playerPos === 1 && standings.length > 1) {
+    const gap = pts - standings[1].points;
+    if (gap < 20) lines.push(`Points lead is tight. ${gap} points up on ${standings[1].name}.`);
+  } else if (playerPos <= 3 && standings.length >= 3) {
+    const leader = standings[0];
+    const gap = leader.points - pts;
+    lines.push(`${ordinal(playerPos)} in points, ${gap} back of ${leader.name}.`);
+  }
+  
+  // Confidence state
+  if (state.confidence >= 8) {
+    lines.push("Confidence is high. The car feels dialed.");
+  } else if (state.confidence <= -5) {
+    lines.push("Rough stretch. Need a clean result today.");
+  }
+  
+  // Return 1-3 lines
+  shuffle(lines);
+  return lines.slice(0, rand(1,3)).join(' ');
+}
+
+// ── RACE NARRATIVE SUMMARY ────────────────────────────────────────────
+function generateRaceSummary(state, seriesId, raceIdx, result, scenarioResults) {
+  const race = (state.schedules[seriesId]||[])[raceIdx];
+  if (!race) return "The race happened. You finished.";
+  
+  const pos = result.position;
+  const dnf = result.dnf;
+  const fieldSize = result.fieldSize;
+  
+  const lines = [];
+  
+  // Opening — starting position context
+  const qualPos = result.qualPosition || Math.floor(fieldSize * 0.5);
+  if (qualPos === 1) {
+    lines.push(`You started on pole at ${race.track}.`);
+  } else if (qualPos <= 5) {
+    lines.push(`Started P${qualPos} in the ${ordinal(raceIdx+1)} race of the season at ${race.track}.`);
+  } else {
+    lines.push(`Started mid-pack (P${qualPos}) at ${race.track}.`);
+  }
+  
+  // Key moments from scenarios
+  if (scenarioResults && scenarioResults.length > 0) {
+    const keyMoment = scenarioResults.find(sr => Math.abs(sr.posDelta||0) >= 3) || scenarioResults[0];
+    if (keyMoment && keyMoment.outcome) {
+      lines.push(keyMoment.outcome.narrativeResult);
+    }
+  }
+  
+  // Race flow
+  if (!dnf) {
+    if (pos === 1) {
+      lines.push(`Led the final laps and brought it home for the win.`);
+    } else if (pos <= 3) {
+      lines.push(`Ran inside the top five all day. Finished ${ordinal(pos)}.`);
+    } else if (pos <= 10) {
+      lines.push(`Solid day. Stayed clean, finished ${ordinal(pos)}.`);
+    } else if (pos > qualPos + 5) {
+      lines.push(`Struggled to find pace. Finished ${ordinal(pos)}, down from where we started.`);
+    } else {
+      lines.push(`Ran mid-pack. Finished ${ordinal(pos)}.`);
+    }
+  } else {
+    lines.push(`DNF: ${result.dnfReason}. A day to forget.`);
+  }
+  
+  // Incident/close finish color
+  if (result.incidentDrivers && result.incidentDrivers.length > 0) {
+    lines.push(`Contact with ${result.incidentDrivers[0]} added drama.`);
+  } else if (result.closeFinishes && result.closeFinishes.length > 0) {
+    lines.push(`Battled door-to-door with ${result.closeFinishes[0]} for multiple laps.`);
+  }
+  
+  // Outcome assessment
+  if (!dnf && pos === 1) {
+    lines.push("Checkered flag. Points. Money. Everything you came for.");
+  } else if (!dnf && pos <= 5) {
+    lines.push("A result you can build on.");
+  } else if (dnf) {
+    lines.push("Hauler goes home quiet.");
+  }
+  
+  return lines.join(' ');
+}
+
+// ── SEASON NARRATIVE SUMMARY ──────────────────────────────────────────
+function generateSeasonNarrative(state, seriesId, finalStandings) {
+  const s = getSeries(seriesId);
+  const playerStanding = finalStandings.find(st => st.name === state.driverName);
+  if (!playerStanding) return "Season complete.";
+  
+  const pos = playerStanding.position;
+  const wins = playerStanding.wins;
+  const top5s = playerStanding.top5s;
+  
+  const lines = [];
+  
+  // Opening — season position
+  if (pos === 1) {
+    lines.push(`${s.name} Champion. ${wins} win${wins===1?'':'s'}, ${top5s} top-five${top5s===1?'':'s'}.`);
+  } else if (pos <= 3) {
+    lines.push(`Finished ${ordinal(pos)} in ${s.name} points. ${wins} win${wins===1?'':'s'} on the season.`);
+  } else if (pos <= 10) {
+    lines.push(`${ordinal(pos)} in the final ${s.name} standings.`);
+  } else {
+    lines.push(`Finished outside the top ten in ${s.name}.`);
+  }
+  
+  // Performance trend
+  const sched = state.schedules[seriesId] || [];
+  const firstHalf = sched.slice(0, Math.floor(sched.length/2)).filter(r=>r.result).map(r=>r.result.position);
+  const secondHalf = sched.slice(Math.floor(sched.length/2)).filter(r=>r.result).map(r=>r.result.position);
+  
+  if (firstHalf.length && secondHalf.length) {
+    const firstAvg = firstHalf.reduce((a,b)=>a+b,0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a,b)=>a+b,0) / secondHalf.length;
+    
+    if (secondAvg < firstAvg - 3) {
+      lines.push("Strong finish to the season. The improvements showed in the second half.");
+    } else if (secondAvg > firstAvg + 3) {
+      lines.push("Started strong but faded late. Something to address in the off-season.");
+    } else {
+      lines.push("Consistency held through the year.");
+    }
+  }
+  
+  // Rival context
+  const topRival = (state.rivals||[]).sort((a,b)=>(b.incidents+b.closeRaces)-(a.incidents+a.closeRaces))[0];
+  if (topRival) {
+    const rivalStanding = finalStandings.find(st => st.name === topRival.name);
+    if (rivalStanding) {
+      if (rivalStanding.position > pos) {
+        lines.push(`Beat ${topRival.name} in the standings. That one felt good.`);
+      } else if (rivalStanding.position < pos) {
+        lines.push(`${topRival.name} finished ahead in points. Unfinished business.`);
+      }
+    }
+  }
+  
+  // Track performance note
+  const bestTracks = getBestTracks(state, 1);
+  const worstTracks = getWorstTracks(state, 1);
+  if (bestTracks.length) {
+    lines.push(`Dominated at ${bestTracks[0].name} (avg finish: ${bestTracks[0].avgFinish}).`);
+  }
+  if (worstTracks.length && parseFloat(worstTracks[0].avgFinish) > 15) {
+    lines.push(`Struggled at ${worstTracks[0].name} all season.`);
+  }
+  
+  // Final evaluation
+  if (pos === 1) {
+    lines.push("Championship proven. Now the question: do you defend it or move up?");
+  } else if (wins >= 3) {
+    lines.push("The wins were there. Points championship is next year's goal.");
+  } else if (top5s >= s.races * 0.4) {
+    lines.push("Consistency was the story. A few more wins and this looks different.");
+  } else {
+    lines.push("A learning season. The off-season work starts now.");
+  }
+  
+  return lines.join(' ');
+}
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// PROCESS RACE RESULT — Core race result handler with all new features
+// ═══════════════════════════════════════════════════════════════════════
+
+function processRaceResult(state, seriesId, raceIdx, result) {
+  const s = getSeries(seriesId);
+  const sched = state.schedules[seriesId];
+  const race = sched[raceIdx];
+  const contract = state.contracts.find(c => c.seriesId === seriesId);
+  
+  // Update track history
+  updateTrackHistory(state, race.track, result.position, result.dnf);
+  
+  // Home race bonus
+  const homeRaceCheck = isHomeRace(state, race);
+  let homeRaceBonus = 0;
+  if (homeRaceCheck === 'player' && !result.dnf) {
+    homeRaceBonus = calcFanGain(seriesId, result.position, false, result.fieldSize) * 0.3;
+    addLog(state, `Home race at ${race.track}! Bonus fans: +${Math.floor(homeRaceBonus)}`);
+  }
+  
+  // Career stats
+  state.starts++;
+  if (result.position === 1) state.wins++;
+  if (result.position <= 5) state.top5s++;
+  if (result.pole) state.poles++;
+  
+  // Contract stats
+  if (contract) {
+    contract.racesCompleted++;
+    if (result.position === 1) {
+      contract.wins = (contract.wins || 0) + 1;
+    }
+  }
+  
+  // Points
+  if (!state.championshipPoints[seriesId]) state.championshipPoints[seriesId] = {};
+  state.championshipPoints[seriesId][state.driverName] = 
+    (state.championshipPoints[seriesId][state.driverName] || 0) + result.points;
+  
+  // Prize money
+  let totalPrize = result.prize;
+  if (result.position === 1 && contract && contract.winBonus) {
+    totalPrize += contract.winBonus;
+    addLog(state, `Win bonus from ${contract.team}: ${fmtMoney(contract.winBonus)}`);
+  }
+  
+  // Prize share (team takes cut)
+  const prizeShare = contract?.prizeShare || 0.70;
+  const playerPrize = Math.floor(totalPrize * prizeShare);
+  state.money += playerPrize;
+  state.totalPrizeMoney += playerPrize;
+  
+  if (contract) contract.earnings += playerPrize;
+  
+  // Sponsor bonuses & goal tracking
+  (state.sponsors || []).forEach(sp => {
+    if (sp.seriesId !== seriesId) return;
+    
+    // Update sponsor goal progress
+    updateSponsorGoal(sp, result.position, result.dnf, result.fieldSize);
+    
+    // Immediate bonuses
+    if (result.position === 1 && sp.winBonus) {
+      state.money += sp.winBonus;
+      addLog(state, `Sponsor win bonus (${sp.brand}): ${fmtMoney(sp.winBonus)}`);
+    }
+    if (result.position <= 5 && sp.top5Bonus) {
+      state.money += sp.top5Bonus;
+      addLog(state, `Sponsor top-5 bonus (${sp.brand}): ${fmtMoney(sp.top5Bonus)}`);
+    }
+    
+    // Happiness adjustment based on result
+    if (result.dnf) {
+      sp.happiness = Math.max(sp.minHappy, sp.happiness - 8);
+    } else if (result.position === 1) {
+      sp.happiness = Math.min(100, sp.happiness + 12);
+    } else if (result.position <= 5) {
+      sp.happiness = Math.min(100, sp.happiness + 6);
+    } else if (result.position <= 10) {
+      sp.happiness = Math.min(100, sp.happiness + 2);
+    } else {
+      sp.happiness = Math.max(sp.minHappy, sp.happiness - 2);
+    }
+  });
+  
+  // Fan gain (scaled by tier)
+  const baseFanGain = calcFanGain(seriesId, result.position, result.dnf, result.fieldSize);
+  let totalFanGain = baseFanGain + homeRaceBonus;
+  
+  // Perk: Crowd Pleaser
+  if ((state.driverPerks||[]).includes('crowd_pleaser')) {
+    totalFanGain = Math.floor(totalFanGain * 1.25);
+  }
+  
+  state.fans += Math.floor(totalFanGain);
+  
+  // Reputation gain
+  let repGain = 0;
+  if (result.dnf) {
+    repGain = -2;
+  } else if (result.position === 1) {
+    repGain = 10 + s.tier * 2;
+  } else if (result.position <= 5) {
+    repGain = 5 + s.tier;
+  } else if (result.position <= 10) {
+    repGain = 2;
+  } else {
+    repGain = 1;
+  }
+  
+  // Perk: Legend
+  if ((state.driverPerks||[]).includes('legend')) {
+    repGain = Math.floor(repGain * 1.3);
+  }
+  
+  state.reputation += repGain;
+  
+  // Confidence adjustment
+  if (result.position === 1) {
+    state.confidence = Math.min(10, state.confidence + 3);
+  } else if (result.position <= 5) {
+    state.confidence = Math.min(10, state.confidence + 1);
+  } else if (result.dnf) {
+    state.confidence = Math.max(-10, state.confidence - 3);
+  } else if (result.position > result.fieldSize * 0.7) {
+    state.confidence = Math.max(-10, state.confidence - 1);
+  }
+  
+  // Car condition degradation
+  if (result.dnf) {
+    // Major damage from DNF
+    state.carCondition.engine = Math.max(0, state.carCondition.engine - rand(15, 30));
+    state.carCondition.suspension = Math.max(0, state.carCondition.suspension - rand(10, 25));
+    state.carCondition.chassis = Math.max(0, state.carCondition.chassis - rand(10, 20));
+    state.carCondition.tires = Math.max(0, state.carCondition.tires - rand(20, 40));
+    state.carCondition.brakes = Math.max(0, state.carCondition.brakes - rand(15, 30));
+  } else {
+    // Normal race wear
+    const tier = s.tier;
+    const wearMult = REPAIR_TIER_MULT[tier] || 1.0;
+    state.carCondition.engine -= Math.floor(rand(3, 8) * wearMult);
+    state.carCondition.suspension -= Math.floor(rand(2, 6) * wearMult);
+    state.carCondition.chassis -= Math.floor(rand(2, 5) * wearMult);
+    state.carCondition.tires -= Math.floor(rand(5, 12) * wearMult);
+    state.carCondition.brakes -= Math.floor(rand(3, 7) * wearMult);
+    
+    // Clamp to 0
+    Object.keys(state.carCondition).forEach(k => {
+      state.carCondition[k] = Math.max(0, state.carCondition[k]);
+    });
+  }
+  
+  // Build close finishes list (drivers within 3 positions)
+  const closeFinishes = [];
+  const fieldDrivers = (state.drivers || []).filter(d => d.active && d.currentSeriesId === seriesId);
+  shuffle(fieldDrivers);
+  
+  if (!result.dnf && result.position <= 10) {
+    // Pick 1-2 drivers within 3 spots for close racing
+    const candidates = fieldDrivers.slice(0, 5);
+    const count = rand(1, Math.min(2, candidates.length));
+    for (let i = 0; i < count; i++) {
+      closeFinishes.push(candidates[i].name);
+      touchRival(state.rivals, candidates[i].name, 'close', true);
+    }
+  }
+  result.closeFinishes = closeFinishes;
+  
+  // Incident driver tracking (populated from scenario choices in modal)
+  if (result.incidentDrivers && result.incidentDrivers.length > 0) {
+    result.incidentDrivers.forEach(name => {
+      touchRival(state.rivals, name, 'incident', false);
+    });
+  }
+  
+  // Check for driver callout
+  const callout = maybeFireCallout(state, result, seriesId);
+  if (callout) {
+    state.dramaQueue.push({
+      id: 'callout_' + uid(),
+      title: callout.type === 'incident' ? 'Post-Race Callout' : 'Respect Earned',
+      effect: 'callout',
+      calloutData: callout,
+      desc: callout.quote,
+      valence: callout.type === 'incident' ? 'negative' : 'positive',
+    });
+  }
+  
+  // Simulate teammate results
+  if (contract && contract.teammates) {
+    const tmResults = simulateTeammateRace(state, contract, raceIdx, result.fieldSize);
+    tmResults.forEach(tmr => {
+      addLog(state, `Teammate ${tmr.name}: ${tmr.dnf ? 'DNF' : 'P' + tmr.position}`);
+    });
+  }
+  
+  // Store result on schedule
+  race.result = result;
+  
+  // Race history log
+  if (!state.raceHistory) state.raceHistory = [];
+  state.raceHistory.push({
+    season: state.season,
+    seriesId,
+    round: raceIdx + 1,
+    track: race.track,
+    position: result.position,
+    dnf: result.dnf,
+    pole: result.pole,
+    prize: playerPrize,
+    points: result.points,
+  });
+  
+  // Driver level up check
+  const oldLevel = state.driverLevel || 0;
+  const newLevel = calcDriverLevel(state);
+  if (newLevel > oldLevel) {
+    state.driverLevel = newLevel;
+    addLog(state, `Driver Level Up! Now Level ${newLevel}`);
+    
+    // Check for perk unlocks
+    DRIVER_PERKS.forEach(perk => {
+      if (perk.reqLvl === newLevel && !(state.driverPerks||[]).includes(perk.id)) {
+        state.driverPerks.push(perk.id);
+        state.dramaQueue.push({
+          id: 'perk_' + uid(),
+          title: 'Perk Unlocked',
+          effect: 'perk',
+          desc: `${perk.icon} ${perk.name}: ${perk.desc}`,
+          valence: 'positive',
+        });
+      }
+    });
+  }
+  
+  // Milestone checks
+  MILESTONE_DEFS.forEach(m => {
+    if ((state.milestones||[]).includes(m.id)) return;
+    if (m.check(state)) {
+      state.milestones.push(m.id);
+      state.dramaQueue.push({
+        id: 'milestone_' + uid(),
+        title: 'Milestone Achieved',
+        effect: 'milestone',
+        desc: `${m.icon} ${m.label}: ${m.desc}`,
+        valence: 'positive',
+      });
+    }
+  });
+  
+  addLog(state, `${race.track} - ${result.dnf ? 'DNF (' + result.dnfReason + ')' : 'P' + result.position} - ${fmtMoney(playerPrize)} - ${result.points} pts`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AI DRIVER SEASON SIMULATION
+// ═══════════════════════════════════════════════════════════════════════
+
+function simulateAISeasons(state) {
+  if (!state.drivers) return;
+  
+  SERIES.forEach(s => {
+    const fieldDrivers = state.drivers.filter(d => d.active && d.currentSeriesId === s.id);
+    if (!fieldDrivers.length) return;
+    
+    const fieldSize = SERIES_FIELD_SIZE[s.id] || 20;
+    
+    // Simulate full season for each AI driver
+    fieldDrivers.forEach(d => {
+      d.seasonPoints = 0;
+      d.seasonWins = 0;
+      d.seasonTop5s = 0;
+      d.seasonStarts = s.races;
+      
+      for (let r = 0; r < s.races; r++) {
+        const skill = d.skill || 50;
+        const basePos = Math.floor(fieldSize * (1 - skill / 100));
+        const variance = rand(-6, 6);
+        const pos = clamp(basePos + variance, 1, fieldSize);
+        const dnfChance = 0.15 - (skill / 100) * 0.08;
+        const dnf = Math.random() < dnfChance;
+        
+        if (!dnf) {
+          const points = calcPoints(s.id, pos, false, false, false);
+          d.seasonPoints += points;
+          if (pos === 1) d.seasonWins++;
+          if (pos <= 5) d.seasonTop5s++;
+        }
+      }
+      
+      // Career totals
+      d.starts += s.races;
+      d.wins += d.seasonWins;
+      d.top5s += d.seasonTop5s;
+      
+      // Fan growth for AI drivers (scaled by tier and performance)
+      const fanGrowth = calcFanGain(s.id, d.seasonWins > 0 ? 1 : 5, false, fieldSize) * s.races * 0.3;
+      d.fans = (d.fans || 0) + Math.floor(fanGrowth);
+    });
+    
+    // Store AI championship standings
+    if (!state.championshipPoints[s.id]) state.championshipPoints[s.id] = {};
+    fieldDrivers.forEach(d => {
+      state.championshipPoints[s.id][d.name] = d.seasonPoints;
+    });
+  });
+  
+  // Evolve AI-AI relationships at season end
+  evolveAIRelationships(state);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SEASON ADVANCEMENT
+// ═══════════════════════════════════════════════════════════════════════
+
+function advanceSeason(state) {
+  state.season++;
+  state.week = 1;
+  state.offseasonPhase = false;
+  
+  // Simulate AI driver seasons
+  simulateAISeasons(state);
+  
+  // Calculate final standings for all series
+  const seasonStandings = {};
+  SERIES.forEach(s => {
+    const pts = state.championshipPoints[s.id] || {};
+    const standings = Object.entries(pts)
+      .map(([name, points]) => {
+        const d = state.drivers.find(dr => dr.name === name) || { name };
+        return {
+          name,
+          points,
+          wins: name === state.driverName ? state.contracts.find(c => c.seriesId === s.id)?.wins || 0 : d.seasonWins || 0,
+          top5s: d.seasonTop5s || 0,
+        };
+      })
+      .sort((a, b) => b.points - a.points)
+      .map((entry, idx) => ({ ...entry, position: idx + 1 }));
+    
+    seasonStandings[s.id] = standings;
+  });
+  
+  // Store season history for contracts completed
+  state.contracts.forEach(c => {
+    if (c.racesCompleted >= c.races) {
+      c.seasonsCompleted++;
+      c.racesCompleted = 0;
+      c.wins = 0;
+      
+      const finalStanding = seasonStandings[c.seriesId]?.find(st => st.name === state.driverName);
+      const narrative = generateSeasonNarrative(state, c.seriesId, seasonStandings[c.seriesId] || []);
+      
+      if (!state.seasonHistory) state.seasonHistory = [];
+      state.seasonHistory.push({
+        season: state.season - 1,
+        seriesId: c.seriesId,
+        team: c.team,
+        position: finalStanding?.position || 99,
+        points: finalStanding?.points || 0,
+        wins: finalStanding?.wins || 0,
+        top5s: finalStanding?.top5s || 0,
+        championships: finalStanding?.position === 1 ? [{ seriesId: c.seriesId, pos: 1 }] : [],
+        narrative,
+      });
+      
+      // Championship trophy drama
+      if (finalStanding?.position === 1) {
+        state.dramaQueue.push({
+          id: 'championship_' + uid(),
+          title: '🏆 CHAMPION',
+          effect: 'championship',
+          desc: `${getSeries(c.seriesId).name} Champion. Season ${state.season - 1}. ${narrative}`,
+          valence: 'positive',
+        });
+      }
+    }
+  });
+  
+  // Sponsor season advancement
+  (state.sponsors || []).forEach(sp => {
+    sp.seasonsLeft--;
+    
+    // Evaluate sponsor goal
+    const goalEval = evaluateSponsorGoal(sp);
+    if (!goalEval.met && !sp.sponsorGoal.warned) {
+      sp.happiness = Math.max(sp.minHappy, sp.happiness - 15);
+      sp.sponsorGoal.warned = true;
+      state.dramaQueue.push({
+        id: 'sponsor_warning_' + uid(),
+        title: 'Sponsor Concern',
+        effect: 'sponsor_warning',
+        desc: `${sp.brand} expected better. Goal was: ${sp.sponsorGoal.desc}. You achieved ${goalEval.pct}%. They're watching closely.`,
+        valence: 'negative',
+      });
+    } else if (goalEval.met && !sp.sponsorGoal.praised) {
+      sp.happiness = Math.min(100, sp.happiness + 10);
+      sp.sponsorGoal.praised = true;
+      state.dramaQueue.push({
+        id: 'sponsor_praise_' + uid(),
+        title: 'Sponsor Satisfaction',
+        effect: 'sponsor_praise',
+        desc: `${sp.brand} is thrilled with the results. Goal exceeded: ${goalEval.pct}%. Relationship strengthened.`,
+        valence: 'positive',
+      });
+    }
+    
+    // Reset goal tracking for new season
+    if (sp.sponsorGoal) {
+      sp.sponsorGoal.racesTracked = 0;
+      sp.sponsorGoal.racesAchieved = 0;
+      sp.sponsorGoal.warned = false;
+      sp.sponsorGoal.praised = false;
+    }
+    
+    // Happiness decay (modified by perk)
+    const decayRate = (state.driverPerks || []).includes('sponsor_magnet') ? 0.70 : 1.0;
+    sp.happiness = Math.max(sp.minHappy, sp.happiness - Math.floor(SPONSOR_TYPES[sp.type].decay * decayRate));
+    
+    // Check for sponsor termination
+    if (sp.happiness <= sp.minHappy && sp.seasonsLeft <= 0) {
+      state.dramaQueue.push({
+        id: 'sponsor_drop_' + uid(),
+        title: 'Sponsor Departure',
+        effect: 'sponsor_drop',
+        desc: `${sp.brand} has decided not to renew. Relationship happiness: ${sp.happiness}/100.`,
+        valence: 'negative',
+      });
+    }
+  });
+  
+  // Remove expired sponsors
+  state.sponsors = (state.sponsors || []).filter(sp => sp.seasonsLeft > 0 || sp.happiness > sp.minHappy);
+  
+  // Contract term completion
+  state.contracts.forEach(c => {
+    if (c.seasonsCompleted >= c.termSeasons) {
+      addLog(state, `Contract with ${c.team} completed. Term: ${c.termSeasons} season${c.termSeasons > 1 ? 's' : ''}.`);
+    }
+  });
+  
+  // Reset championship points
+  state.championshipPoints = {};
+  
+  // Reset schedules
+  state.schedules = {};
+  
+  // Clear race-specific drama
+  state.dramaQueue = (state.dramaQueue || []).filter(d => d.effect !== 'callout');
+  
+  // Merch revenue
+  const merchRev = calcMerchRevenue(state.fans);
+  state.money += merchRev;
+  state.totalMerchRevenue += merchRev;
+  addLog(state, `Season ${state.season - 1} merchandise revenue: ${fmtMoney(merchRev)}`);
+  
+  // Generate new contract offers
+  state.offseasonOffers = generateOffers(state.reputation, state.fans);
+  
+  // Generate new sponsor offers
+  const newSponsorOffers = [];
+  SERIES.forEach(s => {
+    if (state.reputation >= s.reqRep * 0.7 && state.fans >= s.reqFans * 0.5) {
+      if (Math.random() < 0.5) {
+        newSponsorOffers.push(makeSponsor(s.id, 'primary'));
+      }
+      if (Math.random() < 0.6) {
+        newSponsorOffers.push(makeSponsor(s.id, 'associate'));
+      }
+    }
+  });
+  state.sponsorOffers = newSponsorOffers;
+  
+  // Re-assign AI driver fans (natural growth over off-season)
+  assignAIFans(state.drivers);
+  
+  addLog(state, `───────────────────────────────────────────────────────────`);
+  addLog(state, `Season ${state.season} begins.`);
+}
+
+</script>
+
