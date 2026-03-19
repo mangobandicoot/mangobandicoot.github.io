@@ -1,0 +1,1879 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle v1.5.2-SIM — Simulated Career RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif;background:#04060E;color:#E2E8F0;font-size:16px;line-height:1.45}
+input,textarea,select,button{font-family:inherit;font-size:15px}
+input,textarea,select{background:#131822;border:1px solid #64748B;border-radius:6px;color:#F9FAFB;padding:8px 11px}
+input:focus,textarea:focus,select:focus{outline:2px solid #D97706;outline-offset:1px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0B0F1A}
+::-webkit-scrollbar-thumb{background:#64748B;border-radius:3px}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#setup-screen{position:fixed;inset:0;background:#04060E;display:flex;align-items:center;justify-content:center;z-index:999}
+#setup-screen.hidden{display:none}
+#header{background:#080C14;border-bottom:2px solid #1E2433;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-shrink:0}
+.driver-name{font-size:22px;font-weight:900;color:#F59E0B;line-height:1}
+.driver-sub{font-size:12px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:2px}
+.hdr-stats{display:flex;gap:24px;margin-left:auto}
+.hdr-stat .val{font-size:17px;font-weight:800;color:#F9FAFB;line-height:1}
+.hdr-stat .lbl{font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em;margin-top:2px}
+#tabs{background:#080C14;border-bottom:2px solid #1E2433;display:flex;gap:2px;padding:6px 24px 0;flex-shrink:0;overflow-x:auto}
+.tab{background:transparent;border:none;border-bottom:3px solid transparent;color:#94A3B8;padding:7px 16px;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:color 0.15s}
+.tab:hover{color:#E2E8F0}
+.tab.active{color:#F59E0B;border-bottom-color:#F59E0B}
+.tab-badge{display:inline-block;background:#D97706;color:#000;font-size:10px;font-weight:900;padding:1px 5px;border-radius:10px;margin-left:5px;vertical-align:middle}
+#content{flex:1;overflow-y:auto;padding:24px}
+.page{max-width:980px;margin:0 auto;animation:fadeIn 0.2s ease}
+.page-title{font-size:26px;font-weight:900;margin-bottom:6px;color:#F9FAFB}
+.page-sub{font-size:15px;color:#94A3B8;margin-bottom:20px}
+.card{background:#0B0F1A;border:1px solid #1E2433;border-radius:10px;padding:18px;margin-bottom:14px}
+.card-title{font-size:14px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat-bar{margin-bottom:10px}
+.stat-bar .sb-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px}
+.stat-bar .sb-lbl{color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em}
+.stat-bar .sb-val{color:#E5E7EB;font-weight:700}
+.stat-bar .sb-track{height:5px;background:#1E2433;border-radius:3px;overflow:hidden}
+.stat-bar .sb-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+.badge{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:0.04em;border:1px solid;white-space:nowrap}
+button{cursor:pointer;border:none;border-radius:6px;font-weight:700;letter-spacing:0.03em;transition:opacity 0.15s,filter 0.15s;white-space:nowrap}
+button:not(:disabled):hover{filter:brightness(1.12)}
+button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
+.btn{padding:8px 18px;font-size:14px}
+.btn-lg{padding:11px 24px;font-size:16px}
+.btn-full{width:100%}
+.btn-sm{padding:5px 12px;font-size:13px}
+.btn-xs{padding:3px 8px;font-size:12px}
+.btn-primary{background:#D97706;color:#000}
+.btn-success{background:#065F46;color:#6EE7B7}
+.btn-danger{background:#7F1D1D;color:#FCA5A5}
+.btn-chaos{background:#4C1D95;color:#DDD6FE}
+.btn-ghost{background:transparent;color:#CBD5E1;border:1px solid #64748B}
+.btn-secondary{background:#1E2433;color:#E5E7EB}
+.btn-warn{background:#78350F;color:#FDE68A}
+.btn-info{background:#0C4A6E;color:#7DD3FC}
+.row-item{display:flex;align-items:center;gap:14px;background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:11px 14px;margin-bottom:8px}
+.row-item .accent{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.row-name{font-size:15px;font-weight:800;color:#F9FAFB}
+.row-sub{font-size:14px;color:#94A3B8;margin-top:2px}
+.row-sub2{font-size:14px;color:#94A3B8;margin-top:1px}
+.drama-banner{background:#1a1200;border:1px solid #D97706;border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.drama-title{font-size:15px;font-weight:800;color:#FBBF24;margin-bottom:5px}
+.drama-desc{font-size:15px;color:#E2E8F0;line-height:1.5;margin-bottom:10px}
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:500;padding:16px}
+#modal-overlay.hidden{display:none}
+#modal-box{background:#0B0F1A;border:1px solid #64748B;border-radius:14px;padding:26px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto}
+.modal-eyebrow{font-size:13px;color:#94A3B8;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:5px}
+.modal-title{font-size:22px;font-weight:900;color:#F9FAFB;margin-bottom:3px}
+.modal-sub{font-size:15px;color:#94A3B8;margin-bottom:22px}
+.modal-label{font-size:14px;color:#CBD5E1;display:block;margin-bottom:5px;font-weight:600}
+.modal-section{margin-bottom:16px}
+.modal-preview{background:#131822;border-radius:8px;padding:14px;margin:16px 0;display:flex;gap:24px;flex-wrap:wrap}
+.pv-lbl{font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.1em}
+.pv-val{font-size:22px;font-weight:900;margin-top:2px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.checkbox-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.checkbox-item{display:flex;gap:7px;align-items:center;cursor:pointer;font-size:13px;color:#E2E8F0}
+.checkbox-item input[type=checkbox]{width:15px;height:15px;cursor:pointer}
+.stn-table{width:100%;border-collapse:collapse;font-size:14px}
+.stn-table th{font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;text-align:right;padding:5px 8px;border-bottom:1px solid #1E2433}
+.stn-table th:nth-child(2){text-align:left}
+.stn-table td{padding:6px 8px;text-align:right;border-bottom:1px solid #0D1117}
+.stn-table td:nth-child(2){text-align:left}
+.stn-table tr:hover td{background:#0D1117}
+.stn-table tr.player-row td{font-weight:700}
+.race-hist-table{width:100%;border-collapse:collapse;font-size:13px}
+.race-hist-table th{font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.08em;padding:5px 8px;text-align:left;border-bottom:1px solid #1E2433}
+.race-hist-table td{padding:6px 8px;border-bottom:1px solid #0D1117;color:#E2E8F0}
+.race-hist-table tr:hover td{background:#0D1117;cursor:pointer}
+.setup-box{text-align:center;max-width:480px;width:100%;padding:24px;animation:slideUp 0.5s ease}
+.setup-logo{font-size:78px;font-weight:900;line-height:0.88;background:linear-gradient(135deg,#F59E0B,#FBBF24,#F97316);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;margin-bottom:10px}
+.setup-card{background:#0B0F1A;border:1px solid #1E2433;border-radius:12px;padding:30px;margin-bottom:16px}
+.setup-card input{width:100%;font-size:20px;font-weight:700;text-align:center;margin-bottom:18px;border-width:2px}
+.setup-hint{font-size:14px;color:#64748B;margin-bottom:20px;line-height:1.5}
+.sim-badge{display:inline-block;background:#4C1D95;color:#DDD6FE;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;letter-spacing:0.1em;margin-bottom:10px;border:1px solid #7C3AED44}
+.sim-scene{background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px}
+.sim-scene-label{font-size:11px;font-weight:900;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px}
+.sim-narrative{font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px}
+.sim-choices{display:flex;flex-direction:column;gap:7px}
+.sim-choice-btn{background:#0B0F1A;border:1px solid #2D3748;border-radius:8px;padding:12px 16px;text-align:left;cursor:pointer;transition:border-color 0.15s,background 0.15s;font-size:14px;color:#E2E8F0;font-family:'Barlow Condensed',Arial,sans-serif;font-weight:600;letter-spacing:0.02em;width:100%}
+.sim-choice-btn:hover:not(:disabled){border-color:#F59E0B;background:#1a1200;color:#F9FAFB}
+.sim-choice-btn:disabled{opacity:0.38;cursor:not-allowed}
+.sim-outcome{border-radius:8px;padding:14px 16px;margin-top:12px;border-left:3px solid #64748B;background:#060A10}
+.sim-outcome.good{border-left-color:#10B981;background:#06130e}
+.sim-outcome.bad{border-left-color:#EF4444;background:#130606}
+.sim-outcome.neutral{border-left-color:#8B5CF6;background:#0a0616}
+.sim-outcome-title{font-size:15px;font-weight:800;color:#F9FAFB;margin-bottom:4px}
+.sim-outcome-desc{font-size:14px;color:#94A3B8;line-height:1.5}
+.sim-roll-display{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748B;margin-top:8px}
+.attr-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #0D1117}
+.attr-name{font-size:14px;font-weight:800;color:#F9FAFB;width:130px;flex-shrink:0}
+.attr-desc{font-size:12px;color:#64748B;flex:1;line-height:1.4}
+.attr-val{font-size:20px;font-weight:900;width:32px;text-align:center;flex-shrink:0}
+.attr-controls{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.attr-bar-wrap{width:80px;height:5px;background:#1E2433;border-radius:3px;overflow:hidden;flex-shrink:0}
+.attr-bar-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.points-pool{background:#060A10;border:1px solid #F59E0B44;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.perk-card{background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.15s}
+.perk-card.selected{border-color:#F59E0B;background:#1a1200}
+.perk-card.locked{opacity:0.35;cursor:not-allowed}
+.upgrade-card{background:#060A10;border:1px solid #1E2433;border-radius:8px;padding:14px;margin-bottom:10px}
+.upgrade-tier{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.upgrade-pip{width:32px;height:32px;border-radius:5px;border:2px solid #1E2433;background:#0B0F1A;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;cursor:pointer;transition:all 0.15s}
+.upgrade-pip.owned{border-color:#10B981;background:#065F46;color:#6EE7B7}
+.upgrade-pip.available{border-color:#F59E0B;background:#78350F22;color:#F59E0B}
+.upgrade-pip.locked{opacity:0.3;cursor:not-allowed}
+.happy-wrap{width:70px}
+.happy-bar{height:5px;background:#1E2433;border-radius:3px;overflow:hidden}
+.happy-fill{height:100%;border-radius:3px;transition:width 0.4s}
+.graph-wrap{background:#060A10;border-radius:8px;padding:14px;overflow-x:auto}
+.text-gold{color:#F59E0B!important}
+.text-green{color:#10B981!important}
+.text-red{color:#EF4444!important}
+.text-purple{color:#8B5CF6!important}
+.text-muted{color:#94A3B8!important}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.flex{display:flex;align-items:center;gap:10px}
+.flex-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:#0B0F1A;border:1px solid #2D3748;border-radius:8px;padding:12px 16px;font-size:14px;font-weight:600;color:#F9FAFB;animation:slideUp 0.3s ease;max-width:320px}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="setup-screen">
+<div class="setup-box">
+<div style="font-size:11px;letter-spacing:0.35em;color:#94A3B8;text-transform:uppercase;margin-bottom:12px">Full Throttle — Simulated Branch</div>
+<div class="setup-logo">FULL<br>THROTTLE</div>
+<div class="sim-badge">&#10022; FULLY SIMULATED</div>
+<div class="setup-card">
+<form id="setup-form">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.1em">Your Driver Name</div>
+<input id="driver-name-input" type="text" placeholder="Enter your name..." maxlength="28" required autocomplete="off">
+<div style="font-size:12px;color:#CBD5E1;margin-bottom:6px;margin-top:14px;text-transform:uppercase;letter-spacing:0.1em">Home State / Region</div>
+<select id="driver-state-input" style="width:100%;margin-bottom:16px;font-size:16px;font-weight:600;text-align:center"></select>
+<script>
+(function(){
+  const sel=document.getElementById('driver-state-input');
+  if(!sel||sel.options.length>0)return;
+  const usStates=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
+  const intlRegions=['Europe','Africa','Asia','South America','Central America','Australia'];
+  const names={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
+  const usG=document.createElement('optgroup');usG.label='United States';
+  const iG=document.createElement('optgroup');iG.label='International';
+  usStates.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=names[s]||s;if(s==='ME')o.selected=true;usG.appendChild(o);});
+  intlRegions.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;iG.appendChild(o);});
+  sel.appendChild(usG);sel.appendChild(iG);
+})();
+</script>
+<div class="setup-hint">No iRacing required. Qualify and race by picking narrative choices. Build your driver RPG-style, upgrade your car between races. All contracts, sponsors, rivals and series progression from the original — fully intact.</div>
+<button type="submit" class="btn btn-lg btn-primary btn-full">START CAREER &#8594;</button>
+</form>
+</div>
+<div style="font-size:13px;color:#94A3B8;margin-top:12px">
+Have a save file? <label style="color:#D97706;cursor:pointer;margin-left:4px">Import Save<input id="import-setup" type="file" accept=".json" style="display:none"></label>
+</div>
+</div>
+</div>
+<div id="app" style="display:none">
+<div id="header"></div>
+<div id="tabs"></div>
+<div id="content"></div>
+</div>
+<div id="modal-overlay" class="hidden"><div id="modal-box"></div></div>
+<div id="toast-container"></div>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// FULL THROTTLE SIM — Data Constants (identical to v1.5.2)
+// ═══════════════════════════════════════════════════════════════════════
+const APP_VERSION = 'v1.5.2-SIM';
+
+// ── U.S. States (all 50 + DC) ────────────────────────────────────────
+const US_STATES = [
+  'AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY',
+  'LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM',
+  'NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA',
+  'WI','WV','WY','DC',
+];
+const US_STATE_NAMES = {
+  AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',
+  CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',
+  ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',
+  LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',
+  MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',
+  ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',
+  NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',
+  RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',
+  UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',
+  WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.',
+};
+
+// ── International Regions (replace old "International" catch-all) ────
+const INTL_REGIONS = ['Europe','Africa','Asia','South America','Central America','Australia'];
+const INTL_REGION_NAMES = {
+  Europe:'Europe',Africa:'Africa',Asia:'Asia',
+  'South America':'South America','Central America':'Central America',Australia:'Australia',
+};
+
+// Combined for setup dropdown display
+const ALL_ORIGINS = [...US_STATES, ...INTL_REGIONS];
+const ALL_ORIGIN_NAMES = {...US_STATE_NAMES, ...INTL_REGION_NAMES};
+
+function isIntlRegion(origin) { return INTL_REGIONS.includes(origin); }
+function originLabel(origin) { return ALL_ORIGIN_NAMES[origin] || origin; }
+
+// ── Weighted AI home-state pool (Americans dominate standard series) ──
+const HOME_STATE_POOL = [
+  ...Array(8).fill('NC'),...Array(7).fill('VA'),...Array(7).fill('TN'),
+  ...Array(6).fill('GA'),...Array(6).fill('SC'),...Array(5).fill('FL'),
+  ...Array(5).fill('OH'),...Array(5).fill('IN'),...Array(4).fill('KY'),
+  ...Array(4).fill('WI'),...Array(4).fill('IL'),...Array(3).fill('TX'),
+  ...Array(3).fill('PA'),...Array(3).fill('MI'),...Array(3).fill('MO'),
+  ...Array(2).fill('AL'),...Array(2).fill('AR'),...Array(2).fill('MS'),
+  ...Array(2).fill('NY'),...Array(2).fill('CA'),...Array(2).fill('MN'),
+  ...Array(1).fill('WV'),...Array(1).fill('LA'),...Array(1).fill('OK'),
+  ...Array(1).fill('KS'),...Array(1).fill('NE'),...Array(1).fill('IA'),
+  // Small international presence in standard series (~4%)
+  ...Array(1).fill('Europe'),...Array(1).fill('Australia'),
+];
+// Higher intl mix for special events
+const HOME_STATE_POOL_INTL = [
+  ...HOME_STATE_POOL,
+  ...Array(4).fill('Europe'),...Array(3).fill('Australia'),
+  ...Array(2).fill('Asia'),...Array(2).fill('South America'),
+  ...Array(1).fill('Africa'),...Array(1).fill('Central America'),
+];
+
+function randomHomeState(intlBias=false){
+  const pool = intlBias ? HOME_STATE_POOL_INTL : HOME_STATE_POOL;
+  return pool[rand(0,pool.length-1)];
+}
+
+// ── Region-appropriate first names for international drivers ──────────
+const INTL_FIRST_NAMES = {
+  Europe: ['Marco','Luca','Jan','Sven','Pierre','Mikael','Tom','Nico','Erik','Felix',
+           'Romain','Carlos','David','Kevin','Mika','Jari','Rubens','Timo','Sebastian','Max'],
+  Africa: ['Khalid','Moses','Emmanuel','Dayo','Ade','Chukwu','Sipho','Thabo','Kofi','Kwame',
+           'Ahmed','Omar','Yusuf','Ibrahim','Hassan','Abebe','Tariq','Nabil','Karim','Jamal'],
+  Asia: ['Hiroshi','Takashi','Wei','Jin','Sung','Park','Kenji','Ryo','Taro','Yuki',
+         'Naoto','Kazuki','Daiki','Hayato','Sho','Li','Chen','Zhang','Liang','Feng'],
+  'South America': ['Diego','Gabriel','Matheus','Lucas','Felipe','Gustavo','Bruno','Rafael',
+                    'Andre','Rodrigo','Paulo','Emilio','Sebastian','Nicolas','Alejandro','Luis'],
+  'Central America': ['Miguel','Carlos','Juan','Jose','Ernesto','Roberto','Mario','Fernando',
+                      'Ricardo','Alejandro','Hector','Andres','Antonio','Manuel','Javier','Eduardo'],
+  Australia: ['Jack','Liam','Noah','Connor','Dylan','Riley','Lachlan','Cody','Jayden','Blake',
+              'Kyle','Brody','Corey','Tyson','Mitchell','Cameron','Nathan','Rhys','Scott','Dean'],
+};
+const INTL_LAST_NAMES = {
+  Europe: ['Mueller','Leclerc','Verstappen','Bottas','Sainz','Norris','Alonso','Hulkenberg',
+           'Magnussen','Vandoorne','Wehrlein','Auer','Eriksson','Lindqvist','Bergmann','Fischer'],
+  Africa: ['Okonkwo','Mensah','Diallo','Traore','Osei','Boateng','Zuma','Dlamini','Okafor','Nwosu',
+           'Hassan','Khalil','Rashid','Abdulla','Yilmaz','Petros','Tekle','Haile','Bekele','Tadesse'],
+  Asia: ['Yamamoto','Tanaka','Suzuki','Kobayashi','Nakajima','Sato','Ito','Watanabe','Kimura','Matsuda',
+         'Zhang','Wang','Liu','Chen','Yang','Huang','Zhou','Wu','Xu','Sun'],
+  'South America': ['Silva','Santos','Oliveira','Souza','Lima','Pereira','Costa','Alves','Ferreira',
+                    'Rodrigues','Barbosa','Figueiredo','Barrichello','Piquet','Massa','Senna'],
+  'Central America': ['Rodriguez','Martinez','Lopez','Gonzalez','Hernandez','Perez','Torres','Flores',
+                      'Rivera','Morales','Gutierrez','Ramirez','Castillo','Vargas','Cruz','Reyes'],
+  Australia: ['Smith','Jones','Williams','Brown','Wilson','Taylor','Anderson','Thomas','Jackson','White',
+              'Harris','Martin','Thompson','Garcia','Martinez','Robinson','Clark','Lewis','Lee','Walker'],
+};
+
+function generateIntlName(region) {
+  const firsts = INTL_FIRST_NAMES[region] || INTL_FIRST_NAMES['Europe'];
+  const lasts  = INTL_LAST_NAMES[region]  || INTL_LAST_NAMES['Europe'];
+  return firsts[rand(0,firsts.length-1)] + ' ' + lasts[rand(0,lasts.length-1)];
+}
+
+const IRACING_PTS = Array.from({length:50},(_,i)=>Math.max(1,43-i));
+
+const SERIES = [
+  {id:'mini_stock',name:'Mini Stock Series',short:'Mini Stock',tier:1,races:10,pay:120,winBonus:600,reqRep:0,reqFans:0,color:'#8B5CF6',maxTerm:1,maxTm:1,fee:120,desc:'Four cylinders, 200 horses, zero dignity. Everyone starts here.'},
+  {id:'street_stock',name:'Street Stock Series',short:'Street Stock',tier:2,races:12,pay:280,winBonus:1200,reqRep:35,reqFans:200,color:'#3B82F6',maxTerm:1,maxTm:1,fee:250,desc:'A step up. Same chaos, slightly more horsepower.'},
+  {id:'late_model_stock',name:'Late Model Stock Tour',short:'Late Model',tier:3,races:16,pay:1800,winBonus:7000,reqRep:80,reqFans:800,color:'#10B981',maxTerm:1,maxTm:2,fee:1000,desc:'500hp V8, real money, real sponsor pressure.'},
+  {id:'super_late_model',name:'Super Late Model Tour',short:'Super Late',tier:3,races:14,pay:2800,winBonus:10000,reqRep:65,reqFans:500,color:'#F97316',maxTerm:1,maxTm:2,fee:800,desc:'Full-fendered asphalt rockets. The step between street stock and the big money.'},
+  {id:'arca_menards',name:'ARCA Menards Series',short:'ARCA',tier:4,races:20,pay:12000,winBonus:35000,reqRep:130,reqFans:3000,color:'#F59E0B',maxTerm:2,maxTm:2,fee:4000,desc:'National TV. NASCAR scouts in the grandstands.'},
+  {id:'nascar_trucks',name:'NASCAR Craftsman Truck Series',short:'Trucks',tier:5,races:23,pay:25000,winBonus:90000,reqRep:180,reqFans:12000,color:'#EF4444',maxTerm:2,maxTm:3,fee:15000,desc:"NASCAR proper. Don't blow it on a lapped car."},
+  {id:'nascar_xfinity',name:'NASCAR Xfinity Series',short:'Xfinity',tier:6,races:33,pay:75000,winBonus:250000,reqRep:240,reqFans:55000,color:'#06B6D4',maxTerm:3,maxTm:3,fee:35000,desc:'One rung from the Cup. Every lap is an audition.'},
+  {id:'nascar_cup',name:'NASCAR Cup Series',short:'Cup Series',tier:7,races:36,pay:200000,winBonus:1000000,reqRep:320,reqFans:200000,color:'#EC4899',maxTerm:3,maxTm:3,fee:80000,desc:"The pinnacle."},
+];
+function getSeries(id){return SERIES.find(s=>s.id===id);}
+
+const FREE_TRACKS = [
+  {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+  {name:'Langley Speedway',city:'Hampton',state:'VA'},
+  {name:'USA International Speedway',city:'Lakeland',state:'FL'},
+  {name:'Southern National Motorsports Park',city:'Kenly',state:'NC'},
+  {name:'South Boston Speedway',city:'South Boston',state:'VA'},
+  {name:'Concord Speedway',city:'Concord',state:'NC'},
+  {name:'Oxford Plains Speedway',city:'Oxford',state:'ME'},
+  {name:'Lanier National Speedway',city:'Braselton',state:'GA'},
+  {name:'Thompson Speedway Motorsports Park',city:'Thompson',state:'CT'},
+  // Short tracks — grassroots core
+  {name:'Wiscasset Speedway',city:'Wiscasset',state:'ME'},
+  {name:'Seekonk Speedway',city:'Seekonk',state:'MA'},
+  {name:'Stafford Motor Speedway',city:'Stafford Springs',state:'CT'},
+  {name:'Lee USA Speedway',city:'Lee',state:'NH'},
+  {name:'Star Speedway',city:'Epping',state:'NH'},
+  {name:'Beech Ridge Motor Speedway',city:'Scarborough',state:'ME'},
+  {name:'Claremont Motorsports Park',city:'Claremont',state:'NH'},
+  {name:'White Mountain Motorsports Park',city:'North Woodstock',state:'NH'},
+  {name:'Monadnock Speedway',city:'Winchester',state:'NH'},
+  {name:'Waterford Speedbowl',city:'Waterford',state:'CT'},
+  {name:'Lime Rock Park',city:'Lakeville',state:'CT'},
+  {name:'New Smyrna Speedway',city:'New Smyrna Beach',state:'FL'},
+  {name:'Five Flags Speedway',city:'Pensacola',state:'FL'},
+  {name:'Hickory Motor Speedway',city:'Hickory',state:'NC'},
+  {name:'Franklin County Speedway',city:'Callaway',state:'VA'},
+  {name:'Caraway Speedway',city:'Asheboro',state:'NC'},
+  {name:'Tri-County Motor Speedway',city:'Hudson',state:'NC'},
+  // Slinger: owned but not free — pins as season finale for mini/street stock
+  {name:'Slinger Speedway',city:'Slinger',state:'WI',fig8:true},
+];
+const PAID_TRACKS = [
+  {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+  {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+  {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+  {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+  {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+  {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+  {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+  {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+  {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+  {name:'Iowa Speedway',city:'Newton',state:'IA'},
+  {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+  {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+  {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+  {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+  {name:'Dover Motor Speedway',city:'Dover',state:'DE'},
+  {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+  {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+  {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+  {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+  {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+];
+
+const TEAMS = {
+  mini_stock:["Pawlowski's Auto Body","Earl's Speed Shop","Backwoods Motorsports","County Line Racing","Hilltop Racing"],
+  street_stock:['Barnyard Racing',"Cousin's Garage",'Rural Route Racing','Three Dog Racing','Riverside Motorsports'],
+  late_model_stock:['Southern Speed Racing','Appalachian Motorsports','Piedmont Racing Co.','Blue Ridge Speed','Tri-State Racing'],
+  super_late_model:['Carolina Asphalt Racing','Ridgeline Motorsports','Summit Racing Stable','Tri-Oval Racing','Flatout Racing'],
+  arca_menards:['Pinnacle Motorsports','Elevation Racing','Heritage Speed Group','National Oval Racing','Summit Motorsports'],
+  nascar_trucks:['Frontier Truck Racing','Wildfire Motorsports','Crossroads Racing','Thunder Racing','Apex Truck Team'],
+  nascar_xfinity:['Silver Arrow Racing','Criterion Motorsports','Momentum Racing Partners','Apex National','Phoenix Racing'],
+  nascar_cup:['Titan Motorsports','Crown Racing','Dynasty Motor Racing','Apex Cup Team','Legacy Motor Club'],
+};
+
+const SPONSOR_BRANDS = {
+  mini_stock:["Earl's Auto Parts","Bud's Tire World",'County Diesel','Lakeside Motors'],
+  street_stock:['Midwest Auto Supply','Thunder Ridge Fuel','Valley Hardware','Pinecrest Auto'],
+  late_model_stock:['Summit Racing','Holley Performance','Lucas Oil','Driven Racing Oil'],
+  super_late_model:['Comp Cams','Edelbrock','Weld Racing','Hooker Headers'],
+  arca_menards:['Menards','NAPA Auto Parts','Chevrolet Accessories','Mobil 1'],
+  nascar_trucks:['Camping World','DeWalt','3M','Chevrolet Accessories'],
+  nascar_xfinity:['Xfinity',"Hellmann's","Cheddar's",'Benihana'],
+  nascar_cup:['Monster Energy','Coca-Cola','Goodyear','Hendrick Automotive'],
+  international:['Pirelli','Red Bull','Shell V-Power','Bosch','Michelin','Castrol','Gulf Oil'],
+};
+const SPONSOR_TYPES = {
+  primary:{label:'Primary',mult:1.0,dur:[1,2],decay:8,gain:12},
+  associate:{label:'Associate',mult:0.3,dur:[1,1],decay:5,gain:8},
+  contingency:{label:'Contingency',mult:0.1,dur:[1,3],decay:2,gain:4},
+  international:{label:'International',mult:1.5,dur:[1,2],decay:6,gain:10},
+};
+
+const CREW_PACKAGES = [
+  {id:'basic',name:'Basic',cost:0,qualBonus:0,desc:'Standard setup. Gets you to the grid.'},
+  {id:'club',name:'Club',cost:5000,qualBonus:2,desc:'Experienced engineer. Qualifying improves.'},
+  {id:'pro',name:'Pro',cost:20000,qualBonus:4,desc:'Full-time crew chief, proper data.'},
+  {id:'elite',name:'Elite',cost:75000,qualBonus:7,desc:'Best in the business.'},
+];
+
+const OFF_TRACK = [
+  {id:'hospital',label:'Hospital Visit',cost:0,rep:6,fans:200,sponsorHappy:5,desc:'Visit patients at a hospital.'},
+  {id:'school',label:'School Visit',cost:0,rep:5,fans:150,sponsorHappy:4,desc:'Talk to kids about racing.'},
+  {id:'sponsor_dinner',label:'Sponsor Dinner',cost:500,rep:2,fans:50,sponsorHappy:15,desc:'Schmooze with the people who write the checks.'},
+  {id:'media',label:'Media Appearance',cost:0,rep:8,fans:500,sponsorHappy:8,desc:'Interview, podcast, or local TV spot.'},
+  {id:'autograph',label:'Autograph Session',cost:0,rep:4,fans:400,sponsorHappy:6,desc:'Meet the fans.'},
+  {id:'charity_auction',label:'Charity Auction',cost:1000,rep:10,fans:600,sponsorHappy:10,desc:'Donate a helmet or ride-along.'},
+  {id:'team_dinner',label:'Team Dinner',cost:800,rep:1,fans:0,sponsorHappy:3,desc:'Buy the crew dinner.'},
+  {id:'donate_10k',label:'Donate $10,000',cost:10000,rep:15,fans:1000,sponsorHappy:12,desc:'Major donation.'},
+  {id:'donate_5k',label:'Donate $5,000',cost:5000,rep:10,fans:600,sponsorHappy:8,desc:'Meaningful contribution.'},
+  {id:'donate_1k',label:'Donate $1,000',cost:1000,rep:5,fans:200,sponsorHappy:4,desc:'Community-level.'},
+];
+
+const DRAMA = [
+  {id:'rival_media',weight:3,title:'Rival Trash Talk',effect:'rep_hit',value:-4,fans:-150,desc:'A rival went to the media and questioned your ability. It got picked up.'},
+  {id:'rival_media2',weight:2,title:'Called Out Publicly',effect:'rep_hit',value:-5,fans:-200,desc:'Your rival gave an interview specifically calling out your driving. By name. On camera.'},
+  {id:'bad_interview',weight:2,title:'Bad Interview',effect:'rep_hit',value:-4,fans:-100,desc:"You said something you shouldn't have in a post-race interview. The clips are everywhere."},
+  {id:'social_backlash',weight:2,title:'Social Media Backlash',effect:'rep_hit',value:-3,fans:-300,desc:'A clip of an on-track moment went viral for the wrong reasons.'},
+  {id:'team_pressure',weight:2,title:'Team Pressure',effect:'rep_hit',value:-3,fans:0,desc:'The team owner pulled you aside. Results need to improve.'},
+  {id:'sponsor_threat',weight:2,title:'Sponsor Concern',effect:'rep_hit',value:-2,fans:0,desc:"Your sponsor's rep called. They're watching results closely."},
+  {id:'performance_bonus',weight:2,title:'Sponsor Bonus',effect:'money',value:5000,desc:'Your sponsor loved the last result. Unexpected bonus.'},
+  {id:'media_buzz',weight:2,title:'Media Feature',effect:'rep_fans',value:8,fans:600,desc:'A regional outlet ran a feature on your season.'},
+  {id:'rival_stumbles',weight:2,title:'Rival Struggles',effect:'rep_fans',value:4,fans:200,desc:'Your main rival had a rough stretch.'},
+  {id:'good_interview',weight:2,title:'Strong Interview',effect:'rep_fans',value:5,fans:350,desc:'Post-race interview went well. Calm, sharp, professional.'},
+  {id:'parts_deal',weight:2,title:'Parts Hookup',effect:'money',value:800,desc:"A local supplier covered this week's tire bill."},
+  {id:'parts_fail',weight:2,title:'Parts Failure Warning',effect:'money',value:-2000,desc:'Your engine builder flagged a potential issue.'},
+  {id:'bad_press',weight:2,title:'Controversy',effect:'rep_hit',value:-3,fans:-200,desc:'An on-track incident got some bad coverage.'},
+  {id:'media_buzz2',weight:1,title:'Podcast Appearance',effect:'rep_fans',value:5,fans:800,desc:"You were a guest on a popular racing podcast."},
+  {id:'fan_favorite',weight:1,title:'Fan Favorite Award',effect:'rep_fans',value:6,fans:900,desc:'Voted fan favorite at your home track.'},
+  {id:'merch_spike',weight:1,title:'Merch Spike',effect:'money',value:3000,desc:'Your merchandise sold out after that last race.'},
+  {id:'local_hero',weight:1,title:'Local Hero',effect:'rep_fans',value:5,fans:500,desc:'Home track weekend. The crowd was yours.'},
+  {id:'sponsor_warning',weight:2,title:'Sponsor Warning',effect:'sponsor_warning',desc:"Your primary sponsor is unhappy."},
+  {id:'new_sponsor_sniff',weight:1,title:'New Sponsor Inquiring',effect:'rep_fans',value:3,fans:0,desc:'A brand reached out about potential sponsorship.'},
+  {id:'injury_scare',weight:1,title:'Practice Incident',effect:'rep_hit',value:-2,fans:-50,desc:'Hard incident in sim. Nothing broken but the team is quiet.'},
+  {id:'theft',weight:1,title:'Parts Theft',effect:'money',value:-1500,desc:'Someone broke into the hauler. Lost some spare parts.'},
+];
+
+const SPECIAL_EVENTS = [
+  {id:'wgl_invitational',name:'Watkins Glen Invitational',track:'Watkins Glen International',location:'Watkins Glen, NY',travelCost:0,entryCost:2000,fanGain:500,prize:3000,reqRep:30,reqFans:0,sponsorChance:0.05,carType:'NASCAR Stock Car',multiClass:false,desc:'A classic road course weekend.'},
+  {id:'cota_challenge',name:'COTA NASCAR Challenge',track:'Circuit of the Americas',location:'Austin, TX',travelCost:600,entryCost:3000,fanGain:800,prize:5000,reqRep:40,reqFans:500,sponsorChance:0.08,carType:'NASCAR Stock Car',multiClass:false,desc:'The F1 track hosting NASCAR. Big crowd, national coverage.'},
+  {id:'chicago_street',name:'Chicago Street Race',track:'Chicago Street Course',location:'Chicago, IL',travelCost:500,entryCost:4000,fanGain:1200,prize:8000,reqRep:60,reqFans:2000,sponsorChance:0.10,carType:'NASCAR Stock Car',multiClass:false,desc:'Downtown Chicago. Insane atmosphere, maximum exposure.'},
+  {id:'uk_oval',name:'UK Oval Invitational',track:'Coventry Oval',location:'Coventry, England',travelCost:3000,entryCost:2000,fanGain:800,prize:4000,reqRep:50,reqFans:1000,sponsorChance:0.12,carType:'Stock Rod',multiClass:false,desc:'Short oval racing UK style.'},
+  {id:'aus_supercars',name:'Australian Supercars Wildcard',track:'Mount Panorama',location:'Bathurst, Australia',travelCost:5000,entryCost:3000,fanGain:1500,prize:6000,reqRep:70,reqFans:5000,sponsorChance:0.15,carType:'Supercar',multiClass:false,desc:'The mountain.'},
+  {id:'nurburgring_24',name:'Nurburgring 24h Entry',track:'Nurburgring Nordschleife',location:'Nurburg, Germany',travelCost:6000,entryCost:8000,fanGain:3000,prize:5000,reqRep:80,reqFans:10000,sponsorChance:0.20,carType:'GT4/GT3',multiClass:true,desc:'The Green Hell. 24 hours.'},
+  {id:'le_mans_am',name:'Le Mans Am Class Entry',track:'Circuit de la Sarthe',location:'Le Mans, France',travelCost:7000,entryCost:12000,fanGain:5000,prize:8000,reqRep:100,reqFans:20000,sponsorChance:0.25,carType:'GT3',multiClass:true,desc:'Le Mans. Massive worldwide exposure.'},
+  {id:'slinger_fig8',name:'Slinger Figure-8 Open',track:'Slinger Speedway',location:'Slinger, WI',travelCost:0,entryCost:150,fanGain:200,prize:300,reqRep:0,reqFans:0,sponsorChance:0,carType:'Mini Stock',multiClass:false,fig8:true,desc:'Pure chaos. The intersection awaits.'},
+  {id:'mini_exhibition',name:'Mini Stock Local Night',track:'South Boston Speedway',location:'South Boston, VA',travelCost:0,entryCost:250,fanGain:150,prize:500,reqRep:0,reqFans:0,sponsorChance:0,carType:'Mini Stock',multiClass:false,desc:'A local night race.'},
+];
+
+// ─── AI DRIVER NAME POOL (60×60 = 3600 possible combos, 12% Jr.) ────────────
+const AI_FIRST = [
+  'Kyle','Jimmy','Dale','Bobby','Ronnie','Chase','Tyler','Rick','Austin','Sammy',
+  'Devin','Nate','Cole','Brady','Zach','Marcus','Joey','Pete','Garrett','Hank',
+  'Luke','Cody','Ray','Brent','Travis','Dustin','Mitch','Greg','Aaron','Vince',
+  'Drew','Lenny','Stan','Wayne','Danny','Trent','Seth','Ricky','Caleb','Wade',
+  'Jason','Connor','Mike','Phil','Gary','Dave','Shawn','Curt','Neil','Vance',
+  'Brett','Derek','Shane','Lance','Todd','Denny','Clint','Regan','David','Matt',
+  'Blake','Carson','Hunter','Logan','Mason','Carter','Parker','Wyatt','Colton','Reid',
+  'Jeb','Earl','Floyd','Cecil','Lonnie','Doyle','Merle','Dwayne','Leroy','Clyde',
+  'Scotty','Robby','Timmy','Donnie','Ronny','Kenny','Rusty','Buddy','Wally','Gus',
+  'Harrison','Jackson','Preston','Grady','Crawford','Bennett','Tucker','Slade','Knox','Cruz',
+  'Clay','Beau','Tanner','Wes','Eli','Rex','Dex','Brock','Cale','Tate',
+  'Chip','Skip','Budd','Norm','Walt','Mel','Hap','Bo','Lyle','Roscoe',
+];
+const AI_LAST = [
+  'McAllister','Hayes','Whitfield','Tremont','Stacks','Duvall','Boone','Cantrell','Phelps','Gross',
+  'Hargrove','Wicker','Farris','Holt','Tunnell','Deen','Ruiz','Slade','Finch','Dillon',
+  'Farber','Marsh','Sutton','Holloway','Yount','Falk','Pruitt','Sable','Tull','Corley',
+  'Paxson','Hobbs','Cutler','Rideout','Kowalski','Malone','Voss','Firth','Lehr','Bale',
+  'Denton','Arnett','Odom','Kissel','Tully','Ingram','Bassett','Pulliam','Dawson','Hensley',
+  'Cope','Speed','Bodine','Wallace','Nemechek','Green','Kenseth','Keller','Waltrip','Labonte',
+  'Earnhardt','Petty','Allison','Yarborough','Parsons','Pearson','Thomas','Craven','Musgrave','Trickle',
+  'Setzer','Combs','Pressley','Grissom','Purvis','Reffner','Sauter','Lund','Weatherly','Lorenzen',
+  'Marcis','Means','Andretti','Mears','Fittipaldi','Benson','Biffle','Burton','Reutimann','Gilliland',
+  'Kahne','Truex','Logano','Almirola','McDowell','Chastain','Preece','Suarez','Hemric','Cindric',
+  'Swindell','Larson','Byron','Bell','Stenhouse','DiBenedetto','LaJoie','Ware','Ragan','Nemechek',
+  'Smithley','Lafferty','Snider','Haley','Tifft','Bilicki','Morley','Grala','Kligerman','Hocevar',
+];
+
+// ── Curated short bios keyed by last name (used in Drivers tab display) ──────
+const DRIVER_BIOS = {
+  McAllister: 'Started on dirt ovals in Tennessee at fifteen. Has the smoothest throttle in the business.',
+  Hayes:       'Family money got him the ride. Raw talent kept it. Second-generation hunger.',
+  Whitfield:   'Crew chief turned driver. Knows every setup trick in the book.',
+  Tremont:     'Short-track specialist who never wanted to move up. Won every small series first.',
+  Stacks:      'Hard charger. Leads a lot of laps. Finishes outside the top five a lot too.',
+  Duvall:      'Quiet in the hauler, loud on track. Known for moves nobody else tries.',
+  Boone:       'Grew up racing go-karts against his three brothers. None of them made it. He did.',
+  Cantrell:    'Rebuilt his car after a garage fire in year two. Tougher since.',
+  Phelps:      'Road course specialist stuck in an oval world. Adapts better than he lets on.',
+  Gross:       'Local legend in Georgia. Intimidating reputation. Usually earned it.',
+  Hargrove:    'Mechanic first, driver second. The crew trusts his feedback like nobody else.',
+  Wicker:      'Won the mini stock championship three straight years before anyone noticed.',
+  Farris:      'Fast in qualifying. Struggles to translate it. Working on it.',
+  Holt:        'Old-school driver in a data-driven era. Still somehow makes it work.',
+  Tunnell:     'Superspeedway specialist. Give him a draft pack and watch out.',
+  Deen:        'Young enough to be reckless. Old enough to know better. Usually chooses reckless.',
+  Ruiz:        'First-gen racing family. Immigrant story. Works twice as hard as anyone on the grid.',
+  Finch:       'Precision driver. Never leads many laps but rarely finishes outside the top eight.',
+  Dillon:      'Connected family, real speed. Has to fight the perception every race.',
+  Farber:      'Tire management savant. Wins on fuel and tires when others fall apart late.',
+  Marsh:       'Three-time DNF king before he finally finished a full season clean.',
+  Sutton:      'Deep voice, deep pockets, deep commitment. Self-funded for six years.',
+  Holloway:    'Pure aggressor. Leads incidents list and wins list in equal measure.',
+  Yount:       'Night race specialist. Runs better when the sun goes down.',
+  Falk:        'Data-obsessed. More laptops in his hauler than most teams combined.',
+  Pruitt:      'Underdog story every year. Somehow still here.',
+  Tull:        'Known for clean passes and a short memory after incidents. Rare combination.',
+  Paxson:      'Factory development driver. The future the manufacturer is betting on.',
+  Hobbs:       'Veteran who should have retired two seasons ago. Still top five on a good night.',
+  Cutler:      'Good in the rain. Claims it\'s skill. Everyone knows it\'s just experience.',
+  Rideout:     'Sprint car background. Car control that makes the oval guys nervous.',
+  Kowalski:    'Northern roots. Learned to drive on ice ovals. Nothing phases him.',
+  Malone:      'Known for the best burnouts in the series. Also for winning sometimes.',
+  Voss:        'Crew chief\'s dream driver. Communicates setup changes better than anyone.',
+  Dawson:      'Fan favorite. Signs autographs until security closes the gate.',
+  Hensley:     'Quiet competitor who never shows up in headlines until he wins.',
+  Cope:        'Veteran of three series. Knows every track on the schedule intimately.',
+  Speed:       'The name was his destiny. Or a burden. He argues it every interview.',
+  Wallace:     'Deep family roots in the sport. Racing is the only life he knows.',
+  Earnhardt:   'The name carries weight. Heavy weight. Runs better when people forget it.',
+  Petty:       'Another legacy name trying to make his own. Making it.',
+  Thomas:      'Won his first race with borrowed money and a tire from the junkyard.',
+  Kahne:       'Smooth driver. Never the fastest in the field but never out of the race either.',
+  Logano:      'Polarizing. Either loved or hated depending on what lap you caught him on.',
+  Chastain:    'Known for taking the long way through every corner. Somehow it works.',
+  Preece:      'Backmarker turned contender. The improvement curve is real.',
+  Larson:      'Dirt-track DNA in every move he makes. Impossible to replicate.',
+  Bell:        'Methodical. Never makes the same mistake twice.',
+  Haley:       'Young and impatient. The impatience will either cost him or make him great.',
+  Hocevar:     'Wrecks a lot. Also wins a lot. Team calculates the math differently each race.',
+};
+
+// ── Archetype bios for names without specific entries ─────────────────────
+const BIO_ARCHETYPES = [
+  'Started racing at fourteen on a local quarter-mile. Has been chasing that first win ever since.',
+  'Weekend warrior turned full-timer. The consistency is improving every season.',
+  'Grew up in the infield watching races from a lawn chair. Vowed he would be out there someday.',
+  'Self-funded. Self-taught. Still here.',
+  'Wrecked more than he finished in year one. The rebuild made him better.',
+  'Three generations of racers in the family. He is the fastest of the bunch.',
+  'Former kart champion who made the transition to stock cars cleanly.',
+  'Quiet outside the car, aggressive inside it. Nobody in the paddock has him figured out.',
+  'Crew chief thought he was too young. Driver thought he was ready. Driver was right.',
+  'Sponsor dropped him in June. Ran the rest of the season on pocket money and pride.',
+  'Won the fan vote before he won a race. Now he has both.',
+  'Known for getting the most out of underpowered equipment.',
+  'Mechanic for five years before strapping in himself. Best car feel on the grid.',
+  'Dirt-track background. The wall still surprises him sometimes.',
+  'Made two mistakes all season. Both of them were in front of a TV camera.',
+];
+
+function generateAIName(region) {
+  // If an international region is specified, use region-appropriate names
+  if (region && typeof INTL_REGIONS !== 'undefined' && INTL_REGIONS.includes(region)) {
+    return generateIntlName(region);
+  }
+  const first = AI_FIRST[rand(0, AI_FIRST.length-1)];
+  const last  = AI_LAST[rand(0,  AI_LAST.length-1)];
+  const name  = first + ' ' + last;
+  // 12% suffix — authentic to American short-track culture
+  return Math.random() < 0.12 ? name + ' Jr.' : name;
+}
+
+// Return a bio string for a given driver name
+function getDriverBio(name) {
+  const lastName = name.replace(' Jr.','').split(' ').pop();
+  if (DRIVER_BIOS[lastName]) return DRIVER_BIOS[lastName];
+  // Seed a random archetype consistently from the name string
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return BIO_ARCHETYPES[Math.abs(hash) % BIO_ARCHETYPES.length];
+}
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// FULL THROTTLE SIM — Simulation Engine
+// Choose-your-own-adventure qualifying and race sessions
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Utility functions ─────────────────────────────────────────────────
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function randF(min,max){return Math.random()*(max-min)+min;}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function fmtMoney(n){return '$'+n.toLocaleString();}
+function fmtFans(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(1)+'k':n.toString();}
+function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+
+// ── Driver Attributes System ──────────────────────────────────────────
+const DRIVER_ATTR_DEFAULT = 1;
+const DRIVER_ATTR_POINTS_START = 15;
+const DRIVER_ATTRS = [
+  {id:'qualifying',name:'Qualifying',desc:'Improves starting position rolls',max:10,color:'#8B5CF6'},
+  {id:'consistency',name:'Consistency',desc:'Reduces DNF risk, steadier results',max:10,color:'#10B981'},
+  {id:'aggression',name:'Aggression',desc:'Bonus to position gains, riskier plays pay off',max:10,color:'#EF4444'},
+  {id:'restarts',name:'Restarts',desc:'Better late-race and restart scenarios',max:10,color:'#F59E0B'},
+  {id:'fuel_mgmt',name:'Fuel Mgmt',desc:'Strategy scenarios favor you',max:10,color:'#06B6D4'},
+  {id:'wet_weather',name:'Wet Weather',desc:'Bonus in rain/slick conditions',max:10,color:'#3B82F6'},
+];
+
+function getAttrBonus(attrs,id){
+  const val=(attrs||{})[id]||DRIVER_ATTR_DEFAULT;
+  return val-DRIVER_ATTR_DEFAULT;
+}
+
+// ── Driver Perks ──────────────────────────────────────────────────────
+const DRIVER_PERKS = [
+  {id:'clutch',name:'Clutch',icon:'🎯',desc:'Qualifying bonus in high-pressure sessions.',reqLvl:5},
+  {id:'rain_master',name:'Rain Master',icon:'🌧️',desc:'Double wet weather attribute bonus.',reqLvl:10},
+  {id:'iron_will',name:'Iron Will',icon:'💪',desc:'Reduce DNF risk when car condition is critical.',reqLvl:15},
+  {id:'crowd_pleaser',name:'Crowd Pleaser',icon:'👥',desc:'+25% fan gain from all sources.',reqLvl:20},
+  {id:'sponsor_magnet',name:'Sponsor Magnet',icon:'💰',desc:'Sponsor happiness decays 30% slower.',reqLvl:25},
+  {id:'legend',name:'Legend',icon:'🏆',desc:'+30% reputation gain from all sources.',reqLvl:30},
+];
+
+// ── Car Upgrades System ───────────────────────────────────────────────
+const REPAIR_TIER_MULT = {1:1.0,2:1.2,3:1.5,4:2.0,5:3.0,6:4.5,7:6.0};
+const CAR_UPGRADES = [
+  {id:'engine',name:'Engine',icon:'🔥',desc:'Raw speed and power.',
+    tiers:[
+      {name:'Stage 1',cost:2000,desc:'Blueprinted motor',bonus:{speedBonus:2,posBonus:1}},
+      {name:'Stage 2',cost:8000,desc:'Performance heads',bonus:{speedBonus:4,posBonus:2}},
+      {name:'Stage 3',cost:25000,desc:'Custom cam, forged internals',bonus:{speedBonus:7,posBonus:3}},
+    ]},
+  {id:'chassis',name:'Chassis',icon:'🏗️',desc:'Handling and stability.',
+    tiers:[
+      {name:'Stage 1',cost:3000,desc:'Tubular reinforcement',bonus:{consistencyBonus:2,dnfReduce:0.02}},
+      {name:'Stage 2',cost:12000,desc:'Custom geometry',bonus:{consistencyBonus:4,dnfReduce:0.04}},
+      {name:'Stage 3',cost:35000,desc:'Full chromoly cage',bonus:{consistencyBonus:6,dnfReduce:0.07}},
+    ]},
+  {id:'suspension',name:'Suspension',icon:'⚙️',desc:'Corner speed and control.',
+    tiers:[
+      {name:'Stage 1',cost:2500,desc:'Adjustable shocks',bonus:{posBonus:1,trafficBonus:2}},
+      {name:'Stage 2',cost:10000,desc:'Coilover kit',bonus:{posBonus:2,trafficBonus:4}},
+      {name:'Stage 3',cost:30000,desc:'Full race suspension',bonus:{posBonus:3,trafficBonus:6}},
+    ]},
+  {id:'aero',name:'Aero',icon:'💨',desc:'Downforce and top speed.',
+    tiers:[
+      {name:'Stage 1',cost:1500,desc:'Rear spoiler upgrade',bonus:{speedBonus:1,overtakeBonus:2}},
+      {name:'Stage 2',cost:6000,desc:'Front splitter',bonus:{speedBonus:2,overtakeBonus:4}},
+      {name:'Stage 3',cost:20000,desc:'Full aero package',bonus:{speedBonus:4,overtakeBonus:6}},
+    ]},
+  {id:'tires',name:'Tire Program',icon:'🛞',desc:'Grip and longevity.',
+    tiers:[
+      {name:'Stage 1',cost:1000,desc:'Compound optimization',bonus:{lateRaceBonus:2,wearReduce:0.1}},
+      {name:'Stage 2',cost:5000,desc:'Custom tire strategy',bonus:{lateRaceBonus:4,wearReduce:0.2}},
+      {name:'Stage 3',cost:15000,desc:'Full tire development',bonus:{lateRaceBonus:6,wearReduce:0.3}},
+    ]},
+  {id:'pit_crew',name:'Pit Crew',icon:'🔧',desc:'Pit stop speed and strategy.',
+    tiers:[
+      {name:'Stage 1',cost:2000,desc:'Experienced pit crew',bonus:{pitBonus:1,strategyBonus:1}},
+      {name:'Stage 2',cost:8000,desc:'Elite pit crew',bonus:{pitBonus:2,strategyBonus:2}},
+      {name:'Stage 3',cost:25000,desc:'Championship pit crew',bonus:{pitBonus:4,strategyBonus:3}},
+    ]},
+];
+
+function getUpgradeBonus(upgrades,bonusKey){
+  let total=0;
+  CAR_UPGRADES.forEach(upg=>{
+    const lvl=(upgrades||{})[upg.id]||0;
+    if(lvl>0){
+      const tier=upg.tiers[lvl-1];
+      if(tier&&tier.bonus[bonusKey])total+=tier.bonus[bonusKey];
+    }
+  });
+  return total;
+}
+
+// ── Milestones ────────────────────────────────────────────────────────
+const MILESTONE_DEFS = [
+  {id:'first_win',label:'First Win',icon:'🏆',desc:'Won your first race.',check:s=>s.wins>=1},
+  {id:'five_wins',label:'5 Wins',icon:'🏆',desc:'Career win #5.',check:s=>s.wins>=5},
+  {id:'ten_wins',label:'10 Wins',icon:'🏆',desc:'Double-digit career wins.',check:s=>s.wins>=10},
+  {id:'first_pole',label:'First Pole',icon:'🎯',desc:'Qualified P1.',check:s=>s.poles>=1},
+  {id:'five_poles',label:'5 Poles',icon:'🎯',desc:'Five poles in your career.',check:s=>s.poles>=5},
+  {id:'fifty_starts',label:'50 Starts',icon:'🏁',desc:'50 career starts.',check:s=>s.starts>=50},
+  {id:'hundred_starts',label:'100 Starts',icon:'🏁',desc:'Century club.',check:s=>s.starts>=100},
+  {id:'first_championship',label:'First Championship',icon:'👑',desc:'Won a championship.',check:s=>(s.seasonHistory||[]).some(sh=>sh.championships&&sh.championships.some(c=>c.pos===1))},
+  {id:'millionaire',label:'Millionaire',icon:'💰',desc:'$1M in career earnings.',check:s=>s.totalPrizeMoney>=1000000},
+  {id:'fan_favorite',label:'Fan Favorite',icon:'👥',desc:'100k fans.',check:s=>s.fans>=100000},
+  {id:'reputation_elite',label:'Elite Reputation',icon:'⭐',desc:'Reputation 200+.',check:s=>s.reputation>=200},
+  {id:'cup_series',label:'Cup Series',icon:'🏆',desc:'Reached NASCAR Cup Series.',check:s=>s.contracts.some(c=>c.seriesId==='nascar_cup')},
+];
+
+// ── Trophy tiers for season end ───────────────────────────────────────
+const TROPHY_TIERS = [
+  {minPos:1,label:'Champion',icon:'🏆',color:'#F59E0B'},
+  {minPos:2,label:'Runner-Up',icon:'🥈',color:'#CBD5E1'},
+  {minPos:3,label:'Third Place',icon:'🥉',color:'#CD7F32'},
+  {minPos:5,label:'Top 5',icon:'⭐',color:'#10B981'},
+  {minPos:10,label:'Top 10',icon:'✓',color:'#3B82F6'},
+  {minPos:999,label:'Competed',icon:'🏁',color:'#64748B'},
+];
+
+// ── Conditions ────────────────────────────────────────────────────────
+const CONDITIONS = [
+  {id:'clear',label:'Clear',icon:'☀️',color:'#F59E0B',tireWear:1.0},
+  {id:'partly_cloudy',label:'Partly Cloudy',icon:'⛅',color:'#94A3B8',tireWear:0.95},
+  {id:'overcast',label:'Overcast',icon:'☁️',color:'#64748B',tireWear:0.9},
+  {id:'light_rain',label:'Light Rain',icon:'🌧️',color:'#3B82F6',tireWear:0.7},
+  {id:'heavy_rain',label:'Heavy Rain',icon:'⛈️',color:'#1E3A8A',tireWear:0.5},
+  {id:'hot_slick',label:'Hot & Slick',icon:'🔥',color:'#EF4444',tireWear:1.3},
+];
+function rollCondition(){
+  const pool=[...Array(50).fill('clear'),...Array(20).fill('partly_cloudy'),...Array(15).fill('overcast'),...Array(8).fill('light_rain'),...Array(4).fill('heavy_rain'),...Array(3).fill('hot_slick')];
+  return pool[rand(0,pool.length-1)];
+}
+
+// ── Series field sizes ────────────────────────────────────────────────
+const SERIES_FIELD_SIZE = {
+  mini_stock:18,street_stock:20,late_model_stock:22,super_late_model:20,
+  arca_menards:28,nascar_trucks:32,nascar_xfinity:36,nascar_cup:40,
+};
+
+// ── QUALI SCENARIOS ──────────────────────────────────────────────────
+// Each scenario: { scene, choices[] }
+// Each choice: { label, modifier (0..1), icon }
+// modifier affects final roll: 1.0 = no change, 1.2 = +20% boost, 0.8 = -20% penalty
+// Final roll 0..100, mapped to qualifying position
+
+const QUALI_SCENARIOS = [
+  {
+    scene: "You are on your out-lap with two minutes left in the session. The track is rubbering up fast on the bottom. Do you go for the bottom or commit to the top?",
+    choices: [
+      {label:"Take the bottom — rubber is key",modifier:1.12,icon:"📉",risk:"High reward if timed right. You might get freight-trained by traffic."},
+      {label:"Work the top — your comfort zone",modifier:1.02,icon:"📈",risk:"Consistent but not the fastest line today."},
+      {label:"Mix it up — best of both sectors",modifier:1.07,icon:"🔀",risk:"Unproven combination. Potential for something special or a miss."},
+    ]
+  },
+  {
+    scene: "Traffic is heavy. A lapped car from practice is slow through the middle of the circuit right as you start your hot lap.",
+    choices: [
+      {label:"Abort and wait for a clean lap",modifier:0.95,icon:"⏱️",risk:"Safe. You keep your banker and try again if time allows."},
+      {label:"Thread the gap — stay on it",modifier:1.10,icon:"⚡",risk:"Risky in traffic but you stay in rhythm."},
+      {label:"Radio the crew to sort the timing",modifier:1.02,icon:"📻",risk:"Let the spotter work. No disruption to your process."},
+    ]
+  },
+  {
+    scene: "Your engineer says the front tires are still not up to temp on the out-lap. Session ends in two laps.",
+    choices: [
+      {label:"Scrub them hard through the first chicane",modifier:1.08,icon:"🌡️",risk:"Aggressive scrubbing can bring temps up fast — or wear a flat spot."},
+      {label:"Drive the lap as-is and trust your feel",modifier:0.92,icon:"🎯",risk:"You might not have the grip but you know this car."},
+      {label:"Box for a fresh set and one more shot",modifier:1.00,icon:"🔄",risk:"Gamble that fresh rubber makes up for the lost prep time."},
+    ]
+  },
+  {
+    scene: "The crew chief gives you two conflicting reads: the data says lower wing, your feel says keep it. You have to commit.",
+    choices: [
+      {label:"Trust the data — go low wing",modifier:1.12,icon:"📊",risk:"The numbers say this is faster. Trust the numbers."},
+      {label:"Trust your gut — keep yesterday's setup",modifier:1.00,icon:"🧠",risk:"You felt good on that setup. Known quantity."},
+      {label:"Split the difference — neutral compromise",modifier:0.98,icon:"⚖️",risk:"Neither extreme. Consistent but not peak."},
+    ]
+  },
+  {
+    scene: "It starts to drizzle. Track is borderline wet. You are first out and the choice is yours.",
+    choices: [
+      {label:"Go for it on slicks — be first to set a time",modifier:1.18,icon:"🌧️",risk:"Massive upside if you nail it. Spin risk is real."},
+      {label:"Wait for conditions to improve",modifier:0.85,icon:"⏳",risk:"Track dries but you run late in the order."},
+      {label:"Hedged setup — intermediate compromise",modifier:1.00,icon:"🌤️",risk:"Not optimal for either condition but you finish the lap."},
+    ]
+  },
+  {
+    scene: "Your hot lap is yellow-flagged two corners from the end. You get one more shot with the clock winding down.",
+    choices: [
+      {label:"Max attack — throw it at the wall",modifier:1.20,icon:"💥",risk:"Everything on the line. Leave nothing on the track."},
+      {label:"Clean lap — no mistakes",modifier:1.05,icon:"✅",risk:"Steady and clean. The banker should hold."},
+      {label:"Protect what you have — come in",modifier:0.88,icon:"🛡️",risk:"Safe. Accept the starting position."},
+    ]
+  },
+  {
+    scene: "You just put in a lap good enough for the top three. The engineer says you have one more set of tires. Do you risk it?",
+    choices: [
+      {label:"Go for pole — one more lap",modifier:1.15,icon:"⚡",risk:"Could improve. Could ruin the lap already on the board."},
+      {label:"Bank it — the lap is good",modifier:0.98,icon:"🏁",risk:"No risk. Keep what you have."},
+      {label:"One more but lift in the last sector",modifier:1.05,icon:"⚖️",risk:"Push the first half, protect the second. Sensible gamble."},
+    ]
+  },
+  {
+    scene: "Wind has picked up across the back straightaway. The track is changing lap by lap. You can feel it on the out-lap.",
+    choices: [
+      {label:"Attack regardless — conditions equal for all",modifier:1.10,icon:"🌬️",risk:"Conditions are the same for everyone. Press the advantage."},
+      {label:"Drive conservatively — protect the banker",modifier:0.90,icon:"🛡️",risk:"You protect what you have. Conditions may keep getting worse."},
+      {label:"Abort and wait — see if the wind settles",modifier:0.85,icon:"⏳",risk:"No lap now. Hope for a cleaner window at the end."},
+    ]
+  },
+  {
+    scene: "Your first run was mid-pack. You have enough fuel for one proper shot. This is the last chance to improve.",
+    choices: [
+      {label:"Full send — everything on this lap",modifier:1.18,icon:"🔥",risk:"Max attack. Best chance to move up. High bust risk."},
+      {label:"Build through the sectors — methodical",modifier:1.05,icon:"📊",risk:"Sector by sector. If the first two are good, commit the third."},
+      {label:"Accept the grid position — come in",modifier:0.82,icon:"🏁",risk:"Save the tires for the race. Take what the session gave you."},
+    ]
+  },
+  {
+    scene: "A known fast driver just posted a time two tenths quicker than yours with five minutes left. They have the pole.",
+    choices: [
+      {label:"Chase it — go for the extra tenth",modifier:1.14,icon:"🎯",risk:"You might find it. You might destroy what you had."},
+      {label:"Hold your line — P2 is a good start",modifier:0.95,icon:"🛡️",risk:"Clean lap but not enough. Accept second."},
+      {label:"Try a completely different line through the infield",modifier:1.08,icon:"🔀",risk:"Unconventional. Could unlock something or lose what you had."},
+    ]
+  },
+];
+
+const RACE_SCENARIOS = [
+  // ── OPENING CHAOS ─────────────────────────────────────────────────────────
+  {
+    id: 'opening_laps',
+    when: ctx => ctx.lap <= 3,
+    weight: 3,
+    scene: ctx => "Lap " + ctx.lap + ". The field is stacked from the start. Cars are squeezing three-wide through turns 3-4 and there is nowhere clean to go.",
+    choices: [
+      {label:"Be aggressive — claim your real estate now",icon:"💥",posModifier:2,dnfRisk:0.10,fanBonus:60,rivalEffect:'incident',narrativeResult:{good:"You establish yourself early. Three spots gained, car clean.",bad:"Three-wide goes wrong. Contact drops you back five. Classic first-lap mistake."}},
+      {label:"Be patient — let the dust settle",icon:"⏳",posModifier:0,dnfRisk:0.01,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Smart. The chaos clears and you pick up two free spots.",bad:"Too patient. The field gaps out and you are stuck mid-pack."}},
+      {label:"Take the high line around the outside",icon:"🔄",posModifier:1,dnfRisk:0.06,fanBonus:40,rivalEffect:null,narrativeResult:{good:"Slick move. You go around the outside and gain two spots cleanly.",bad:"No room up top. You get pinched and lose two spots."}},
+    ]
+  },
+  // ── RESTART ───────────────────────────────────────────────────────────────
+  {
+    id: 'restart_battle',
+    when: ctx => ctx.lap > 3 && ctx.pos <= Math.ceil(ctx.fieldSize * 0.5),
+    weight: 4,
+    scene: ctx => "Green flag flies on the restart. " + (ctx.rival||"The car ahead") + " gets a jump and there is a gap to your inside. You are P" + ctx.pos + " with " + ctx.lapsLeft + " to go.",
+    choices: [
+      {label:"Dive to the inside — take the spot",icon:"⚡",posModifier:2,dnfRisk:0.08,fanBonus:80,rivalEffect:'incident',narrativeResult:{good:"You thread the needle perfectly. The move sticks and the crowd erupts.",bad:"Contact. You both lose positions. That is going to cost you."}},
+      {label:"Stay patient — protect your line",icon:"🛡️",posModifier:0,dnfRisk:0.01,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Clean restart. You hold your line and let the chaos sort itself out ahead.",bad:"You hesitate and get squeezed back two spots. Should have gone."}},
+      {label:"Go high and build momentum through 3-4",icon:"📈",posModifier:1,dnfRisk:0.02,fanBonus:40,rivalEffect:null,narrativeResult:{good:"Smart move. You gain two spots through turns 3-4 on the opening lap.",bad:"Everyone else was thinking the same thing. You net zero."}},
+    ]
+  },
+  // ── FUEL ──────────────────────────────────────────────────────────────────
+  {
+    id: 'fuel_decision',
+    when: ctx => ctx.lapsLeft > 0 && ctx.lapsLeft <= Math.floor(ctx.fieldSize * 0.4),
+    weight: 2,
+    scene: ctx => "Your spotter comes on: fuel is getting tight. They think you can make it but it is close. " + ctx.lapsLeft + " laps left.",
+    choices: [
+      {label:"Trust the math — go to the end",icon:"🎲",posModifier:3,dnfRisk:0.12,fanBonus:100,rivalEffect:null,narrativeResult:{good:"You make it on fumes. Everyone who pitted is behind you now.",bad:"You run out on the last lap. Should have pitted."}},
+      {label:"Pit for a splash — play it safe",icon:"⛽",posModifier:-3,dnfRisk:0.02,fanBonus:0,rivalEffect:null,narrativeResult:{good:"Smart call. You come out clean and fight back hard.",bad:"You lost five spots in the pit cycle and could not get them back."}},
+      {label:"Back off the throttle — stretch the fuel",icon:"💡",posModifier:1,dnfRisk:0.04,fanBonus:30,rivalEffect:null,narrativeResult:{good:"Textbook fuel management. You stretch it and keep your spot.",bad:"Backing off cost you two positions to cars that stayed on it."}},
+    ]
+  },
+  // ── INCIDENT AHEAD ────────────────────────────────────────────────────────
+  {
+    id: 'incident_ahead',
+    when: ctx => ctx.pos >= 3,
+    weight: 3,
+    scene: () => "Yellow flag. Cars are spinning ahead and there is nowhere obvious to go. Split-second decision.",
+    choices: [
+      {label:"Stab the brakes and go high",icon:"🔼",posModifier:2,dnfRisk:0.05,fanBonus:60,rivalEffect:null,narrativeResult:{good:"You thread it perfectly and come out three spots cleaner.",bad:"The spin comes back to you. Your nose takes the hit."}},
+      {label:"Hold your line — trust your reactions",icon:"🎯",posModifier:0,dnfRisk:0.08,fanBonus:40,rivalEffect:null,narrativeResult:{good:"You thread the gap cleanly. Luck was on your side.",bad:"The car understeers into the mess. Damage will cost positions."}},
+      {label:"Bail wide and take your chances on the apron",icon:"🌿",posModifier:-1,dnfRisk:0.03,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Smart bail. You give up one spot but keep the car clean.",bad:"The apron was wet. You spin it. Minor damage, down four spots."}},
+    ]
+  },
+  // ── LATE BATTLE ───────────────────────────────────────────────────────────
+  {
+    id: 'late_battle',
+    when: ctx => ctx.lapsLeft <= 5 && ctx.lapsLeft > 0 && ctx.pos <= 10,
+    weight: 4,
+    scene: ctx => (ctx.lapsLeft) + " laps to go. " + (ctx.rival||"A fast car") + " is right on your bumper, sliding to the inside every straight. This is it.",
+    choices: [
+      {label:"Make the move — door to door into turn 1",icon:"⚡",posModifier:2,dnfRisk:0.07,fanBonus:150,rivalEffect:'close',narrativeResult:{good:"You squeeze alongside and make it stick. The crowd is on their feet.",bad:"Contact. You lose the spot and have to fight back."}},
+      {label:"Keep it smooth — drive clean consistent laps",icon:"✅",posModifier:1,dnfRisk:0.02,fanBonus:60,rivalEffect:'close',narrativeResult:{good:"Consistent laps do the job. They cannot find a way past.",bad:"You are giving up ground every lap. Not going to work."}},
+      {label:"Work lapped traffic to your advantage",icon:"🧭",posModifier:1,dnfRisk:0.03,fanBonus:80,rivalEffect:null,narrativeResult:{good:"You use a lapped car perfectly. The gap opens up.",bad:"The lapped car hurt you too. You are both stuck behind it."}},
+    ]
+  },
+  // ── MECHANICAL ────────────────────────────────────────────────────────────
+  {
+    id: 'mechanical_rattle',
+    when: () => true,
+    weight: 2,
+    scene: () => "Mid-race your car starts vibrating. The crew chief says it might be the right-front. Could be nothing. Could be a blowout brewing.",
+    choices: [
+      {label:"Push through — probably fine",icon:"💪",posModifier:0,dnfRisk:0.18,fanBonus:40,rivalEffect:null,narrativeResult:{good:"You pushed through and it was nothing. Character.",bad:"The tire lets go. DNF. Should have pitted."}},
+      {label:"Box now — do not risk it",icon:"🔧",posModifier:-4,dnfRisk:0.02,fanBonus:0,rivalEffect:null,narrativeResult:{good:"Smart. They find a cut in the right front. Saves your race.",bad:"Pit under green. Costly. You come out down six spots."}},
+      {label:"One more lap then decide",icon:"⏱️",posModifier:-2,dnfRisk:0.10,fanBonus:20,rivalEffect:null,narrativeResult:{good:"One more lap and the vibration settles. You stay out.",bad:"That extra lap cost you. Tire goes down entering turn 3."}},
+    ]
+  },
+  // ── TEAM ORDERS ───────────────────────────────────────────────────────────
+  {
+    id: 'team_orders',
+    when: ctx => ctx.pos <= 5 && ctx.pos >= 2,
+    weight: 1,
+    scene: ctx => "Your crew chief comes on flat: the team wants you to hold position. Your teammate is behind on a different strategy. Let them by if they come.",
+    choices: [
+      {label:"Follow team orders — let them through",icon:"📋",posModifier:-1,dnfRisk:0.0,fanBonus:-20,rivalEffect:null,narrativeResult:{good:"You follow orders. Team is happy. It counts on the points sheet.",bad:"You follow orders and your teammate botches it anyway. You lost time for nothing."}},
+      {label:"Ignore the radio — race for your position",icon:"🔇",posModifier:1,dnfRisk:0.03,fanBonus:80,rivalEffect:null,narrativeResult:{good:"You hold the position. The result is yours. Relationship tension but the points are real.",bad:"The team is furious. You hold it but this conversation is not over."}},
+      {label:"Negotiate — ask for two laps to prove pace",icon:"🤝",posModifier:0,dnfRisk:0.01,fanBonus:30,rivalEffect:null,narrativeResult:{good:"They give you two laps. You pull away. Orders rescinded.",bad:"They do not budge. You comply. At least you asked."}},
+    ]
+  },
+  // ── STRATEGY ──────────────────────────────────────────────────────────────
+  {
+    id: 'strategy_call',
+    when: ctx => ctx.lapsLeft > 8 && ctx.lapsLeft < Math.floor(ctx.fieldSize * 0.6),
+    weight: 2,
+    scene: ctx => "Green flag pit window is open. " + ctx.lapsLeft + " laps left. Half the field has pitted. Your crew says track position or fresh tires — your call.",
+    choices: [
+      {label:"Stay out — bank track position",icon:"📍",posModifier:2,dnfRisk:0.04,fanBonus:40,rivalEffect:null,narrativeResult:{good:"You stay out and manage the gap. Track position wins today.",bad:"Everyone comes out on fresh tires. They eat you alive in the final stint."}},
+      {label:"Pit now — get fresh rubber",icon:"🔄",posModifier:-2,dnfRisk:0.02,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Fresh tires work. You claw back to where you were and more.",bad:"Pit cycle works against you. Came out mid-pack."}},
+      {label:"Wait one more lap — pressure the leaders to pit first",icon:"♟️",posModifier:1,dnfRisk:0.02,fanBonus:50,rivalEffect:null,narrativeResult:{good:"Chess move. The leader flinches and pits. You come out clean.",bad:"You waited too long. Everyone moved and the window closed ugly."}},
+    ]
+  },
+  // ── CAUTION TIMING ────────────────────────────────────────────────────────
+  {
+    id: 'caution_timing',
+    when: ctx => ctx.pos <= 8 && ctx.lapsLeft > 3,
+    weight: 2,
+    scene: () => "Yellow flag while the pit window is open. Your crew says box this lap. Half the leaders are staying out.",
+    choices: [
+      {label:"Pit under yellow — take the fresh rubber",icon:"🔄",posModifier:-1,dnfRisk:0.01,fanBonus:30,rivalEffect:null,narrativeResult:{good:"You come out on new tires. The late run is decisive.",bad:"The leaders that stayed out hold the gap. Track position was the call today."}},
+      {label:"Stay out — keep the track position",icon:"📍",posModifier:2,dnfRisk:0.03,fanBonus:50,rivalEffect:null,narrativeResult:{good:"You cycle to the lead. Old tires hold just enough.",bad:"Tires went away on the final restart. You lose four spots in two laps."}},
+    ]
+  },
+  // ── LAPPED TRAFFIC ────────────────────────────────────────────────────────
+  {
+    id: 'lapped_traffic',
+    when: ctx => ctx.pos <= 5 && ctx.lapsLeft <= 10,
+    weight: 2,
+    scene: ctx => "Running inside the top 5 with " + ctx.lapsLeft + " to go. There is a lapped car ahead not moving off the preferred line.",
+    choices: [
+      {label:"Be patient — wait for a clean lane",icon:"⏳",posModifier:0,dnfRisk:0.01,fanBonus:20,rivalEffect:null,narrativeResult:{good:"You pick your spot perfectly and get by clean.",bad:"You lost two car lengths being patient. The car behind closed right up."}},
+      {label:"Throw a slider — force the issue",icon:"💨",posModifier:1,dnfRisk:0.06,fanBonus:60,rivalEffect:'incident',narrativeResult:{good:"Clean pass. You are free.",bad:"Contact. Lapped car spins. You limp through with damage."}},
+      {label:"Use the lapped car as a pick on the car behind",icon:"🛡️",posModifier:1,dnfRisk:0.02,fanBonus:40,rivalEffect:null,narrativeResult:{good:"Smart racing. The car behind gets hung up. You gap out.",bad:"The car behind goes three-wide. You lose the spot."}},
+    ]
+  },
+  // ── CONTACT ───────────────────────────────────────────────────────────────
+  {
+    id: 'contact_decision',
+    when: ctx => ctx.pos >= 5 && ctx.pos <= Math.ceil(ctx.fieldSize * 0.55),
+    weight: 2,
+    scene: () => "Someone taps you entering turn 1 and you get loose. Car is still pointing mostly forward. Split second.",
+    choices: [
+      {label:"Catch it — keep racing",icon:"💪",posModifier:0,dnfRisk:0.08,fanBonus:50,rivalEffect:null,narrativeResult:{good:"You catch the car at the limit and never lift. Remarkable save.",bad:"Car snapped the other way. You hit the wall. DNF."}},
+      {label:"Lift and stabilize — live to fight",icon:"🛡️",posModifier:-2,dnfRisk:0.02,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Smart. You lose positions but keep the car together.",bad:"Three cars go by while you sort it. But you finish."}},
+      {label:"Straight to pit road — assess the damage",icon:"🔧",posModifier:-4,dnfRisk:0.01,fanBonus:0,rivalEffect:null,narrativeResult:{good:"Quick stop fixes it. You come back out fighting.",bad:"More damage than expected. Long stop. Race is over."}},
+    ]
+  },
+  // ── RIVAL BATTLE ──────────────────────────────────────────────────────────
+  {
+    id: 'rival_battle',
+    when: ctx => ctx.rival !== null,
+    weight: 3,
+    scene: ctx => (ctx.rival||"A rival") + " pulls alongside you in the middle of the race. You have been trading positions for six laps. Everyone watching knows this battle.",
+    choices: [
+      {label:"Defend hard — shut the door every corner",icon:"🚪",posModifier:1,dnfRisk:0.06,fanBonus:120,rivalEffect:'incident',narrativeResult:{good:"You keep them behind by an inch every corner. The fans are standing.",bad:"Contact entering the corner. You both lose spots. The rivalry just got personal."}},
+      {label:"Let them go — pick a better spot later",icon:"⏱️",posModifier:0,dnfRisk:0.01,fanBonus:40,rivalEffect:null,narrativeResult:{good:"Smart move. They tire themselves out and you pass back with three to go.",bad:"You give them the spot and the momentum. They gap you out."}},
+      {label:"Race them clean — best driver wins",icon:"🤝",posModifier:1,dnfRisk:0.03,fanBonus:90,rivalEffect:'close',narrativeResult:{good:"Six clean laps, three position changes, one incredible battle. You come out ahead.",bad:"A clean battle you lose on the final move. They got you fair."}},
+    ]
+  },
+  // ── HARD CONTACT / WRECK ──────────────────────────────────────────────────
+  {
+    id: 'wreck_involvement',
+    when: ctx => ctx.pos >= 4,
+    weight: 2,
+    scene: ctx => "The car in front of you gets turned sideways by " + (ctx.rival||"a backmarker") + " right in your lane. You have maybe half a second.",
+    choices: [
+      {label:"Dive under — thread the gap to the inside",icon:"⚡",posModifier:2,dnfRisk:0.10,fanBonus:70,rivalEffect:'incident',narrativeResult:{good:"Unbelievable instinct. You split the gap and come out clean.",bad:"No room. Hard contact. You both end up in the wall."}},
+      {label:"Stand on the brakes — straight ahead",icon:"🛑",posModifier:-1,dnfRisk:0.05,fanBonus:30,rivalEffect:null,narrativeResult:{good:"You scrub enough speed. Slide through the debris clean.",bad:"Glancing blow to the nose. Damage but you keep going."}},
+      {label:"Go to the apron — take the dirt",icon:"🌿",posModifier:-2,dnfRisk:0.04,fanBonus:20,rivalEffect:null,narrativeResult:{good:"You get on the gas early off the apron. Net positive.",bad:"Dug a rut off the apron. Car handling is compromised."}},
+    ]
+  },
+  // ── WEATHER CHANGE ────────────────────────────────────────────────────────
+  {
+    id: 'weather_change',
+    when: ctx => ['light_rain','heavy_rain','hot_slick'].includes(ctx.condition),
+    weight: 3,
+    scene: ctx => ctx.condition === 'light_rain' || ctx.condition === 'heavy_rain'
+      ? "Rain is intensifying. Some cars are diving for pit road for wet tires. The call right now could define your race."
+      : "Track is going away fast in the heat. The right-front is almost gone. You can feel it every corner.",
+    choices: [
+      {label:"Pit now — change to the right compound",icon:"🔄",posModifier:-2,dnfRisk:0.02,fanBonus:30,rivalEffect:null,narrativeResult:{good:"You come out on the right rubber. Fastest car on track in three laps.",bad:"Everyone had the same idea. You are stuck in a long pit queue."}},
+      {label:"Stay out and adapt your driving",icon:"💪",posModifier:1,dnfRisk:0.12,fanBonus:60,rivalEffect:null,narrativeResult:{good:"You manage the conditions brilliantly. Six spots gained while others pit.",bad:"The conditions got you. Spun exiting turn 2. Down ten spots."}},
+      {label:"Slow pace and wait for a natural caution",icon:"⏳",posModifier:0,dnfRisk:0.06,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Caution flies two laps later. Free pit stop under yellow.",bad:"No caution. You ran slow for five laps for nothing."}},
+    ]
+  },
+  // ── SPOTTER CALL ──────────────────────────────────────────────────────────
+  {
+    id: 'spotter_call',
+    when: ctx => ctx.pos <= 15,
+    weight: 2,
+    scene: () => "Your spotter calls a different line through the middle of the race — says there is more grip up top than your usual line. Nobody else is running it.",
+    choices: [
+      {label:"Try it — trust the spotter",icon:"📻",posModifier:2,dnfRisk:0.03,fanBonus:50,rivalEffect:null,narrativeResult:{good:"The top is significantly faster. You gain three spots in five laps.",bad:"The spotter was wrong. You lose two spots before you find your way back."}},
+      {label:"Stay with your line — you know this car",icon:"🧠",posModifier:0,dnfRisk:0.01,fanBonus:10,rivalEffect:null,narrativeResult:{good:"Your line is consistent. You do not gain but you do not lose.",bad:"Others find the top groove. You stay planted in traffic."}},
+    ]
+  },
+  // ── AGGRESSIVE PASS ───────────────────────────────────────────────────────
+  {
+    id: 'aggressive_pass',
+    when: ctx => ctx.pos >= 6 && ctx.pos <= Math.ceil(ctx.fieldSize * 0.7),
+    weight: 3,
+    scene: ctx => "You have been following " + (ctx.rival||"the car ahead") + " for ten laps. They are a little loose in. You see an opportunity going into turn 1.",
+    choices: [
+      {label:"Go for it — commit to the inside",icon:"💥",posModifier:2,dnfRisk:0.07,fanBonus:90,rivalEffect:'incident',narrativeResult:{good:"Clean pass. The crowd sees it. You are clear.",bad:"They close the door late. Contact. You lose the spot and more."}},
+      {label:"Wait for a better moment",icon:"⏳",posModifier:0,dnfRisk:0.01,fanBonus:20,rivalEffect:null,narrativeResult:{good:"Patience pays off. A better opportunity comes and you take it cleanly.",bad:"The opportunity never comes. You follow them to the flag."}},
+      {label:"Try the outside through turn 3",icon:"🔄",posModifier:1,dnfRisk:0.05,fanBonus:70,rivalEffect:'close',narrativeResult:{good:"Beautiful outside move. Track position is yours.",bad:"They cover the outside. You get pinched at the exit."}},
+    ]
+  },
+  // ── CAUTION RESTART CHOICE ────────────────────────────────────────────────
+  {
+    id: 'restart_choice',
+    when: ctx => ctx.pos <= 6 && ctx.lapsLeft <= 8,
+    weight: 2,
+    scene: ctx => "Late caution with " + ctx.lapsLeft + " to go. You are P" + ctx.pos + ". The two-file restart is set and you have a choice of lanes.",
+    choices: [
+      {label:"Inside lane — track position and momentum",icon:"📍",posModifier:1,dnfRisk:0.04,fanBonus:40,rivalEffect:null,narrativeResult:{good:"Clean launch on the inside. You get to the preferred lane first.",bad:"The outside gets a better push. You surrender two spots on the restart."}},
+      {label:"Outside lane — gamble on the better push",icon:"📈",posModifier:2,dnfRisk:0.06,fanBonus:60,rivalEffect:null,narrativeResult:{good:"The outside push is real. You gain two spots off the restart.",bad:"No push from behind. The inside lane drives away."}},
+    ]
+  },
+];
+
+// ─── SIMULATION CORE ──────────────────────────────────────────────────
+function rollD100(){return Math.random()*100;}
+function rollD20(){return rand(1,20);}
+
+// Build a context object for scenario selection
+function buildSimContext(state, seriesId, raceIdx, currentPos, fieldSize, lapNum, totalLaps) {
+  const sched = state.schedules[seriesId]||[];
+  const race = sched[raceIdx]||{};
+  const topRival = (state.rivals||[]).sort((a,b)=>(b.incidents+b.closeRaces)-(a.incidents+a.closeRaces))[0];
+  return {
+    lap: lapNum,
+    pos: currentPos,
+    fieldSize,
+    lapsLeft: totalLaps - lapNum,
+    condition: race.condition||'clear',
+    rival: topRival?.name||null,
+    driverAttrs: state.driverAttrs||{},
+    carUpgrades: state.carUpgrades||{},
+    seriesId,
+  };
+}
+
+// Pick N random scenarios for a session (deduplicated)
+function pickScenarios(ctx, count, pool) {
+  // Filter by 'when' condition
+  const eligible = pool.filter(s => s.when(ctx));
+  if (!eligible.length) return [];
+  // Weight-based selection without replacement
+  const picked = [];
+  const used = new Set();
+  let attempts = 0;
+  while (picked.length < count && attempts < 50) {
+    attempts++;
+    const total = eligible.reduce((s,e) => used.has(e.id)?s:s+e.weight, 0);
+    let r = Math.random() * total;
+    for (const s of eligible) {
+      if (used.has(s.id)) continue;
+      r -= s.weight;
+      if (r <= 0) { picked.push(s); used.add(s.id); break; }
+    }
+  }
+  return picked;
+}
+
+// Compute driver skill bonus from attributes
+// getAttrBonus defined in utils block
+
+// Compute car upgrade bonus
+// getUpgradeBonus defined in utils block
+
+// Simulate qualifying — returns {position, pole, scenarioResults}
+function simulateQualifying(state, seriesId, raceIdx) {
+  const s = getSeries(seriesId);
+  const fieldSize = SERIES_FIELD_SIZE[seriesId]||20;
+  const attrs = state.driverAttrs||{};
+  const upgrades = state.carUpgrades||{};
+
+  // Base roll: 0-100
+  let baseRoll = rollD100();
+
+  // Attribute: qualifying attr bonus (+7 per point above default)
+  const qualAttr = getAttrBonus(attrs, 'qualifying');
+  baseRoll += qualAttr * 4;
+
+  // Car upgrade: engine speed + crew package
+  baseRoll += getUpgradeBonus(upgrades, 'speedBonus') * 0.4;
+  baseRoll += getUpgradeBonus(upgrades, 'pitBonus') * 0.3;
+
+  // Confidence bonus
+  baseRoll += (state.confidence||0) * 3;
+
+  // Crew package
+  const contract = (state.contracts||[]).find(c=>c.seriesId===seriesId);
+  const crewPkg = CREW_PACKAGES.find(p=>p.id===(contract?.crewPackage||'basic'));
+  if (crewPkg) baseRoll += crewPkg.qualBonus * 2;
+
+  // Condition modifier
+  const cond = CONDITIONS.find(c=>c.id===((state.schedules[seriesId]||[])[raceIdx]?.condition||'clear'))||CONDITIONS[0];
+  const wetAttr = getAttrBonus(attrs, 'wet_weather');
+  if (['light_rain','heavy_rain'].includes(cond.id)) baseRoll += wetAttr * 3;
+
+  // Perk: clutch factor in quali
+  const perks = state.driverPerks||[];
+  if (perks.includes('clutch')) baseRoll += 8;
+
+  baseRoll = clamp(baseRoll, 1, 115);
+
+  // Map roll to position (higher roll = better position)
+  // roll 100+ = pole territory, roll 50 = roughly mid-pack
+  const pctile = baseRoll / 115;
+  const rawPos = Math.round(fieldSize * (1 - pctile * 0.95)) + 1;
+  const position = clamp(rawPos, 1, fieldSize);
+  const pole = position === 1;
+
+  return { position, pole, fieldSize };
+}
+// Simulate race — runs through scenarios, accumulates position changes
+// Returns: {position, dnf, dnfReason, points, prize, pole, lapsLed, mostLaps, fieldSize, closeFinishes, incidentDrivers, scenarioResults}
+function simulateRace(state, seriesId, raceIdx, qualPosition) {
+  const s = getSeries(seriesId);
+  const fieldSize = SERIES_FIELD_SIZE[seriesId]||20;
+  const attrs = state.driverAttrs||{};
+  const upgrades = state.carUpgrades||{};
+  const race = (state.schedules[seriesId]||[])[raceIdx]||{};
+  const totalLaps = s.races * 3; // approximate race laps (3 per race in schedule)
+  const perks = state.driverPerks||[];
+
+  // Starting position
+  let pos = qualPosition || Math.floor(fieldSize * 0.5);
+
+  // Base positional swing — engine, chassis, driving skill composite
+  const baseSkill = (
+    getAttrBonus(attrs, 'consistency') * 3 +
+    getAttrBonus(attrs, 'aggression') * 1.5 +
+    getUpgradeBonus(upgrades, 'posBonus') +
+    getUpgradeBonus(upgrades, 'speedBonus') * 0.3 +
+    getUpgradeBonus(upgrades, 'consistencyBonus') * 0.2 +
+    (state.confidence||0) * 2
+  );
+
+  // Late-race bonus
+  const lateRaceBonus = getUpgradeBonus(upgrades, 'lateRaceBonus') * 0.2;
+
+  // Condition modifier
+  const cond = CONDITIONS.find(c=>c.id===(race.condition||'clear'))||CONDITIONS[0];
+  let condBonus = 0;
+  if (['light_rain','heavy_rain'].includes(cond.id)) {
+    condBonus += getAttrBonus(attrs, 'wet_weather') * 2;
+    if (perks.includes('rain_master')) condBonus *= 2;
+  }
+
+  // DNF base probability — modified by car condition, engine upgrade, consistency
+  let dnfProb = 0.12 - getAttrBonus(attrs, 'consistency') * 0.01;
+  if (state.carCondition) {
+    const avgCond = Object.values(state.carCondition).reduce((a,b)=>a+b,0)/5;
+    if (avgCond < 30) dnfProb += 0.15;
+    else if (avgCond < 50) dnfProb += 0.06;
+  }
+  dnfProb -= getUpgradeBonus(upgrades, 'dnfReduce');
+  if (perks.includes('iron_will') && (state.carCondition?.engine||100) < 40) dnfProb *= 0.8;
+  dnfProb = clamp(dnfProb, 0.01, 0.45);
+
+  // DNF check
+  const isDNF = Math.random() < dnfProb;
+
+  // Build scenarios for this race
+  const numScenarios = rand(2,4);
+  const ctx = buildSimContext(state, seriesId, raceIdx, pos, fieldSize, 5, totalLaps);
+  const scenarios = pickScenarios(ctx, numScenarios, RACE_SCENARIOS);
+
+  // Track scenario results for the modal
+  const scenarioResults = [];
+  let totalPosDelta = 0;
+  let raceIncidentDrivers = [];
+  let extraDNFRisk = 0;
+  let extraFanBonus = 0;
+
+  for (const sc of scenarios) {
+    // This gets filled in when the player makes choices — store empty for now
+    scenarioResults.push({
+      scenario: sc,
+      choiceMade: null,
+      outcome: null,
+      posDelta: 0,
+    });
+  }
+
+  // Without player input yet, just store pending state
+  // The modal will call resolveRaceScenarios() after player makes all choices
+
+  return {
+    pending: true,
+    scenarios: scenarioResults,
+    basePos: pos,
+    fieldSize,
+    dnfRoll: Math.random(), // stored for deterministic resolve
+    dnfProb,
+    baseSkill,
+    lateRaceBonus,
+    condBonus,
+    qualPosition: pos,
+    seriesId,
+    raceIdx,
+  };
+}
+
+// Resolve race after all choices made
+function resolveRace(pendingRace, choiceResults) {
+  const {basePos, fieldSize, dnfRoll, dnfProb, baseSkill, lateRaceBonus, condBonus, qualPosition, seriesId, raceIdx, narrativeDelta} = pendingRace;
+  const s = getSeries(seriesId);
+
+  // Accumulate position changes from choices
+  let totalPosDelta = 0;
+  let extraDNFRisk = 0;
+  let extraFanBonus = 0;
+  const incidentDrivers = [];
+
+  choiceResults.forEach(cr => {
+    totalPosDelta += cr.posDelta||0;
+    extraDNFRisk += cr.dnfRisk||0;
+    extraFanBonus += cr.fanBonus||0;
+    if (cr.incidentDriver) incidentDrivers.push(cr.incidentDriver);
+  });
+
+  // Apply narrative delta — choices made across the race flow shift the result
+  // Positive = driver made smart calls, negative = driver made costly calls
+  if (narrativeDelta) totalPosDelta += narrativeDelta;
+
+  // Apply base skill drift
+  const skillDrift = baseSkill * randF(0.5, 1.5);
+  totalPosDelta += skillDrift;
+
+  // Late race bonus
+  totalPosDelta += lateRaceBonus * randF(0.5, 1.5);
+
+  // Condition bonus
+  totalPosDelta += condBonus;
+
+  // DNF check
+  const finalDNFProb = dnfProb + extraDNFRisk;
+  const isDNF = (dnfRoll + (extraDNFRisk * 0.5)) < finalDNFProb;
+
+  if (isDNF) {
+    const dnfReasons = ['engine failure','crash damage','fuel issue','overheating','suspension failure','oil pressure'];
+    const dnfReason = dnfReasons[rand(0,dnfReasons.length-1)];
+    return {
+      position: fieldSize,
+      dnf: true,
+      dnfReason,
+      fieldSize,
+      points: 0,
+      prize: 0,
+      pole: false,
+      lapsLed: false,
+      mostLaps: false,
+      closeFinishes: [],
+      incidentDrivers,
+    };
+  }
+
+  // Calculate final position
+  let finalPos = basePos - Math.round(totalPosDelta);
+  finalPos = clamp(finalPos, 1, fieldSize);
+
+  // Laps led — top 5 has a chance
+  const lapsLed = finalPos <= 5 && Math.random() < 0.4;
+  const mostLaps = finalPos === 1 && Math.random() < 0.5;
+
+  // Close finishes built in processRaceResult where state is available
+  const closeFinishes = [];
+
+  const points = calcPoints(seriesId, finalPos, finalPos===1, lapsLed, mostLaps);
+  const prize = calcPrize(seriesId, finalPos, fieldSize);
+
+  return {
+    position: finalPos,
+    dnf: false,
+    dnfReason: null,
+    fieldSize,
+    points,
+    prize,
+    pole: qualPosition === 1,
+    lapsLed,
+    mostLaps,
+    closeFinishes,
+    incidentDrivers,
+  };
+}
+
+function buildFinishOrder(state, seriesId, playerPos, fieldSize) {
+  const drivers = (state.drivers||[]).filter(d=>d.currentSeriesId===seriesId&&d.active).slice(0, fieldSize-1);
+  const order = [];
+  for (let i=1; i<=fieldSize; i++) {
+    if (i === playerPos) {
+      order.push({name: state.driverName, isPlayer: true, gap: i===1?'---':'-'+(i*0.3).toFixed(3)});
+    } else {
+      const d = drivers[i > playerPos ? i-2 : i-1];
+      if (d) order.push({name: d.name, isPlayer: false, gap: i===1?'---':'-'+(i*0.3).toFixed(3)});
+    }
+  }
+  return order;
+}
+</script><script>
+// ═══════════════════════════════════════════════════════════════════════
+// FULL THROTTLE SIM — Core Game Logic (from v1.5.2)
+// ═══════════════════════════════════════════════════════════════════════
+
+// rand, randF, shuffle, clamp, uid, fmtMoney, fmtFans, ordinal defined in utils block above
+
+function calcPoints(seriesId,pos,pole,lapsLed,mostLaps){
+  return (IRACING_PTS[Math.max(0,pos-1)]||1)+(pole?1:0)+(lapsLed?1:0)+(mostLaps?3:0);
+}
+function calcPrize(seriesId,pos,fs){
+  const s=getSeries(seriesId);
+  if(pos===1)return s.pay+s.winBonus;
+  const pct=Math.max(0.10,0.70-((pos-2)/(fs-2))*0.60);
+  return Math.floor(s.pay*pct);
+}
+
+// ── Real-world series schedules (2024 season tracks, in order) ────────
+const REAL_SCHEDULES = {
+  arca_menards: [
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Circuit of the Americas',city:'Austin',state:'TX'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Chicagoland Speedway',city:'Joliet',state:'IL'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+  ],
+  nascar_trucks: [
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+    {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+    {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+  ],
+  nascar_xfinity: [
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Circuit of the Americas',city:'Austin',state:'TX'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Dover Motor Speedway',city:'Dover',state:'DE'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Portland International Raceway',city:'Portland',state:'OR'},
+    {name:'Sonoma Raceway',city:'Sonoma',state:'CA'},
+    {name:'Chicago Street Course',city:'Chicago',state:'IL'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+    {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+    {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+  ],
+  nascar_cup: [
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Circuit of the Americas',city:'Austin',state:'TX'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Dover Motor Speedway',city:'Dover',state:'DE'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Iowa Speedway',city:'Newton',state:'IA'},
+    {name:'Sonoma Raceway',city:'Sonoma',state:'CA'},
+    {name:'Chicago Street Course',city:'Chicago',state:'IL'},
+    {name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH'},
+    {name:'Pocono Raceway',city:'Long Pond',state:'PA'},
+    {name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN'},
+    {name:'Michigan International Speedway',city:'Brooklyn',state:'MI'},
+    {name:'Richmond Raceway',city:'Richmond',state:'VA'},
+    {name:'Watkins Glen International',city:'Watkins Glen',state:'NY'},
+    {name:'Daytona International Speedway',city:'Daytona Beach',state:'FL'},
+    {name:'Darlington Raceway',city:'Darlington',state:'SC'},
+    {name:'Kansas Speedway',city:'Kansas City',state:'KS'},
+    {name:'Bristol Motor Speedway',city:'Bristol',state:'TN'},
+    {name:'Texas Motor Speedway',city:'Fort Worth',state:'TX'},
+    {name:'Talladega Superspeedway',city:'Talladega',state:'AL'},
+    {name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV'},
+    {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL'},
+    {name:'Martinsville Speedway',city:'Ridgeway',state:'VA'},
+    {name:'Charlotte Motor Speedway',city:'Concord',state:'NC'},
+    {name:'Phoenix Raceway',city:'Avondale',state:'AZ'},
+    {name:'Nashville Superspeedway',city:'Lebanon',state:'TN'},
+    {name:'Atlanta Motor Speedway',city:'Hampton',state:'GA'},
+    {name:'North Wilkesboro Speedway',city:'North Wilkesboro',state:'NC'},
+    {name:'Gateway Motorsports Park',city:'Madison',state:'IL'},
+  ],
+};
+
+function generateSchedule(seriesId,trackPools){
+  const s=getSeries(seriesId);
+  // Use real schedule for tier 4+ series
+  if(REAL_SCHEDULES[seriesId]){
+    const realTracks=REAL_SCHEDULES[seriesId];
+    // Trim or pad to match series race count
+    const count=s.races;
+    const picks=[];
+    while(picks.length<count)realTracks.forEach(t=>{if(picks.length<count)picks.push(t);});
+    return picks.slice(0,count).map((t,i)=>({
+      round:i+1,track:t.name,city:t.city,state:t.state,fig8:false,
+      qualifying:null,result:null,bonusResult:null,condition:rollCondition(),
+    }));
+  }
+  // Generated schedule for lower tiers
+  const isFree=seriesId==='mini_stock'||seriesId==='street_stock'||seriesId==='super_late_model';
+  const pool=trackPools?(isFree?trackPools.free:trackPools.paid):(isFree?FREE_TRACKS:PAID_TRACKS);
+  const slinger=isFree?pool.find(t=>t.fig8):null;
+  const rest=slinger?pool.filter(t=>!t.fig8):pool;
+  const mainCount=s.races-(slinger?1:0);
+  const shuffled=shuffle(rest);
+  const picks=[];
+  while(picks.length<mainCount)shuffled.forEach(t=>{if(picks.length<mainCount)picks.push(t);});
+  if(slinger)picks.push(slinger);
+  return picks.map((t,i)=>({
+    round:i+1,track:t.name,city:t.city,state:t.state,fig8:!!t.fig8,
+    qualifying:null,result:null,bonusResult:null,condition:rollCondition(),
+  }));
+}
+
+function makeContract(seriesId,quality){
+  const s=getSeries(seriesId);
+  const teamList=TEAMS[seriesId]||['Independent Racing'];
+  const team=teamList[rand(0,teamList.length-1)];
+  const mult={poor:0.7,average:1.0,good:1.3,elite:1.7}[quality];
+  const termSeasons=rand(1,s.maxTerm);
+  const tmCount=rand(0,Math.min(s.maxTm,quality==='elite'?3:quality==='good'?2:1));
+  const prizeShare=s.tier<=3?{poor:0.60,average:0.70,good:0.78,elite:0.85}[quality]:{poor:0.70,average:0.80,good:0.88,elite:0.95}[quality];
+  const signingBonus=s.tier>=4?Math.floor(s.pay*s.races*mult*randF(0.2,0.4)):0;
+  return {
+    id:uid(),team,seriesId,quality,salary:signingBonus,prizeShare,entryFee:s.fee,
+    termSeasons,seasonsCompleted:0,winBonus:Math.floor(s.winBonus*mult*randF(0.5,0.9)),
+    races:s.races,racesCompleted:0,earnings:0,missedFinishWarnings:0,
+    reqFinish:quality==='elite'?8:quality==='good'?12:18,penaltyRate:0.35,buyoutRate:0.50,
+    teammates:new Array(tmCount).fill(null),crewPackage:'basic',indie:false,
+  };
+}
+
+function generateOffers(rep,fans){
+  const offers=[];
+  SERIES.forEach(s=>{
+    if(rep>=s.reqRep-10&&fans>=s.reqFans*0.5){
+      const q=rep>=s.reqRep+50?'good':rep>=s.reqRep+20?'average':'poor';
+      if(Math.random()<(rep>=s.reqRep?0.65:0.25))offers.push(makeContract(s.id,q));
+    }
+  });
+  if(!offers.length)offers.push(makeContract('mini_stock','poor'));
+  return shuffle(offers).slice(0,4);
+}
+
+function makeSponsor(seriesId,type='primary',international=false){
+  const brands=international?SPONSOR_BRANDS.international:(SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock);
+  const brand=brands[rand(0,brands.length-1)];
+  const st=SPONSOR_TYPES[international?'international':type];
+  const s=getSeries(seriesId);
+  const base=Math.floor(s.pay*(type==='primary'?3:type==='associate'?0.8:0.3)*randF(0.8,1.3));
+  const seasons=rand(st.dur[0],st.dur[1]);
+  // Sponsor expectations — what they signed you to achieve
+  const goalTypes=['top5_pct','wins','finish_pct'];
+  const goalType=goalTypes[rand(0,goalTypes.length-1)];
+  const sponsorGoal={
+    type:goalType,
+    // top5_pct: finish top-5 in X% of races; wins: win at least N; finish_pct: finish (not DNF) X% of races
+    target:goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85),
+    racesTracked:0, racesAchieved:0, warned:false, praised:false,
+    desc:goalType==='top5_pct'?`Expect top-5 finishes in at least ${rand(25,50)}% of races`:
+         goalType==='wins'?`Expect at least ${rand(1,2)} win${rand(1,2)>1?'s':''} this season`:
+         `Expect you to finish (not DNF) in ${rand(60,85)}% of races`,
+  };
+  return {id:uid(),brand,type:international?'international':type,seriesId,valuePerSeason:base,seasonsLeft:seasons,totalSeasons:seasons,happiness:75,winBonus:Math.floor(base*0.15),top5Bonus:Math.floor(base*0.05),minHappy:25,international,sponsorGoal};
+}
+
+// ── Driver bio pool ────────────────────────────────────────────────────────
+const DRIVER_BIO_LINES = [
+  "Grew up watching his dad run late models every Saturday night. Never left.",
+  "Started karting at eight and hasn't stopped since. Skipped college for this.",
+  "Works a day job through the week and races on weekends. Has for twelve years.",
+  "Won three consecutive track championships before anyone in a higher series noticed.",
+  "His engine builder is also his uncle. The arrangement has outlasted two marriages.",
+  "Moved down from the Midwest three seasons ago chasing better competition.",
+  "Used to race dirt before switching to asphalt. Still thinks dirt is harder.",
+  "Every car he's ever had is under his own name. No team money. No investors.",
+  "Crew chief relationship goes back to high school. Best friend. Worst critic.",
+  "Comes from a logging family. Says racing is quieter. Nobody argues with that.",
+  "Spent four seasons in the bottom ten before finding the right setup package.",
+  "Drives with a chip on his shoulder that the results are slowly justifying.",
+  "Former military. The discipline shows in his consistency. The temper, less so.",
+  "Built his first car from a wrecked shell in a rented garage bay.",
+  "Has three kids. All three have been to every race since they were born.",
+  "Known in the paddock for showing up earlier than everyone and leaving last.",
+  "Nearly quit after back-to-back DNFs. Crew chief talked him out of it.",
+  "Sponsors rotate but the number on the door hasn't changed in six years.",
+  "Ran his first season without a spotter. Doesn't recommend it.",
+  "Quiet in the pits. Loud on the radio. The crew has adjusted.",
+  "Grew up in the bleachers watching this series. Now he's in it.",
+  "No formal training. Learned entirely from watching tape and asking questions.",
+  "His qualifying pace has always been better than his race pace. Working on it.",
+  "Finished second in points last season and doesn't talk about it at all.",
+  "Backup car has more miles on it than the primary. That should tell you something.",
+  "Runs a tight budget. Every repair decision gets debated for at least a week.",
+  "Known for clean restarts. Takes the long view on track position.",
+  "Career DNF rate is above average. He'd tell you luck is part of the game.",
+  "Has never sponsored himself out of a series. Earns every ride he gets.",
+  "Strong on short tracks. Struggles when the field goes superspeedway.",
+  "Came up through the same program as two current Cup drivers. Took his own path.",
+  "Car owner, driver, and PR rep all at once. The hustle is the whole operation.",
+  "Never finished lower than P8 in a qualifying session. Race day is the puzzle.",
+  "Known for late-race charge. Manages tires better than anyone in the field.",
+  "Moved teams twice in four seasons. Each time the car got better.",
+  "Former mechanic who crossed to the driver's side. Setup understanding shows.",
+  "Has a superstition about the order he puts his gear on. Nobody asks about it.",
+  "Won his first feature on a night when three faster cars broke. Didn't care.",
+  "Builds the chassis himself in the offseason. Has the hands for it.",
+  "His worst finish streak lasted six races. Came back and won three in a row.",
+];
+
+function generateDriverBio() {
+  return DRIVER_BIO_LINES[rand(0, DRIVER_BIO_LINES.length - 1)];
+}
+
+function createDriver(name,skill=null,seriesId=null,source='generated'){
+  const tier=seriesId?(getSeries(seriesId)?.tier||1):1;
+  const homeState=randomHomeState();
+  return {
+    id:uid(),name,source,skill:skill!==null?skill:rand(30,75),
+    currentSeriesId:seriesId||'mini_stock',
+    currentTeam:(()=>{const tl=TEAMS[seriesId||'mini_stock']||[''];return tl[rand(0,tl.length-1)];})(),
+    rep:rand(0,Math.max(0,(tier-1)*30)),fans:rand(0,Math.max(0,(tier-1)*500)),
+    money:rand(1000,5000*tier),wins:0,top5s:0,starts:0,seasonPoints:0,seasonWins:0,
+    active:true,injuredOrPenalized:false,substituteFor:null,notes:'',careerHistory:[],
+    homeState,
+    bio:generateDriverBio(),aliases:[],
+  };
+}
+
+function generateInitialDriverPool(){
+  const drivers=[];
+  SERIES.forEach(s=>{
+    const count=SERIES_FIELD_SIZE[s.id]||20;
+    for(let i=0;i<count;i++){
+      const homeState=randomHomeState();
+      const isIntl=typeof INTL_REGIONS!=='undefined'&&INTL_REGIONS.includes(homeState);
+      let name=isIntl?generateAIName(homeState):generateAIName();
+      // Guarantee uniqueness
+      let attempts=0;
+      while(drivers.find(d=>d.name===name)&&attempts++<20){
+        name=isIntl?generateAIName(homeState):generateAIName();
+      }
+      const d=createDriver(name,rand(25,85),s.id,'generated');
+      d.homeState=homeState; // override with the one we already picked
+      drivers.push(d);
+    }
+  });
+  return drivers;
+}
+
+// Generate a small set of pre-existing relationships for a new career
+function generateStartingRivals(drivers) {
+  const rivals = [];
+  const pool = (drivers||[]).filter(d=>d.currentSeriesId==='mini_stock'||d.currentSeriesId==='street_stock');
+  if (!pool.length) return rivals;
+  shuffle(pool);
+  const count = Math.min(pool.length, rand(4,7));
+  for (let i=0; i<count; i++) {
+    const d = pool[i];
+    const roll = Math.random();
+    let r;
+    if (roll < 0.25) {
+      r = {name:d.name,incidents:rand(1,3),closeRaces:rand(0,2),cleanBattles:0,
+           preExisting:true,preExistingNote:'Ran into each other on the local circuit. History exists.'};
+    } else if (roll < 0.50) {
+      r = {name:d.name,incidents:0,closeRaces:rand(2,4),cleanBattles:rand(2,4),
+           preExisting:true,preExistingNote:'Grew up racing each other. Mutual respect on track.'};
+    } else {
+      r = {name:d.name,incidents:0,closeRaces:rand(0,2),cleanBattles:rand(0,1),
+           preExisting:true,preExistingNote:'You know each other from around the paddock.'};
+    }
+    rivals.push(r);
+  }
+  return rivals;
+}
+
+// Seed AI-AI relationships — each driver has opinions of a handful of peers
+// Stored on the driver object as driverRelationships: [{name, type}]
+// type: 'rival' | 'friend' | 'neutral'
+function seedAIDriverRelationships(drivers) {
+  drivers.forEach(d => {
+    if (d.driverRelationships) return; // already seeded
+    d.driverRelationships = [];
+    const peers = drivers.filter(p=>p.id!==d.id&&p.currentSeriesId===d.currentSeriesId);
+    if (!peers.length) return;
+    shuffle(peers);
+    const count = rand(1, Math.min(4, peers.length));
+    for (let i=0; i<count; i++) {
+      const p = peers[i];
+      const roll = Math.random();
+      const type = roll<0.3?'rival':roll<0.6?'friend':'neutral';
+      d.driverRelationships.push({name:p.name,type});
+    }
+  });
+}
+
+// Evolve AI-AI relationships based on simulated season outcomes
+function evolveAIRelationships(state) {
+  if (!state.drivers) return;
+  state.drivers.forEach(d => {
+    if (!d.driverRelationships) d.driverRelationships = [];
+    // Small chance each season of a relationship shifting
+    d.driverRelationships.forEach(rel => {
+      if (Math.random() < 0.15) {
+        // Shift: rival can cool, friend can sour, neutral can tip either way
+        if (rel.type==='rival' && Math.random()<0.3)      rel.type='neutral';
+        else if (rel.type==='friend' && Math.random()<0.2) rel.type='neutral';
+        else if (rel.type==='neutral')                     rel.type=Math.random()<0.5?'rival':'friend';
+      }
+    });
+    // Small chance of gaining a new relationship with someone in their series
+    if (Math.random()<0.2) {
+      const peers = (state.drivers||[]).filter(p=>p.id!==d.id&&p.currentSeriesId===d.currentSeriesId&&!d.driverRelationships.find(r=>r.name===p.name));
+      if (peers.length) {
+        const p = peers[rand(0,peers.length-1)];
+        const type = Math.random()<0.4?'rival':Math.random()<0.6?'friend':'neutral';
+        d.driverRelationships.push({name:p.name,type});
+        if (d.driverRelationships.length>6) d.driverRelationships.shift();
+      }
+    }
+  });
+  // Generate AI-AI drama that occasionally spills into player's feed
+  const rivalPairs = [];
+  state.drivers.forEach(d=>{
+    (d.driverRelationships||[]).filter(r=>r.type==='rival').forEach(rel=>{
+      if (Math.random()<0.05) rivalPairs.push({a:d.name,b:rel.name});
+    });
+  });
+  if (rivalPairs.length && Math.random()<0.4) {
+    const pair = rivalPairs[rand(0,rivalPairs.length-1)];
+    const lines = [
+      `${pair.a} and ${pair.b} had words in the paddock after last week's race. Nobody's talking specifics.`,
+      `The ${pair.a}/${pair.b} beef is apparently still going. Sources say the last race didn't help.`,
+      `${pair.a} was overheard calling out ${pair.b} in the garage. Nothing new there but the tone was sharp.`,
+      `Word from the paddock: ${pair.a} and ${pair.b} nearly came to blows after the race. Officials stepped in.`,
+    ];
+    state.dramaQueue.push({id:'aifeud_'+uid(),title:'Paddock Intel',effect:'none',
+      desc:lines[rand(0,lines.length-1)],valence:'neutral'});
+  }
+}
+
+// ── Relationship system ──────────────────────────────────────────────
+function touchRival(rivals, name, type, clean=true) {
+  let r = rivals.find(x => x.name === name);
+  if (!r) { r={name,incidents:0,closeRaces:0,cleanBattles:0}; rivals.push(r); }
+  if (type==='incident') r.incidents++;
+  if (type==='close') { r.closeRaces++; if(clean) r.cleanBattles=(r.cleanBattles||0)+1; }
+  if (r.chosen==='chosen_rival' && (r.cleanBattles||0)>=6) r.coolingDown=true;
+  if (r.chosen==='chosen_friend' && (r.incidents||0)>=3) r.tension=true;
+}
+
+function relationship(r) {
+  const i=r.incidents||0, c=r.closeRaces||0, cb=r.cleanBattles||0;
+  if (r.chosen==='chosen_rival') {
+    if (cb>=8&&i===0) return 'racing_rival';
+    return (i>=1||c<=1) ? 'rival' : 'frenemy';
+  }
+  if (r.chosen==='chosen_friend') {
+    if (i>=4) return 'frenemy';
+    return (c>=2||cb>=2) ? 'friend' : 'racing_rival';
+  }
+  if (i>=3&&c>=4) return 'frenemy';
+  if (i>=3)       return 'rival';
+  if (c>=4)       return cb>=c*0.7 ? 'racing_rival' : 'friend';
+  return 'acquaintance';
+}
+
+const REL_COLOR={rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8',chosen_rival:'#DC2626',chosen_friend:'#059669'};
+const REL_LABEL={rival:'RIVAL',friend:'FRIEND',frenemy:'FRENEMY',racing_rival:'RACING RIVAL',acquaintance:'',chosen_rival:'CHOSEN RIVAL',chosen_friend:'CHOSEN FRIEND'};
+const REL_ICON={rival:'😤',frenemy:'🫤',racing_rival:'🏎️',friend:'🤝',acquaintance:'👀',chosen_rival:'🔥',chosen_friend:'🫡'};
+const REL_DESC={
+  rival:'History of incidents. This one is personal.',
+  friend:'Good, clean racing. Mutual respect built over time.',
+  frenemy:"Race great together and also hate each other. It's complicated.",
+  racing_rival:'Consistent clean battles. The best kind of enemy.',
+  acquaintance:"You've shared a track.",
+  chosen_rival:'You called them out. They know it. The paddock knows it.',
+  chosen_friend:"You reached out. Mutual respect agreed upon. Doesn't mean they'll give you room.",
+};
+
+const DRIVER_PERSONALITIES=['hothead','veteran','joker','ice_cold','showman','grinder'];
+function getPersonality(name){
+  let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))&0xffffffff;
+  return DRIVER_PERSONALITIES[Math.abs(h)%DRIVER_PERSONALITIES.length];
+}
+const PERSONALITY_CALLOUT={
+  hothead:{
+    incident:[
+      "{name} was still hot in the garage. 'That was garbage and {player} knows it. Done being patient.'",
+      "{name} on the broadcast: 'Honestly? Pissed off. That\'s the only word I\'ve got for it right now.'",
+      "On the team radio that got leaked, {name} said {player} 'races like an ass and somebody needs to say it.'",
+      "{name} posted before he was even out of the car: 'That was a damn joke and the whole paddock knows it.'",
+    ],
+    close:[
+      "{name} to the broadcast: 'Alright yeah, {player} had me working tonight. Hell of a battle.'",
+      "In the cool-down area, {name} shook his head. 'Damn good race, honestly. {player} was right there every lap.'",
+    ],
+  },
+  veteran:{
+    incident:[
+      "{name} kept it measured but the message was clear. 'I\'ve been doing this a long time. That move has no place here.'",
+      "Post-race, {name} told reporters: 'I\'ll let the replay speak for itself. I just hope {player} watches it.'",
+      "{name}, plain and flat: 'Dirty racing. Simple as that.'",
+    ],
+    close:[
+      "{name} nodded in {player}\'s direction after the race. 'That\'s how it\'s supposed to look. Good battle.'",
+      "{name} in the press room: 'I\'ve raced a lot of people in this sport. {player} belongs here. Earned it tonight.'",
+    ],
+  },
+  joker:{
+    incident:[
+      "{name} posted a meme. The caption was just {player}\'s name and a dumpster fire emoji. Seventeen thousand shares.",
+      "On the podcast: 'Look, I\'m not gonna say {player} wrecked me on purpose. I\'ll just say the timing was real convenient.'",
+      "{name}, grinning on camera: 'Some people race clean and some people race creative. {player} is creative.'",
+    ],
+    close:[
+      "{name} on the broadcast, laughing: 'What the hell? {player} almost had me. Almost! Good stuff.'",
+      "Posted after the race: '{player} nearly pulled off the buffoonery of the year with that move. Respect. Almost worked.'",
+    ],
+  },
+  ice_cold:{
+    incident:[
+      "{name} gave reporters exactly one sentence: 'I saw it. I know what happened. We move on.'",
+      "Zero expression, total calm: '{player} made a decision in turn three. I\'ll remember it.'",
+      "{name} didn\'t post. Didn\'t interview. Just walked past every camera with the same face. Somehow that was worse.",
+    ],
+    close:[
+      "Brief statement from {name}: '{player} was fast. I was faster. Good race.'",
+      "{name} acknowledged it with a nod in the paddock. No words. Just a nod. Coming from {name}, that\'s high praise.",
+    ],
+  },
+  showman:{
+    incident:[
+      "{name} went full spectacle. 'This is the {player} and {name} show, baby, and tonight\'s episode was a damn mess. Stay tuned.'",
+      "The clip of {name} pointing at the camera saying '{player}, we\'re not done' has two million views and counting.",
+      "Post-race interview turned into a whole bit. '{player} tried to write me out of the script. I rewrote it. Still here.'",
+    ],
+    close:[
+      "{name} pointed straight at the camera in victory lane. 'That one\'s for {player}. Come on back next week, hell yes.'",
+      "Posted a three-minute video. First two and a half minutes hyping the battle. Last thirty seconds: pure respect for {player}.",
+    ],
+  },
+  grinder:{
+    incident:[
+      "{name}: 'All I can say is I don\'t race anybody that way. I race clean. I expect the same back.'",
+      "Quietly, to one reporter: 'That cost us points. That\'s the issue. Not the drama. The points.'",
+      "{name} filed a protest. It didn\'t go anywhere. The statement did.",
+    ],
+    close:[
+      "{name}: '{player} was solid tonight. Made me work every restart. That\'s what this is supposed to feel like.'",
+      "{name} to his crew chief on the radio, which got picked up: 'Tell {player}\'s crew that was a hell of a battle.'",
+    ],
+  },
+};
+
+function getPersonalityCallout(driverName,type){
+  const p=getPersonality(driverName);
+  const pool=(PERSONALITY_CALLOUT[p]||PERSONALITY_CALLOUT.grinder)[type]||PERSONALITY_CALLOUT.grinder.incident;
+  return pool[rand(0,pool.length-1)];
+}
+
+function calcMerchRevenue(fans){
+  if(!fans)return 0;
+  if(fans<1000)return Math.floor(fans*0.5);
+  if(fans<10000)return Math.floor(500+(fans-1000)*0.3);
+  if(fans<100000)return Math.floor(3200+(fans-10000)*0.15);
+  return Math.floor(16700+(fans-100000)*0.08);
+}
+
+function addLog(state,msg){
+  state.log.push('[S'+state.season+' W'+state.week+'] '+msg);
+  if(state.log.length>200)state.log=state.log.slice(-200);
+}
+
+function initDriverAttrs(){
+  const attrs={};
+  DRIVER_ATTRS.forEach(a=>{attrs[a.id]=DRIVER_ATTR_DEFAULT;});
+  return attrs;
+}
+
+function initCarUpgrades(){
+  const ups={};
+  CAR_UPGRADES.forEach(u=>{ups[u.id]=0;});
+  return ups;
+}
+
+function calcDriverLevel(state){
+  return Math.floor((state.wins*3+state.top5s+state.poles*2)/5);
+}
+
+function initState(name){
+  const drivers = generateInitialDriverPool();
+  const state = {
+    driverName:name, homeState:'ME', season:1, week:1,
+    money:5000, reputation:0, fans:0,
+    wins:0, top5s:0, starts:0, poles:0,
+    totalPrizeMoney:0, totalMerchRevenue:0,
+    contracts:[], pendingOffers:generateOffers(0,0),
+    schedules:{}, championshipPoints:{}, seriesFields:{},
+    sponsors:[], sponsorOffers:[], rivals:[], teammates:[],
+    offTrackDone:[], dramaQueue:[],
+    seasonGoals:[], goalHistory:[], seasonHistory:[],
+    confidence:0, spotter:null, milestones:[],
+    offseasonOffers:[], offseasonPhase:false,
+    carCondition:{engine:100,suspension:100,chassis:100,tires:100,brakes:100},
+    specialResults:[], raceHistory:[],
+    trackPools:{free:JSON.parse(JSON.stringify(FREE_TRACKS)),paid:JSON.parse(JSON.stringify(PAID_TRACKS))},
+    drivers,
+    log:['Season 1. $5,000, a dream, and a simulated engine that hopefully doesn\'t blow. Let\'s go.'],
+    settings:{},
+    // SIM-specific fields
+    driverAttrs: initDriverAttrs(),
+    driverAttrPoints: DRIVER_ATTR_POINTS_START - DRIVER_ATTRS.length * DRIVER_ATTR_DEFAULT,
+    driverPerks: [],
+    carUpgrades: initCarUpgrades(),
+    driverLevel: 0,
+    lastSocialPost:{},
+    trackHistory: {},
+  };
+  // Seed pre-existing relationships from local circuit history
+  state.rivals = generateStartingRivals(drivers);
+  // Seed AI-AI relationships so the world has texture from day 1
+  seedAIDriverRelationships(drivers);
+  return state;
+}
