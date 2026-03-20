@@ -360,6 +360,8 @@ sp.goal.praised=false;
 });
 state.sponsors=state.sponsors.filter(sp=>sp.seasonsLeft>0);
 
+showSeasonSummary(state);
+
 state.season++;
 state.contracts=[];
 state.schedules={};
@@ -367,13 +369,9 @@ state.standings={};
 state.offers=generateOffers(state.rep,state.fans);
 state.sponsorOffers=generateSponsorOffers(state);
 state.log.push('--- SEASON '+state.season+' BEGINS ---');
-}
-
-
 
 save(st);
 }
-
 
 let currentPage='dashboard';
 let st=null;
@@ -545,6 +543,7 @@ save(st);
 showPage('sponsors');
 }
 
+//Schedule
 function renderSchedule(){
 const active=st.contracts;
 let html='<div class="page"><div class="page-title">Schedule</div>';
@@ -554,9 +553,26 @@ const s=getSeries(c.seriesId);
 const sched=st.schedules[c.seriesId]||[];
 html+='<div class="card"><div class="card-title">'+s.name+'</div>';
 sched.forEach(r=>{
-html+='<div class="row-item"><div style="flex:1"><div class="row-name">Round '+r.round+': '+r.track+'</div>';
-if(r.result)html+='<div class="row-sub">'+(r.result.dnf?'DNF':'P'+r.result.position)+' - '+r.result.points+' pts</div>';
-html+='</div></div>';
+const typeColors={superspeedway:'#8B5CF6',intermediate:'#3B82F6',short:'#F59E0B',road:'#10B981',triangle:'#EC4899'};
+const typeColor=typeColors[r.type]||'#64748B';
+html+='<div class="row-item"><div style="flex:1">';
+html+='<div class="row-name">Round '+r.round+': '+r.track;
+if(r.type){
+html+=' <span style="font-size:10px;background:'+typeColor+';color:#000;padding:2px 6px;border-radius:4px;font-weight:900;text-transform:uppercase">'+r.type+'</span>';
+}
+html+='</div>';
+if(r.result){
+html+='<div class="row-sub">'+(r.result.dnf?'DNF':'P'+r.result.position)+' - '+r.result.points+' pts';
+if(r.qualifying&&r.qualifying.pole)html+=' • 🏁 Pole';
+html+='</div>';
+}else{
+html+='<div class="row-sub">'+(r.city||'TBD')+', '+(r.state||'TBD')+'</div>';
+}
+html+='</div>';
+if(!r.result){
+html+='<button class="btn btn-sm btn-primary" onclick="startQualifying(\''+c.seriesId+'\','+r.round+')">Qualify</button>';
+}
+html+='</div>';
 });
 html+='</div>';
 });
