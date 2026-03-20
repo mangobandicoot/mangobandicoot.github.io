@@ -112,6 +112,10 @@ wins:0,top5s:0,starts:0,poles:0,
 contracts:[],offers:[],
 schedules:{},standings:{},
 log:['Season 1 begins.'],
+log:['Season 1 begins.'],
+winStreak:0,
+bestStreak:0,
+
 }
 }
 
@@ -251,7 +255,16 @@ if(contract)contract.completed++;
 state.starts++;
 if(result.position===1){
 state.wins++;
+state.winStreak=(state.winStreak||0)+1;
+if(state.winStreak>=(state.bestStreak||0)){
+state.bestStreak=state.winStreak;
+}
+if(state.winStreak>=3){
+state.log.push('🔥 WIN STREAK: '+state.winStreak+' in a row!');
+}
 checkMilestone(state,'wins',state.wins);
+}else{
+state.winStreak=0;
 }
 if(result.position<=5)state.top5s++;
 if(result.pole)state.poles++;
@@ -331,6 +344,13 @@ html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Starts</sp
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">'+st.wins+'</span></div></div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">'+st.top5s+'</span></div></div>';
 html+='</div>';
+if(st.winStreak&&st.winStreak>=2){
+html+='<div class="card" style="background:linear-gradient(135deg,#F59E0B22,#EF444422);border-color:#F59E0B">';
+html+='<div style="text-align:center;padding:10px"><div style="font-size:32px">🔥</div>';
+html+='<div style="font-size:24px;font-weight:900;color:#F59E0B;margin-top:8px">'+st.winStreak+' WIN STREAK</div>';
+html+='<div style="font-size:13px;color:#94A3B8;margin-top:4px">Best: '+st.bestStreak+'</div></div></div>';
+}
+
 if(st.milestones&&st.milestones.length>0){
 html+='<div class="card"><div class="card-title">Recent Milestones</div>';
 st.milestones.slice(-3).reverse().forEach(m=>{
