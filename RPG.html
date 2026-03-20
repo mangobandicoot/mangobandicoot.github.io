@@ -95,19 +95,6 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(
 function fmt(n){return'$'+n.toLocaleString()}
 function $(id){return document.getElementById(id)}
 function getSeries(id){return SERIES.find(s=>s.id===id)}
-//AI rivals
-const FIRST_NAMES=['Tyler','Kyle','Chase','Ryan','Denny','Kevin','Brad','Joey','Martin','Austin','William','Alex','Christopher','Bubba','Erik','Ross','Daniel','Corey','AJ','Justin'];
-const LAST_NAMES=['Wallace','Larson','Elliott','Blaney','Hamlin','Harvick','Keselowski','Logano','Truex','Dillon','Byron','Bowman','Bell','Jones','Chastain','Suarez','Hemric','LaJoie','Allmendinger','Haley'];
-
-function generateAIDriver(){
-const fn=FIRST_NAMES[rand(0,FIRST_NAMES.length-1)];
-const ln=LAST_NAMES[rand(0,LAST_NAMES.length-1)];
-return{
-id:uid(),
-name:fn+' '+ln,
-skill:rand(60,95),
-};
-}
 
 function generateDriverField(count){
 const drivers=[];
@@ -124,7 +111,6 @@ season:1,money:5000,rep:0,fans:0,
 wins:0,top5s:0,starts:0,poles:0,
 contracts:[],offers:[],
 schedules:{},standings:{},
-drivers:generateDriverField(25),
 log:['Season 1 begins.'],
 }
 }
@@ -202,25 +188,14 @@ result:null
 }
 return sched;
 }
-
-
+//Quali Sim
 function simulateQualifying(state,seriesId){
-const fieldSize=Math.min(20,state.drivers.length+1);
+const s=getSeries(seriesId);
+const fieldSize=20;
 const baseRoll=Math.random()*100;
 const pos=Math.round(fieldSize*(1-baseRoll/115))+1;
 const position=Math.max(1,Math.min(fieldSize,pos));
-
-const field=[{name:state.driverName,position:position,player:true}];
-const aiDrivers=state.drivers.slice(0,fieldSize-1).map((d,i)=>{
-let aiPos=i+1;
-if(aiPos>=position)aiPos++;
-return{name:d.name,position:aiPos,player:false};
-});
-
-field.push(...aiDrivers);
-field.sort((a,b)=>a.position-b.position);
-
-return{position:position,pole:position===1,fieldSize:fieldSize,field:field};
+return{position:position,pole:position===1,fieldSize:fieldSize};
 }
 
 //Race Simulation 
@@ -481,7 +456,7 @@ $('modal-overlay').classList.remove('hidden');
 function closeModal(){
 $('modal-overlay').classList.add('hidden');
 }
-//Simulate Qualifying
+//Start Qualifying
 function startQualifying(seriesId,round){
 const sched=st.schedules[seriesId];
 const race=sched[round-1];
@@ -501,18 +476,10 @@ html+='<div style="background:#060A10;border-radius:8px;padding:14px 16px;margin
 html+='<div><div style="font-size:12px;color:#94A3B8">Position</div><div style="font-size:22px;font-weight:900;color:'+(qualResult.pole?'#F59E0B':'#F9FAFB')+'">'+(qualResult.pole?'POLE':'P'+qualResult.position)+'</div></div>';
 html+='<div style="margin-top:10px"><div style="font-size:12px;color:#94A3B8">Field Size</div><div style="font-size:22px;font-weight:900">'+qualResult.fieldSize+'</div></div>';
 html+='</div>';
-
-if(qualResult.field){
-html+='<div style="max-height:200px;overflow-y:auto;background:#0B0F1A;border-radius:6px;padding:10px;margin-top:12px">';
-qualResult.field.slice(0,10).forEach(function(d){
-html+='<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;'+(d.player?'font-weight:700;color:#F59E0B':'color:#94A3B8')+'"><span>P'+d.position+'</span><span>'+d.name+'</span></div>';
-});
-html+='</div>';
-}
-
 html+='<div class="modal-actions"><button class="btn btn-primary" onclick="startRace(\''+seriesId+'\','+round+')">Continue to Race</button></div>';
 showModal(html);
 }
+
 
 function startRace(seriesId,round){
 const sched=st.schedules[seriesId];
