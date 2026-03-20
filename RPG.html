@@ -89,6 +89,18 @@ const SERIES=[
 {id:'late_model',name:'Late Model',races:16,pay:1800,win:7000,reqRep:80,reqFans:800},
 {id:'cup',name:'Cup Series',races:36,pay:200000,win:1000000,reqRep:320,reqFans:200000},
 ];
+const SPONSOR_BRANDS={
+mini_stock:['Local Auto Parts','County Towing','Main Street Garage','Family Diner','Hardware Co.'],
+street_stock:['Regional Tools','State Farm Supply','Tri-County Motors','Valley Tire','Mountain Auto'],
+late_model:['Premium Parts','Advanced Automotive','Performance Racing','Speed Tech','Race Fuel Co.'],
+cup:['Global Brands','Championship Motors','Elite Racing','Victory Systems','Premier Tech'],
+};
+
+const SPONSOR_TYPES={
+primary:{payMult:3.0,dur:[2,4]},
+associate:{payMult:0.8,dur:[1,3]},
+personal:{payMult:0.3,dur:[1,2]},
+};
 
 function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
@@ -116,7 +128,8 @@ log:['Season 1 begins.'],
 log:['Season 1 begins.'],
 winStreak:0,
 bestStreak:0,
-
+sponsors:[],
+sponsorOffers:[],
 }
 }
 
@@ -249,7 +262,7 @@ const s=getSeries('mini_stock');
 const prize=pos===1?s.pay+s.win:Math.floor(s.pay*(0.7-(pos/pending.fieldSize)*0.6));
 return{position:pos,dnf:dnf,points:points,prize:prize,pole:false};
 }
-//End Season and Offseason advance
+//Results, end of season
 function processResult(state,seriesId,raceIdx,result){
 const contract=state.contracts.find(c=>c.seriesId===seriesId);
 if(contract)contract.completed++;
@@ -288,8 +301,9 @@ if(!state.standings[seriesId])state.standings[seriesId]={};
 state.standings[seriesId][state.driverName]=(state.standings[seriesId][state.driverName]||0)+result.points;
 const sched=state.schedules[seriesId];
 sched[raceIdx].result=result;
-
+updateSponsorGoals(state,seriesId,result);
 const track=sched[raceIdx].track;
+
 if(!state.trackHistory[track]){
 state.trackHistory[track]={starts:0,wins:0,top5s:0,dnfs:0,totalPos:0,bestFinish:null,worstFinish:null};
 }
@@ -314,13 +328,26 @@ state.log.push('Contract with '+contract.team+' complete! Bonus: '+fmt(bonus));
 
 const allComplete=state.contracts.every(c=>c.completed>=c.races);
 if(allComplete){
+state.sponsors.forEach(sp=>{
+sp.seasonsLeft--;
+if(sp.goal){
+sp.goal.tracked=0;
+sp.goal.achieved=0;
+sp.goal.warned=false;
+sp.goal.praised=false;
+}
+});
+state.sponsors=state.sponsors.filter(sp=>sp.seasonsLeft>0);
+
 state.season++;
 state.contracts=[];
 state.schedules={};
 state.standings={};
 state.offers=generateOffers(state.rep,state.fans);
+state.sponsorOffers=generateSponsorOffers(state);
 state.log.push('--- SEASON '+state.season+' BEGINS ---');
 }
+
 
 
 save(st);
@@ -788,6 +815,109 @@ if(winPct>=0.5)bonus*=2;
 else if(winPct>=0.25)bonus*=1.5;
 
 return Math.floor(bonus);
+}
+//Sponsor Functions
+function makeSponsor(seriesId,type){
+const s=getSeries(seriesId);
+const brands=SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock;
+const brand=brands[rand(0,brands.length-1)];
+const st=SPONSOR_TYPES[type];
+const basePay=Math.floor(s.pay*st.payMult*rand(80,130)/100);
+const duration=rand(st.dur[0],st.dur[1]);
+
+const goalTypes=['top5_pct','wins','finish_pct'];
+const goalType=goalTypes[rand(0,goalTypes.length-1)];
+let target=0;
+let desc='';
+
+if(goalType==='top5_pct'){
+target=rand(25,50);
+desc='Expect top-5 finishes in at least '+target+'% of races';
+}else if(goalType==='wins'){
+target=rand(1,s.tier<=2?2:3);
+desc='Expect at least '+target+' win'+(target>1?'s':'')+' this season';
+}else{
+target=rand(60,85);
+desc='Expect you to finish in '+target+'% of races (no DNFs)';
+}
+
+return{
+id:uid(),
+brand:brand,
+type:type,
+seriesId:seriesId,
+payPerSeason:basePay,
+seasonsLeft:duration,
+totalSeasons:duration,
+happiness:75,
+goal:{type:goalType,target:target,desc:desc,tracked:0,achieved:0,warned:false,praised:false},
+};
+}
+
+function generateSponsorOffers(state){
+const offers=[];
+state.contracts.forEach(c=>{
+const s=getSeries(c.seriesId);
+if(state.rep>=s.reqRep*0.5&&Math.random()<0.4){
+offers.push(makeSponsor(c.seriesId,'primary'));
+}
+if(state.rep>=s.reqRep*0.3&&Math.random()<0.5){
+offers.push(makeSponsor(c.seriesId,'associate'));
+}
+});
+if(offers.length===0&&state.contracts.length>0){
+offers.push(makeSponsor(state.contracts[0].seriesId,'associate'));
+}
+return offers.slice(0,3);
+}
+
+function updateSponsorGoals(state,seriesId,result){
+const sponsors=state.sponsors.filter(s=>s.seriesId===seriesId);
+sponsors.forEach(sp=>{
+const g=sp.goal;
+g.tracked++;
+
+if(g.type==='top5_pct'&&!result.dnf&&result.position<=5)g.achieved++;
+else if(g.type==='wins'&&result.position===1)g.achieved++;
+else if(g.type==='finish_pct'&&!result.dnf)g.achieved++;
+
+const pct=g.tracked>0?(g.achieved/g.tracked)*100:0;
+
+if(g.type==='top5_pct'&&pct>=g.target&&!g.praised&&g.tracked>=5){
+sp.happiness=Math.min(100,sp.happiness+10);
+g.praised=true;
+state.log.push('💰 '+sp.brand+' is thrilled with your top-5 performance! (+10 happiness)');
+}else if(g.type==='top5_pct'&&pct<g.target*0.6&&!g.warned&&g.tracked>=8){
+sp.happiness=Math.max(0,sp.happiness-15);
+g.warned=true;
+state.log.push('⚠️ '+sp.brand+' warns you about missing top-5 targets (-15 happiness)');
+}
+
+if(g.type==='wins'&&g.achieved>=g.target&&!g.praised){
+sp.happiness=Math.min(100,sp.happiness+15);
+g.praised=true;
+state.log.push('💰 '+sp.brand+' celebrates hitting the win target! (+15 happiness)');
+}else if(g.type==='wins'&&g.tracked>=15&&g.achieved<g.target&&!g.warned){
+sp.happiness=Math.max(0,sp.happiness-20);
+g.warned=true;
+state.log.push('⚠️ '+sp.brand+' is disappointed with lack of wins (-20 happiness)');
+}
+
+if(g.type==='finish_pct'&&pct>=g.target&&!g.praised&&g.tracked>=5){
+sp.happiness=Math.min(100,sp.happiness+8);
+g.praised=true;
+state.log.push('💰 '+sp.brand+' is pleased with your reliability (+8 happiness)');
+}else if(g.type==='finish_pct'&&pct<g.target*0.7&&!g.warned&&g.tracked>=8){
+sp.happiness=Math.max(0,sp.happiness-12);
+g.warned=true;
+state.log.push('⚠️ '+sp.brand+' is concerned about DNF rate (-12 happiness)');
+}
+
+if(sp.happiness<25&&sp.seasonsLeft>0){
+sp.seasonsLeft=0;
+state.log.push('❌ '+sp.brand+' has terminated their sponsorship due to poor performance');
+}
+});
 }
 
 </script>
