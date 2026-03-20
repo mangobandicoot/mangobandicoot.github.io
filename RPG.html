@@ -84,11 +84,16 @@ button:disabled{opacity:0.35;cursor:not-allowed}
 
 <script>
 const SERIES=[
-{id:'mini_stock',name:'Mini Stock',races:10,pay:120,win:600,reqRep:0,reqFans:0},
-{id:'street_stock',name:'Street Stock',races:12,pay:280,win:1200,reqRep:35,reqFans:200},
-{id:'late_model',name:'Late Model',races:16,pay:1800,win:7000,reqRep:80,reqFans:800},
-{id:'cup',name:'Cup Series',races:36,pay:200000,win:1000000,reqRep:320,reqFans:200000},
+{id:'mini_stock',name:'Mini Stock',short:'Mini',races:10,pay:120,win:600,reqRep:0,reqFans:0,tier:0,trackType:'local'},
+{id:'street_stock',name:'Street Stock',short:'Street',races:12,pay:280,win:1200,reqRep:35,reqFans:200,tier:1,trackType:'local'},
+{id:'late_model',name:'Late Model',short:'Late',races:16,pay:1800,win:7000,reqRep:80,reqFans:800,tier:2,trackType:'local'},
+{id:'super_late',name:'Super Late Model',short:'Super',races:18,pay:5000,win:15000,reqRep:150,reqFans:2000,tier:3,trackType:'mixed'},
+{id:'arca',name:'ARCA Menards Series',short:'ARCA',races:20,pay:8000,win:25000,reqRep:200,reqFans:5000,tier:4,trackType:'nascar'},
+{id:'trucks',name:'NASCAR Craftsman Truck Series',short:'Trucks',races:23,pay:15000,win:50000,reqRep:250,reqFans:15000,tier:5,trackType:'nascar'},
+{id:'xfinity',name:'NASCAR Xfinity Series',short:'Xfinity',races:33,pay:30000,win:100000,reqRep:300,reqFans:50000,tier:6,trackType:'nascar'},
+{id:'cup',name:'NASCAR Cup Series',short:'Cup',races:36,pay:200000,win:1000000,reqRep:350,reqFans:150000,tier:7,trackType:'nascar'},
 ];
+
 const SPONSOR_BRANDS={
 mini_stock:['Local Auto Parts','County Towing','Main Street Garage','Family Diner','Hardware Co.'],
 street_stock:['Regional Tools','State Farm Supply','Tri-County Motors','Valley Tire','Mountain Auto'],
@@ -163,26 +168,54 @@ if(offers.length===0)offers.push(makeContract('mini_stock'));
 return offers.slice(0,3);
 }
 
-const TRACKS=[
-{name:'Daytona',city:'Daytona Beach',state:'FL'},
-{name:'Charlotte',city:'Concord',state:'NC'},
-{name:'Bristol',city:'Bristol',state:'TN'},
-{name:'Martinsville',city:'Martinsville',state:'VA'},
-{name:'Talladega',city:'Talladega',state:'AL'},
-{name:'Richmond',city:'Richmond',state:'VA'},
-{name:'Phoenix',city:'Avondale',state:'AZ'},
-{name:'Atlanta',city:'Hampton',state:'GA'},
-{name:'Las Vegas',city:'Las Vegas',state:'NV'},
-{name:'Texas',city:'Fort Worth',state:'TX'},
-{name:'Dover',city:'Dover',state:'DE'},
-{name:'Kansas',city:'Kansas City',state:'KS'},
-{name:'Pocono',city:'Long Pond',state:'PA'},
-{name:'Michigan',city:'Brooklyn',state:'MI'},
-{name:'Watkins Glen',city:'Watkins Glen',state:'NY'},
-{name:'Indianapolis',city:'Indianapolis',state:'IN'},
-{name:'Darlington',city:'Darlington',state:'SC'},
-{name:'Nashville',city:'Nashville',state:'TN'},
-];
+const TRACKS={
+local:[
+{name:'USA International Speedway',city:'Lakeland',state:'FL',type:'short',tier:0},
+{name:'Concord Speedway',city:'Concord',state:'NC',type:'short',tier:0},
+{name:'South Boston Speedway',city:'South Boston',state:'VA',type:'short',tier:0},
+{name:'Orange County Speedway',city:'Rougemont',state:'NC',type:'short',tier:0},
+{name:'Five Flags Speedway',city:'Pensacola',state:'FL',type:'short',tier:0},
+{name:'Kingsport Speedway',city:'Kingsport',state:'TN',type:'short',tier:0},
+{name:'Hickory Motor Speedway',city:'Hickory',state:'NC',type:'short',tier:1},
+{name:'Myrtle Beach Speedway',city:'Myrtle Beach',state:'SC',type:'short',tier:1},
+{name:'Montgomery Motor Speedway',city:'Montgomery',state:'AL',type:'short',tier:1},
+{name:'Dillon Motor Speedway',city:'Dillon',state:'SC',type:'short',tier:1},
+{name:'Greenville-Pickens Speedway',city:'Greenville',state:'SC',type:'short',tier:2},
+{name:'Florence Motor Speedway',city:'Florence',state:'SC',type:'short',tier:2},
+{name:'Carteret County Speedway',city:'Swansboro',state:'NC',type:'short',tier:2},
+{name:'Southern National Motorsports Park',city:'Lucama',state:'NC',type:'short',tier:2},
+],
+nascar:[
+{name:'Daytona International Speedway',city:'Daytona Beach',state:'FL',type:'superspeedway',series:['arca','trucks','xfinity','cup']},
+{name:'Phoenix Raceway',city:'Avondale',state:'AZ',type:'intermediate',series:['arca','trucks','xfinity','cup']},
+{name:'Atlanta Motor Speedway',city:'Hampton',state:'GA',type:'intermediate',series:['arca','trucks','xfinity','cup']},
+{name:'Las Vegas Motor Speedway',city:'Las Vegas',state:'NV',type:'intermediate',series:['arca','trucks','xfinity','cup']},
+{name:'Auto Club Speedway',city:'Fontana',state:'CA',type:'intermediate',series:['xfinity','cup']},
+{name:'Bristol Motor Speedway',city:'Bristol',state:'TN',type:'short',series:['trucks','xfinity','cup']},
+{name:'Circuit of the Americas',city:'Austin',state:'TX',type:'road',series:['trucks','xfinity','cup']},
+{name:'Martinsville Speedway',city:'Martinsville',state:'VA',type:'short',series:['trucks','xfinity','cup']},
+{name:'Texas Motor Speedway',city:'Fort Worth',state:'TX',type:'intermediate',series:['arca','trucks','xfinity','cup']},
+{name:'Talladega Superspeedway',city:'Talladega',state:'AL',type:'superspeedway',series:['arca','trucks','xfinity','cup']},
+{name:'Dover Motor Speedway',city:'Dover',state:'DE',type:'intermediate',series:['trucks','xfinity','cup']},
+{name:'Kansas Speedway',city:'Kansas City',state:'KS',type:'intermediate',series:['arca','trucks','xfinity','cup']},
+{name:'Darlington Raceway',city:'Darlington',state:'SC',type:'intermediate',series:['trucks','xfinity','cup']},
+{name:'Charlotte Motor Speedway',city:'Concord',state:'NC',type:'intermediate',series:['trucks','xfinity','cup']},
+{name:'World Wide Technology Raceway',city:'Madison',state:'IL',type:'intermediate',series:['arca','trucks','xfinity']},
+{name:'Sonoma Raceway',city:'Sonoma',state:'CA',type:'road',series:['trucks','xfinity','cup']},
+{name:'Iowa Speedway',city:'Newton',state:'IA',type:'short',series:['arca','trucks','xfinity']},
+{name:'New Hampshire Motor Speedway',city:'Loudon',state:'NH',type:'intermediate',series:['xfinity','cup']},
+{name:'Nashville Superspeedway',city:'Nashville',state:'TN',type:'intermediate',series:['trucks','xfinity','cup']},
+{name:'Chicago Street Course',city:'Chicago',state:'IL',type:'road',series:['xfinity','cup']},
+{name:'Pocono Raceway',city:'Long Pond',state:'PA',type:'triangle',series:['trucks','xfinity','cup']},
+{name:'Road America',city:'Elkhart Lake',state:'WI',type:'road',series:['trucks','xfinity','cup']},
+{name:'Indianapolis Motor Speedway',city:'Indianapolis',state:'IN',type:'road',series:['xfinity','cup']},
+{name:'Michigan International Speedway',city:'Brooklyn',state:'MI',type:'intermediate',series:['arca','trucks','xfinity','cup']},
+{name:'Daytona International Speedway Road Course',city:'Daytona Beach',state:'FL',type:'road',series:['trucks','xfinity']},
+{name:'Watkins Glen International',city:'Watkins Glen',state:'NY',type:'road',series:['trucks','xfinity','cup']},
+{name:'Richmond Raceway',city:'Richmond',state:'VA',type:'short',series:['trucks','xfinity','cup']},
+{name:'Homestead-Miami Speedway',city:'Homestead',state:'FL',type:'intermediate',series:['trucks','xfinity','cup']},
+],
+};
 
 function generateSchedule(seriesId){
 const s=getSeries(seriesId);
