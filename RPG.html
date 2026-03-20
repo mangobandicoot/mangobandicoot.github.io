@@ -137,34 +137,15 @@ fans=Math.floor(fans*0.98);
 
 const offers=[];
 SERIES.forEach(s=>{
-
+if(rep>=s.reqRep&&fans>=s.reqFans){
+if(Math.random()<0.6)offers.push(makeContract(s.id));
+}
+});
+if(offers.length===0)offers.push(makeContract('mini_stock'));
+return offers.slice(0,3);
+}
 
 const TRACKS=[
-{name:'Daytona International Speedway',short:'Daytona',city:'Daytona Beach',state:'FL',type:'superspeedway'},
-{name:'Charlotte Motor Speedway',short:'Charlotte',city:'Concord',state:'NC',type:'intermediate'},
-{name:'Bristol Motor Speedway',short:'Bristol',city:'Bristol',state:'TN',type:'short'},
-{name:'Martinsville Speedway',short:'Martinsville',city:'Martinsville',state:'VA',type:'short'},
-{name:'Talladega Superspeedway',short:'Talladega',city:'Talladega',state:'AL',type:'superspeedway'},
-{name:'Richmond Raceway',short:'Richmond',city:'Richmond',state:'VA',type:'short'},
-{name:'Phoenix Raceway',short:'Phoenix',city:'Avondale',state:'AZ',type:'intermediate'},
-{name:'Atlanta Motor Speedway',short:'Atlanta',city:'Hampton',state:'GA',type:'intermediate'},
-{name:'Las Vegas Motor Speedway',short:'Las Vegas',city:'Las Vegas',state:'NV',type:'intermediate'},
-{name:'Auto Club Speedway',short:'Fontana',city:'Fontana',state:'CA',type:'intermediate'},
-{name:'Dover Motor Speedway',short:'Dover',city:'Dover',state:'DE',type:'intermediate'},
-{name:'Kansas Speedway',short:'Kansas',city:'Kansas City',state:'KS',type:'intermediate'},
-{name:'Texas Motor Speedway',short:'Texas',city:'Fort Worth',state:'TX',type:'intermediate'},
-{name:'Pocono Raceway',short:'Pocono',city:'Long Pond',state:'PA',type:'triangle'},
-{name:'Michigan International Speedway',short:'Michigan',city:'Brooklyn',state:'MI',type:'intermediate'},
-{name:'Watkins Glen International',short:'The Glen',city:'Watkins Glen',state:'NY',type:'road'},
-{name:'Indianapolis Motor Speedway',short:'Indy',city:'Indianapolis',state:'IN',type:'intermediate'},
-{name:'Darlington Raceway',short:'Darlington',city:'Darlington',state:'SC',type:'intermediate'},
-{name:'Nashville Superspeedway',short:'Nashville',city:'Nashville',state:'TN',type:'intermediate'},
-{name:'Road America',short:'Road America',city:'Elkhart Lake',state:'WI',type:'road'},
-];
-// Real NASCAR tracks
-function generateSchedule(seriesId){
-const s=getSeries(seriesId);
-const tracks=[
 {name:'Daytona',city:'Daytona Beach',state:'FL'},
 {name:'Charlotte',city:'Concord',state:'NC'},
 {name:'Bristol',city:'Bristol',state:'TN'},
@@ -184,13 +165,17 @@ const tracks=[
 {name:'Darlington',city:'Darlington',state:'SC'},
 {name:'Nashville',city:'Nashville',state:'TN'},
 ];
+
+function generateSchedule(seriesId){
+const s=getSeries(seriesId);
 const sched=[];
 for(let i=0;i<s.races;i++){
-const t=tracks[rand(0,tracks.length-1)];
+const t=TRACKS[rand(0,TRACKS.length-1)];
 sched.push({round:i+1,track:t.name,city:t.city,state:t.state,qualifying:null,result:null});
 }
 return sched;
 }
+
 //Quali Sim
 function simulateQualifying(state,seriesId){
 const s=getSeries(seriesId);
