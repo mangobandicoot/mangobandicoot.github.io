@@ -2030,7 +2030,7 @@ function relationship(r){
   if(i>=3&&c>=4)return'frenemy';
   if(i>=3)return'rival';
   if(c>=4)return cb>=c*0.7?'racing_rival':'friend';
-  return'acquaintance';
+    return'acquaintance';
 }
 
 const REL_COLOR={rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8',chosen_rival:'#DC2626',chosen_friend:'#059669'};
@@ -2067,88 +2067,33 @@ function makeSponsor(seriesId,type,international){
   const s=getSeries(seriesId);
   const base=Math.floor(s.pay*(type==='primary'?3:type==='associate'?0.8:0.3)*randF(0.8,1.3));
   const seasons=rand(st.dur[0],st.dur[1]);
-  
   const goalTypes=['top5_pct','wins','finish_pct'];
   const goalType=goalTypes[rand(0,goalTypes.length-1)];
-  
-  const sponsorGoal={
-  type:goalType,
-target:goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85),
-racesTracked:0,
-racesAchieved:0,
-warned:false,
-praised:false,
-desc:goalType==='top5_pct'?'Expect top-5 finishes in at least '+rand(25,50)+'% of races':
-     goalType==='wins'?'Expect at least '+rand(1,2)+' win'+(rand(1,2)>1?'s':'')+' this season':
-     'Expect you to finish (not DNF) in '+rand(60,85)+'% of races',
-};
-
-  return{
-    id:uid(),
-    brand,
-    type:international?'international':type,
-    seriesId,
-    valuePerSeason:base,
-    seasonsLeft:seasons,
-    totalSeasons:seasons,
-    happiness:75,
-    winBonus:Math.floor(base*0.15),
-    top5Bonus:Math.floor(base*0.05),
-    minHappy:25,
-    international,
-    sponsorGoal,
-  };
+  const targetVal=goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85);
+  const descText=goalType==='top5_pct'?'Expect top-5 finishes in at least '+targetVal+'% of races':goalType==='wins'?'Expect at least '+targetVal+' win'+(targetVal>1?'s':'')+' this season':'Expect you to finish (not DNF) in '+targetVal+'% of races';
+  const sponsorGoal={type:goalType,target:targetVal,racesTracked:0,racesAchieved:0,warned:false,praised:false,desc:descText};
+  return{id:uid(),brand,type:international?'international':type,seriesId,valuePerSeason:base,seasonsLeft:seasons,totalSeasons:seasons,happiness:75,winBonus:Math.floor(base*0.15),top5Bonus:Math.floor(base*0.05),minHappy:25,international,sponsorGoal};
 }
 
 function updateSponsorGoals(state,seriesId,result){
   const sponsors=(state.sponsors||[]).filter(s=>s.seriesId===seriesId);
-  
   sponsors.forEach(sp=>{
     const goal=sp.sponsorGoal;
     if(!goal)return;
-    
     goal.racesTracked++;
-    
-    if(goal.type==='top5_pct'&&!result.dnf&&result.position<=5){
-      goal.racesAchieved++;
-    }else if(goal.type==='wins'&&result.position===1){
-      goal.racesAchieved++;
-    }else if(goal.type==='finish_pct'&&!result.dnf){
-      goal.racesAchieved++;
-    }
-    
+    if(goal.type==='top5_pct'&&!result.dnf&&result.position<=5){goal.racesAchieved++;}
+    else if(goal.type==='wins'&&result.position===1){goal.racesAchieved++;}
+    else if(goal.type==='finish_pct'&&!result.dnf){goal.racesAchieved++;}
     const currentPct=goal.racesTracked>0?(goal.racesAchieved/goal.racesTracked)*100:0;
-    
     if(goal.type==='top5_pct'){
-      if(currentPct>=goal.target&&!goal.praised&&goal.racesTracked>=5){
-        sp.happiness=Math.min(100,sp.happiness+10);
-        goal.praised=true;
-        addLog(state,`${sp.brand} is thrilled with your top-5 performance (+10 happiness)`);
-      }else if(currentPct<goal.target*0.6&&!goal.warned&&goal.racesTracked>=8){
-        sp.happiness=Math.max(0,sp.happiness-15);
-        goal.warned=true;
-        addLog(state,`${sp.brand} warns you about missing top-5 targets (-15 happiness)`);
-      }
+      if(currentPct>=goal.target&&!goal.praised&&goal.racesTracked>=5){sp.happiness=Math.min(100,sp.happiness+10);goal.praised=true;addLog(state,sp.brand+' is thrilled with your top-5 performance (+10 happiness)');}
+      else if(currentPct<goal.target*0.6&&!goal.warned&&goal.racesTracked>=8){sp.happiness=Math.max(0,sp.happiness-15);goal.warned=true;addLog(state,sp.brand+' warns you about missing top-5 targets (-15 happiness)');}
     }else if(goal.type==='wins'){
-      if(goal.racesAchieved>=goal.target&&!goal.praised){
-        sp.happiness=Math.min(100,sp.happiness+15);
-        goal.praised=true;
-        addLog(state,`${sp.brand} celebrates hitting the win target! (+15 happiness)`);
-      }else if(goal.racesTracked>=15&&goal.racesAchieved<goal.target&&!goal.warned){
-        sp.happiness=Math.max(0,sp.happiness-20);
-        goal.warned=true;
-        addLog(state,`${sp.brand} is disappointed with the lack of wins (-20 happiness)`);
-      }
+      if(goal.racesAchieved>=goal.target&&!goal.praised){sp.happiness=Math.min(100,sp.happiness+15);goal.praised=true;addLog(state,sp.brand+' celebrates hitting the win target! (+15 happiness)');}
+      else if(goal.racesTracked>=15&&goal.racesAchieved<goal.target&&!goal.warned){sp.happiness=Math.max(0,sp.happiness-20);goal.warned=true;addLog(state,sp.brand+' is disappointed with the lack of wins (-20 happiness)');}
     }else if(goal.type==='finish_pct'){
-      if(currentPct>=goal.target&&!goal.praised&&goal.racesTracked>=5){
-        sp.happiness=Math.min(100,sp.happiness+8);
-        goal.praised=true;
-        addLog(state,`${sp.brand} is pleased with your reliability (+8 happiness)`);
-      }else if(currentPct<goal.target*0.7&&!goal.warned&&goal.racesTracked>=8){
-        sp.happiness=Math.max(0,sp.happiness-12);
-        goal.warned=true;
-        addLog(state,`${sp.brand} is concerned about DNF rate (-12 happiness)`);
-      }
+      if(currentPct>=goal.target&&!goal.praised&&goal.racesTracked>=5){sp.happiness=Math.min(100,sp.happiness+8);goal.praised=true;addLog(state,sp.brand+' is pleased with your reliability (+8 happiness)');}
+      else if(currentPct<goal.target*0.7&&!goal.warned&&goal.racesTracked>=8){sp.happiness=Math.max(0,sp.happiness-12);goal.warned=true;addLog(state,sp.brand+' is concerned about DNF rate (-12 happiness)');}
     }
   });
 }
@@ -2156,78 +2101,43 @@ function updateSponsorGoals(state,seriesId,result){
 function generateSponsorOffers(state){
   const offers=[];
   const activeSeries=[...new Set(state.contracts.map(c=>c.seriesId))];
-  
   activeSeries.forEach(seriesId=>{
     const s=getSeries(seriesId);
-    
-    if(state.reputation>=s.reqRep*0.8&&state.fans>=s.reqFans*0.6){
-      if(Math.random()<0.4){
-        offers.push(makeSponsor(seriesId,'primary',false));
-      }
-    }
-    
-    if(state.reputation>=s.reqRep*0.5&&state.fans>=s.reqFans*0.4){
-      if(Math.random()<0.5){
-        offers.push(makeSponsor(seriesId,'associate',false));
-      }
-    }
-    
-    if(state.reputation>=s.reqRep*1.5&&state.fans>=s.reqFans*1.2){
-      if(Math.random()<0.25){
-        offers.push(makeSponsor(seriesId,'primary',true));
-      }
-    }
+    if(state.reputation>=s.reqRep*0.8&&state.fans>=s.reqFans*0.6){if(Math.random()<0.4){offers.push(makeSponsor(seriesId,'primary',false));}}
+    if(state.reputation>=s.reqRep*0.5&&state.fans>=s.reqFans*0.4){if(Math.random()<0.5){offers.push(makeSponsor(seriesId,'associate',false));}}
+    if(state.reputation>=s.reqRep*1.5&&state.fans>=s.reqFans*1.2){if(Math.random()<0.25){offers.push(makeSponsor(seriesId,'primary',true));}}
   });
-  
   return shuffle(offers).slice(0,3);
 }
 
 function processSponsorPayments(state){
   const sponsors=state.sponsors||[];
   let totalPaid=0;
-  
   sponsors.forEach(sp=>{
     if(sp.seasonsLeft>0){
       const payment=sp.valuePerSeason;
       state.money+=payment;
       totalPaid+=payment;
-      
       sp.happiness=Math.max(0,sp.happiness-2);
-      
-      if(sp.happiness<sp.minHappy){
-        addLog(state,`${sp.brand} has terminated their sponsorship due to poor performance`);
-        sp.seasonsLeft=0;
-      }
+      if(sp.happiness<sp.minHappy){addLog(state,sp.brand+' has terminated their sponsorship due to poor performance');sp.seasonsLeft=0;}
     }
   });
-  
-  if(totalPaid>0){
-    addLog(state,`Sponsor payments: ${fmtMoney(totalPaid)}`);
-  }
-  
+  if(totalPaid>0){addLog(state,'Sponsor payments: '+fmtMoney(totalPaid));}
   state.sponsors=sponsors.filter(sp=>sp.seasonsLeft>0);
 }
 
 function advanceSponsors(state){
   const sponsors=state.sponsors||[];
-  
   sponsors.forEach(sp=>{
     if(sp.seasonsLeft>0){
       sp.seasonsLeft--;
-      
-      if(sp.sponsorGoal){
-        sp.sponsorGoal.racesTracked=0;
-        sp.sponsorGoal.racesAchieved=0;
-        sp.sponsorGoal.warned=false;
-        sp.sponsorGoal.praised=false;
-      }
+      if(sp.sponsorGoal){sp.sponsorGoal.racesTracked=0;sp.sponsorGoal.racesAchieved=0;sp.sponsorGoal.warned=false;sp.sponsorGoal.praised=false;}
     }
   });
-  
   state.sponsors=sponsors.filter(sp=>sp.seasonsLeft>0);
-  
   state.sponsorOffers=generateSponsorOffers(state);
 }
+
 
 
 //PART 13
