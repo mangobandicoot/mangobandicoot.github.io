@@ -3082,40 +3082,6 @@ function makeRaceChoiceEnhanced(seriesId,raceIdx,scenarioIdx,choiceIdx){
 //PART 17
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const stateSelect=$('driver-state-input');
-  
-  if(stateSelect){
-    stateSelect.innerHTML='';
-    
-    const states=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
-    const stateNames={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
-    const intlRegions=['Europe','Africa','Asia','South America','Central America','Australia'];
-    
-    const usG=document.createElement('optgroup');
-    usG.label='United States';
-    
-    states.forEach(s=>{
-      const o=document.createElement('option');
-      o.value=s;
-      o.textContent=stateNames[s]||s;
-      if(s==='ME')o.selected=true;
-      usG.appendChild(o);
-    });
-    
-    const iG=document.createElement('optgroup');
-    iG.label='International';
-    
-    intlRegions.forEach(s=>{
-      const o=document.createElement('option');
-      o.value=s;
-      o.textContent=s;
-      iG.appendChild(o);
-    });
-    
-    stateSelect.appendChild(usG);
-    stateSelect.appendChild(iG);
-  }
-  
   const existingSave=getState();
   
   if(existingSave){
@@ -3127,8 +3093,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     showPage('dashboard');
   }else{
     const setupForm=$('setup-form');
-    setupForm.addEventListener('submit',e=>{
+    
+    if(!setupForm){
+      alert('ERROR: Setup form not found!');
+      return;
+    }
+    
+    setupForm.addEventListener('submit',function(e){
       e.preventDefault();
+      e.stopPropagation();
       
       const driverName=$('driver-name-input').value.trim();
       const driverNumber=parseInt($('driver-number-input').value);
@@ -3136,15 +3109,24 @@ document.addEventListener('DOMContentLoaded',()=>{
       
       if(!driverName){
         alert('Please enter your driver name');
-        return;
+        return false;
       }
       
       if(isNaN(driverNumber)||driverNumber<0||driverNumber>999){
         alert('Please enter a valid car number (0-999)');
-        return;
+        return false;
       }
       
-      const newState=initStateComplete(driverName,driverNumber,homeState);
+      let newState;
+      
+      if(typeof initStateComplete==='function'){
+        newState=initStateComplete(driverName,driverNumber,homeState);
+      }else if(typeof initState==='function'){
+        newState=initState(driverName,driverNumber,homeState);
+      }else{
+        alert('ERROR: initState function not found!');
+        return false;
+      }
       
       saveState(newState);
       
@@ -3154,6 +3136,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       updateHeader(newState);
       updateTabs(newState);
       showPage('dashboard');
+      
+      return false;
     });
   }
   
@@ -3346,7 +3330,7 @@ window.doSignContract=doSignContractEnhanced;
 console.log('Full Throttle v1.5.2-SIM loaded successfully');
 console.log('Type window.DEV in console for debug commands');
 console.log('Features: AI personalities, track history, sponsor goals, real schedules, callouts');
-</script>
+
 
 
 </script>
