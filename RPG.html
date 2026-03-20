@@ -403,7 +403,7 @@ if(active.length===0)html+='<div class="card"><div style="text-align:center;padd
 html+='</div>';
 $('content').innerHTML=html;
 }
-
+//Standings Tab
 function renderStandings(){
 let html='<div class="page"><div class="page-title">Standings</div>';
 
@@ -411,8 +411,18 @@ Object.keys(st.standings).forEach(seriesId=>{
 const s=getSeries(seriesId);
 const pts=st.standings[seriesId];
 const list=Object.entries(pts).map(([name,points])=>({name:name,points:points,player:name===st.driverName})).sort((a,b)=>b.points-a.points);
-html+='<div class="card"><div class="card-title">'+s.name+'</div>';
-list.forEach((d,i)=>{
+
+const playerStanding=list.find(d=>d.player);
+const playerPos=playerStanding?list.indexOf(playerStanding)+1:99;
+
+html+='<div class="card">';
+html+='<div class="card-title">'+s.name+'</div>';
+html+='<div style="background:#060A10;padding:12px;border-radius:6px;margin-bottom:12px">';
+html+='<div style="display:flex;justify-content:space-between;font-size:14px;color:#94A3B8"><span>Your Position</span><span style="font-size:18px;font-weight:900;color:#F59E0B">'+playerPos+getOrdinal(playerPos)+'</span></div>';
+html+='<div style="display:flex;justify-content:space-between;font-size:14px;color:#94A3B8;margin-top:8px"><span>Your Points</span><span style="font-size:18px;font-weight:900;color:#F9FAFB">'+(playerStanding?playerStanding.points:0)+'</span></div>';
+html+='</div>';
+
+list.slice(0,10).forEach((d,i)=>{
 html+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222'+(d.player?';font-weight:700;color:#F59E0B':'')+'"><span>'+(i+1)+'. '+d.name+'</span><span>'+d.points+' pts</span></div>';
 });
 html+='</div>';
@@ -423,6 +433,13 @@ if(Object.keys(st.standings).length===0)html+='<div class="card"><div style="tex
 html+='</div>';
 $('content').innerHTML=html;
 }
+
+function getOrdinal(n){
+const s=['th','st','nd','rd'];
+const v=n%100;
+return s[(v-20)%10]||s[v]||s[0];
+}
+
 
 function renderSettings(){
 let html='<div class="page"><div class="page-title">Settings</div>';
