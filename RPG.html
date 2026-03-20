@@ -899,15 +899,14 @@ let bonus=s.pay*2;
 if(playerPos===1)bonus+=s.win*5;
 else if(playerPos<=3)bonus+=s.win*2;
 else if(playerPos<=5)bonus+=s.win;
-
 const winPct=contract.races>0?(state.wins/contract.races):0;
 if(winPct>=0.5)bonus*=2;
 else if(winPct>=0.25)bonus*=1.5;
-
 return Math.floor(bonus);
 }
 //Sponsor Functions
 function makeSponsor(seriesId,type){
+
 const s=getSeries(seriesId);
 const brands=SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock;
 const brand=brands[rand(0,brands.length-1)];
