@@ -1548,30 +1548,39 @@ function finishRace(seriesId,raceIdx){
 
 document.addEventListener('DOMContentLoaded',()=>{
   const stateSelect=$('driver-state-input');
-  if(stateSelect&&stateSelect.options.length===0){
-    const usG=document.createElement('optgroup');
-    usG.label='United States';
-    const iG=document.createElement('optgroup');
-    iG.label='International';
-    
-    US_STATES.forEach(s=>{
-      const o=document.createElement('option');
-      o.value=s;
-      o.textContent=US_STATE_NAMES[s]||s;
-      if(s==='ME')o.selected=true;
-      usG.appendChild(o);
-    });
-    
-    INTL_REGIONS.forEach(s=>{
-      const o=document.createElement('option');
-      o.value=s;
-      o.textContent=s;
-      iG.appendChild(o);
-    });
-    
-    stateSelect.appendChild(usG);
-    stateSelect.appendChild(iG);
-  }
+console.log('State select element:',stateSelect);
+if(stateSelect){
+  stateSelect.innerHTML='';
+  
+  const usG=document.createElement('optgroup');
+  usG.label='United States';
+  
+  US_STATES.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s;
+    o.textContent=US_STATE_NAMES[s]||s;
+    if(s==='ME')o.selected=true;
+    usG.appendChild(o);
+  });
+  
+  const iG=document.createElement('optgroup');
+  iG.label='International';
+  
+  INTL_REGIONS.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s;
+    o.textContent=s;
+    iG.appendChild(o);
+  });
+  
+  stateSelect.appendChild(usG);
+  stateSelect.appendChild(iG);
+  
+  console.log('State dropdown populated with',stateSelect.options.length,'options');
+}else{
+  console.error('State select element not found!');
+}
+
   
   const existingSave=getState();
   
