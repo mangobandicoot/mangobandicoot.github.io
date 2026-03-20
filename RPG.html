@@ -108,7 +108,7 @@ function initState(name,num,state){
 return{
 driverName:name,carNumber:num,homeState:state,
 season:1,money:5000,rep:0,fans:0,
-wins:0,top5s:0,starts:0,poles:0,dnfs:0,totalFinishPos:0,
+wins:0,top5s:0,starts:0,poles:0,dnfs:0,totalFinishPos:0,bestFinish:null,
 contracts:[],offers:[],
 schedules:{},standings:{},
 log:['Season 1 begins.'],
@@ -255,6 +255,7 @@ if(contract)contract.completed++;
 state.starts++;
 if(result.dnf)state.dnfs=(state.dnfs||0)+1;
 if(!result.dnf)state.totalFinishPos=(state.totalFinishPos||0)+result.position;
+if(!result.dnf&&(!state.bestFinish||result.position<state.bestFinish))state.bestFinish=result.position;
 if(result.position===1){
 state.wins++;
 state.winStreak=(state.winStreak||0)+1;
@@ -347,6 +348,8 @@ html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Wins</span
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">'+st.top5s+'</span></div></div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">DNF Rate</span><span class="sb-val">'+(st.starts>0?((st.dnfs||0)/st.starts*100).toFixed(1):0)+'%</span></div></div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Avg Finish</span><span class="sb-val">'+(st.starts>0?((st.totalFinishPos||0)/st.starts).toFixed(1):'--')+'</span></div></div>';
+html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Best Finish</span><span class="sb-val">'+(st.bestFinish?'P'+st.bestFinish:'--')+'</span></div></div>';
+html+='</div>';
 html+='</div>';
 html+='</div>';
 if(st.winStreak&&st.winStreak>=2){
