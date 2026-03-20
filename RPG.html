@@ -455,6 +455,23 @@ html+='</div></div>';
 });
 html+='</div>';
 }
+
+if(offers.length>0){
+html+='<div class="card"><div class="card-title">Contract Offers</div>';
+offers.forEach(o=>{
+const s=getSeries(o.seriesId);
+html+='<div class="row-item"><div style="flex:1"><div class="row-name">'+o.team+'</div><div class="row-sub">'+s.name+' - '+o.races+' races</div></div>';
+html+='<button class="btn btn-sm btn-primary" onclick="signContract(\''+o.id+'\')">Sign</button></div>';
+});
+html+='</div>';
+}else if(active.length===0){
+html+='<div class="card"><div style="text-align:center;padding:30px;color:#64748B">No contract offers. Build reputation and fans.</div></div>';
+}
+
+html+='</div>';
+$('content').innerHTML=html;
+}
+
 //Sponsors Tab
 function renderSponsors(){
 const active=st.sponsors.filter(s=>s.seasonsLeft>0);
@@ -505,23 +522,6 @@ st.sponsorOffers=st.sponsorOffers.filter(o=>o.id!==id);
 st.log.push('Signed sponsorship with '+offer.brand);
 save(st);
 showPage('sponsors');
-}
-
-
-if(offers.length>0){
-html+='<div class="card"><div class="card-title">Contract Offers</div>';
-offers.forEach(o=>{
-const s=getSeries(o.seriesId);
-html+='<div class="row-item"><div style="flex:1"><div class="row-name">'+o.team+'</div><div class="row-sub">'+s.name+' - '+o.races+' races</div></div>';
-html+='<button class="btn btn-sm btn-primary" onclick="signContract(\''+o.id+'\')">Sign</button></div>';
-});
-html+='</div>';
-}else if(active.length===0){
-html+='<div class="card"><div style="text-align:center;padding:30px;color:#64748B">No contract offers. Build reputation and fans.</div></div>';
-}
-
-html+='</div>';
-$('content').innerHTML=html;
 }
 
 function renderSchedule(){
