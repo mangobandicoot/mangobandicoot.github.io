@@ -3066,21 +3066,29 @@ function makeRaceChoiceEnhanced(seriesId,raceIdx,scenarioIdx,choiceIdx){
 
 document.addEventListener('DOMContentLoaded',()=>{
   const stateSelect=$('driver-state-input');
-  if(stateSelect&&stateSelect.options.length===0){
+  
+  if(stateSelect){
+    stateSelect.innerHTML='';
+    
+    const states=['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY','DC'];
+    const stateNames={AL:'Alabama',AR:'Arkansas',AZ:'Arizona',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',FL:'Florida',GA:'Georgia',IA:'Iowa',ID:'Idaho',IL:'Illinois',IN:'Indiana',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',MA:'Massachusetts',MD:'Maryland',ME:'Maine',MI:'Michigan',MN:'Minnesota',MO:'Missouri',MS:'Mississippi',MT:'Montana',NC:'North Carolina',ND:'North Dakota',NE:'Nebraska',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NV:'Nevada',NY:'New York',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VA:'Virginia',VT:'Vermont',WA:'Washington',WI:'Wisconsin',WV:'West Virginia',WY:'Wyoming',DC:'Washington D.C.'};
+    const intlRegions=['Europe','Africa','Asia','South America','Central America','Australia'];
+    
     const usG=document.createElement('optgroup');
     usG.label='United States';
-    const iG=document.createElement('optgroup');
-    iG.label='International';
     
-    US_STATES.forEach(s=>{
+    states.forEach(s=>{
       const o=document.createElement('option');
       o.value=s;
-      o.textContent=US_STATE_NAMES[s]||s;
+      o.textContent=stateNames[s]||s;
       if(s==='ME')o.selected=true;
       usG.appendChild(o);
     });
     
-    INTL_REGIONS.forEach(s=>{
+    const iG=document.createElement('optgroup');
+    iG.label='International';
+    
+    intlRegions.forEach(s=>{
       const o=document.createElement('option');
       o.value=s;
       o.textContent=s;
@@ -3321,6 +3329,7 @@ window.doSignContract=doSignContractEnhanced;
 console.log('Full Throttle v1.5.2-SIM loaded successfully');
 console.log('Type window.DEV in console for debug commands');
 console.log('Features: AI personalities, track history, sponsor goals, real schedules, callouts');
+</script>
 
 
 </script>
