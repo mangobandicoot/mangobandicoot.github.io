@@ -2072,17 +2072,17 @@ function makeSponsor(seriesId,type,international){
   const goalType=goalTypes[rand(0,goalTypes.length-1)];
   
   const sponsorGoal={
-    type:goalType,
-    target:goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85),
-    racesTracked:0,
-    racesAchieved:0,
-    warned:false,
-    praised:false,
-    desc:goalType==='top5_pct'?`Expect top-5 finishes in at least ${rand(25,50)}% of races`:
-         goalType==='wins'?`Expect at least ${rand(1,2)} win${rand(1,2)>1?'s':''} this season`:
-         `Expect you to finish (not DNF) in ${rand(60,85)}% of races`,
-  };
-  
+  type:goalType,
+target:goalType==='top5_pct'?rand(25,50):goalType==='wins'?rand(1,s.tier<=2?2:3):rand(60,85),
+racesTracked:0,
+racesAchieved:0,
+warned:false,
+praised:false,
+desc:goalType==='top5_pct'?'Expect top-5 finishes in at least '+rand(25,50)+'% of races':
+     goalType==='wins'?'Expect at least '+rand(1,2)+' win'+(rand(1,2)>1?'s':'')+' this season':
+     'Expect you to finish (not DNF) in '+rand(60,85)+'% of races',
+};
+
   return{
     id:uid(),
     brand,
