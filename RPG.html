@@ -28,7 +28,7 @@ button:disabled{opacity:0.35;cursor:not-allowed}
 .hdr-stats{display:flex;gap:24px;margin-left:auto}
 .hdr-stat .val{font-size:17px;font-weight:800;color:#F9FAFB}
 .hdr-stat .lbl{font-size:12px;color:#94A3B8;text-transform:uppercase}
-#tabs{background:#080C14;border-bottom:2px solid #1E2433;display:flex;gap:2px;padding:6px 24px 0}
+#tabs{background:#080C14;border-bottom:2px solid #1E2433;display:flex;gap:2px;padding:6px 24px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tab{background:transparent;border:none;border-bottom:3px solid transparent;color:#94A3B8;padding:7px 16px;font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer}
 .tab:hover{color:#E2E8F0}
 .tab.active{color:#F59E0B;border-bottom-color:#F59E0B}
@@ -108,7 +108,7 @@ function initState(name,num,state){
 return{
 driverName:name,carNumber:num,homeState:state,
 season:1,money:5000,rep:0,fans:0,
-wins:0,top5s:0,starts:0,poles:0,
+wins:0,top5s:0,starts:0,poles:0,dnfs:0,
 contracts:[],offers:[],
 schedules:{},standings:{},
 log:['Season 1 begins.'],
@@ -253,6 +253,7 @@ function processResult(state,seriesId,raceIdx,result){
 const contract=state.contracts.find(c=>c.seriesId===seriesId);
 if(contract)contract.completed++;
 state.starts++;
+if(result.dnf)state.dnfs=(state.dnfs||0)+1;
 if(result.position===1){
 state.wins++;
 state.winStreak=(state.winStreak||0)+1;
@@ -343,6 +344,7 @@ html+='<div class="card"><div class="card-title">Career Stats</div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Starts</span><span class="sb-val">'+st.starts+'</span></div></div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">'+st.wins+'</span></div></div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">'+st.top5s+'</span></div></div>';
+html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">DNF Rate</span><span class="sb-val">'+(st.starts>0?((st.dnfs||0)/st.starts*100).toFixed(1):0)+'%</span></div></div>';
 html+='</div>';
 if(st.winStreak&&st.winStreak>=2){
 html+='<div class="card" style="background:linear-gradient(135deg,#F59E0B22,#EF444422);border-color:#F59E0B">';
