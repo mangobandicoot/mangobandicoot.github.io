@@ -112,7 +112,9 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(
 function fmt(n){return'$'+n.toLocaleString()}
 function $(id){return document.getElementById(id)}
 function getSeries(id){return SERIES.find(s=>s.id===id)}
-
+function generateAIDriver(){
+return{name:'AI Driver',skill:rand(50,100)};
+}
 function generateDriverField(count){
 const drivers=[];
 for(let i=0;i<count;i++){
@@ -129,7 +131,6 @@ wins:0,top5s:0,starts:0,poles:0,dnfs:0,totalFinishPos:0,bestFinish:null,
 trackHistory:{},
 contracts:[],offers:[],
 schedules:{},standings:{},
-log:['Season 1 begins.'],
 log:['Season 1 begins.'],
 winStreak:0,
 bestStreak:0,
@@ -407,6 +408,7 @@ state.log.push('--- SEASON '+state.season+' BEGINS ---');
 
 save(st);
 }
+}  
 
 let currentPage='dashboard';
 let st=null;
@@ -941,19 +943,16 @@ return Math.floor(bonus);
 }
 //Sponsor Functions
 function makeSponsor(seriesId,type){
-
 const s=getSeries(seriesId);
 const brands=SPONSOR_BRANDS[seriesId]||SPONSOR_BRANDS.mini_stock;
 const brand=brands[rand(0,brands.length-1)];
 const st=SPONSOR_TYPES[type];
 const basePay=Math.floor(s.pay*st.payMult*rand(80,130)/100);
 const duration=rand(st.dur[0],st.dur[1]);
-
 const goalTypes=['top5_pct','wins','finish_pct'];
 const goalType=goalTypes[rand(0,goalTypes.length-1)];
 let target=0;
 let desc='';
-
 if(goalType==='top5_pct'){
 target=rand(25,50);
 desc='Expect top-5 finishes in at least '+target+'% of races';
@@ -964,7 +963,6 @@ desc='Expect at least '+target+' win'+(target>1?'s':'')+' this season';
 target=rand(60,85);
 desc='Expect you to finish in '+target+'% of races (no DNFs)';
 }
-
 return{
 id:uid(),
 brand:brand,
@@ -1000,13 +998,10 @@ const sponsors=state.sponsors.filter(s=>s.seriesId===seriesId);
 sponsors.forEach(sp=>{
 const g=sp.goal;
 g.tracked++;
-
 if(g.type==='top5_pct'&&!result.dnf&&result.position<=5)g.achieved++;
 else if(g.type==='wins'&&result.position===1)g.achieved++;
 else if(g.type==='finish_pct'&&!result.dnf)g.achieved++;
-
 const pct=g.tracked>0?(g.achieved/g.tracked)*100:0;
-
 if(g.type==='top5_pct'&&pct>=g.target&&!g.praised&&g.tracked>=5){
 sp.happiness=Math.min(100,sp.happiness+10);
 g.praised=true;
@@ -1016,7 +1011,6 @@ sp.happiness=Math.max(0,sp.happiness-15);
 g.warned=true;
 state.log.push('⚠️ '+sp.brand+' warns you about missing top-5 targets (-15 happiness)');
 }
-
 if(g.type==='wins'&&g.achieved>=g.target&&!g.praised){
 sp.happiness=Math.min(100,sp.happiness+15);
 g.praised=true;
@@ -1026,7 +1020,6 @@ sp.happiness=Math.max(0,sp.happiness-20);
 g.warned=true;
 state.log.push('⚠️ '+sp.brand+' is disappointed with lack of wins (-20 happiness)');
 }
-
 if(g.type==='finish_pct'&&pct>=g.target&&!g.praised&&g.tracked>=5){
 sp.happiness=Math.min(100,sp.happiness+8);
 g.praised=true;
@@ -1036,14 +1029,12 @@ sp.happiness=Math.max(0,sp.happiness-12);
 g.warned=true;
 state.log.push('⚠️ '+sp.brand+' is concerned about DNF rate (-12 happiness)');
 }
-
 if(sp.happiness<25&&sp.seasonsLeft>0){
 sp.seasonsLeft=0;
 state.log.push('❌ '+sp.brand+' has terminated their sponsorship due to poor performance');
 }
 });
 }
-
 //Season Summary
 function showSeasonSummary(state){
 const prevSeason=state.season;
