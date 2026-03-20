@@ -167,24 +167,30 @@ const TRACKS=[
 // Real NASCAR tracks
 function generateSchedule(seriesId){
 const s=getSeries(seriesId);
+const tracks=[
+{name:'Daytona',city:'Daytona Beach',state:'FL'},
+{name:'Charlotte',city:'Concord',state:'NC'},
+{name:'Bristol',city:'Bristol',state:'TN'},
+{name:'Martinsville',city:'Martinsville',state:'VA'},
+{name:'Talladega',city:'Talladega',state:'AL'},
+{name:'Richmond',city:'Richmond',state:'VA'},
+{name:'Phoenix',city:'Avondale',state:'AZ'},
+{name:'Atlanta',city:'Hampton',state:'GA'},
+{name:'Las Vegas',city:'Las Vegas',state:'NV'},
+{name:'Texas',city:'Fort Worth',state:'TX'},
+{name:'Dover',city:'Dover',state:'DE'},
+{name:'Kansas',city:'Kansas City',state:'KS'},
+{name:'Pocono',city:'Long Pond',state:'PA'},
+{name:'Michigan',city:'Brooklyn',state:'MI'},
+{name:'Watkins Glen',city:'Watkins Glen',state:'NY'},
+{name:'Indianapolis',city:'Indianapolis',state:'IN'},
+{name:'Darlington',city:'Darlington',state:'SC'},
+{name:'Nashville',city:'Nashville',state:'TN'},
+];
 const sched=[];
-const usedTracks=[];
 for(let i=0;i<s.races;i++){
-let track;
-do{
-track=TRACKS[rand(0,TRACKS.length-1)];
-}while(usedTracks.includes(track.short)&&usedTracks.length<TRACKS.length);
-usedTracks.push(track.short);
-sched.push({
-round:i+1,
-track:track.short,
-trackFull:track.name,
-city:track.city,
-state:track.state,
-type:track.type,
-qualifying:null,
-result:null
-});
+const t=tracks[rand(0,tracks.length-1)];
+sched.push({round:i+1,track:t.name,city:t.city,state:t.state,qualifying:null,result:null});
 }
 return sched;
 }
@@ -256,7 +262,7 @@ const s=getSeries('mini_stock');
 const prize=pos===1?s.pay+s.win:Math.floor(s.pay*(0.7-(pos/pending.fieldSize)*0.6));
 return{position:pos,dnf:dnf,points:points,prize:prize,pole:false};
 }
-
+//End Season and Offseason advance
 function processResult(state,seriesId,raceIdx,result){
 const contract=state.contracts.find(c=>c.seriesId===seriesId);
 if(contract)contract.completed++;
@@ -273,8 +279,20 @@ state.standings[seriesId][state.driverName]=(state.standings[seriesId][state.dri
 const sched=state.schedules[seriesId];
 sched[raceIdx].result=result;
 state.log.push((result.dnf?'DNF':'P'+result.position)+' at '+sched[raceIdx].track+' - '+fmt(playerPrize));
-save(state);
+
+const allComplete=state.contracts.every(c=>c.completed>=c.races);
+if(allComplete){
+state.season++;
+state.contracts=[];
+state.schedules={};
+state.standings={};
+state.offers=generateOffers(state.rep,state.fans);
+state.log.push('--- SEASON '+state.season+' BEGINS ---');
 }
+
+save(st);
+}
+
 
 let currentPage='dashboard';
 let st=null;
