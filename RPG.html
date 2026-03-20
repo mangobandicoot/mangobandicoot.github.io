@@ -267,9 +267,13 @@ function processResult(state,seriesId,raceIdx,result){
 const contract=state.contracts.find(c=>c.seriesId===seriesId);
 if(contract)contract.completed++;
 state.starts++;
-if(result.position===1)state.wins++;
+if(result.position===1){
+state.wins++;
+checkMilestone(state,'wins',state.wins);
+}
 if(result.position<=5)state.top5s++;
 if(result.pole)state.poles++;
+checkMilestone(state,'starts',state.starts);
 const playerPrize=Math.floor(result.prize*(contract?contract.prizeShare:0.7));
 state.money+=playerPrize;
 state.rep+=result.position===1?10:result.position<=5?5:1;
@@ -330,6 +334,13 @@ html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Starts</sp
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Wins</span><span class="sb-val">'+st.wins+'</span></div></div>';
 html+='<div class="stat-bar"><div class="sb-row"><span class="sb-lbl">Top 5s</span><span class="sb-val">'+st.top5s+'</span></div></div>';
 html+='</div>';
+if(st.milestones&&st.milestones.length>0){
+html+='<div class="card"><div class="card-title">Recent Milestones</div>';
+st.milestones.slice(-3).reverse().forEach(m=>{
+html+='<div style="padding:8px 0;border-bottom:1px solid #222;font-size:13px;color:#94A3B8">🏆 '+m.msg+' <span style="color:#64748B">(S'+m.season+')</span></div>';
+});
+html+='</div>';
+}
 
 if(upcoming.length>0){
 html+='<div class="card"><div class="card-title">Next Races</div>';
@@ -628,6 +639,21 @@ if(e.target===$('modal-overlay'))closeModal();
 
 console.log('Full Throttle v1.5.2-SIM loaded');
 console.log('Minimal working version - core gameplay only');
+//Milestones
+function checkMilestone(state,type,count){
+if(!state.milestones)state.milestones=[];
+const milestones={
+starts:[1,10,25,50,100,250,500],
+wins:[1,5,10,25,50,100],
+};
+const list=milestones[type]||[];
+if(list.includes(count)){
+const msg=type==='wins'?'Career win #'+count+'!':'Career start #'+count+'!';
+state.milestones.push({type:type,count:count,season:state.season,msg:msg});
+state.log.push('🏆 MILESTONE: '+msg);
+}
+}
+
 </script>
 </body>
 </html>
