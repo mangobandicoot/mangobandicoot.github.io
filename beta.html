@@ -152,7 +152,7 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 </div>
 <div style="font-size:11px;color:#64748B;margin-top:16px;text-align:center">
 
-  Build 2026.03.19.v12 • Full Feature Edition
+  Build 2026.03.19.v13 • Full Feature Edition
 </div>
 
 </div>
@@ -1358,43 +1358,6 @@ let pendingQualResult=null;
 let pendingRaceResult=null;
 let currentRaceChoices=[];
 
-function openSimQualModal(seriesId,raceIdx){
-  const st=getState();
-  const s=getSeries(seriesId);
-  const sched=st.schedules[seriesId];
-  const race=sched[raceIdx];
-  
-  if(race.qualifying){
-    openSimRaceModal(seriesId,raceIdx);
-    return;
-  }
-  
-  const scenario=QUALI_SCENARIOS[rand(0,QUALI_SCENARIOS.length-1)];
-  
-  let html=`
-    <div class="modal-title">Qualifying: ${race.track}</div>
-    <div style="font-size:14px;color:#94A3B8;margin-bottom:20px">${s.name} • Round ${race.round}</div>
-    
-    <div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:900;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px">QUALIFYING SESSION</div>
-      <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${scenario.scene}</div>
-      <div style="display:flex;flex-direction:column;gap:7px">
-        ${scenario.choices.map((ch,idx)=>`
-          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="resolveQuali('${seriesId}',${raceIdx},${ch.modifier})">
-            <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
-          </button>
-        `).join('')}
-      </div>
-    </div>
-    
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-    </div>
-  `;
-  
-  showModal(html);
-}
-
 function resolveQuali(seriesId,raceIdx,modifier){
   const st=getState();
   const qualResult=simulateQualifying(st,seriesId,raceIdx);
@@ -1523,48 +1486,6 @@ function makeRaceChoice(seriesId,raceIdx,scenarioIdx,choiceIdx){
   `;
   
   showModal(html);
-}
-
-function finishRace(seriesId,raceIdx){
-  const st=getState();
-  const finalResult=resolveRace(pendingRaceResult,currentRaceChoices);
-  
-  processRaceResult(st,seriesId,raceIdx,finalResult);
-  saveState(st);
-  
-  let html=`
-    <div class="modal-title">Race Complete</div>
-    
-    <div style="background:#060A10;border-radius:8px;padding:14px 16px;margin:16px 0">
-      ${finalResult.dnf?`
-        <div style="font-size:32px;font-weight:900;color:#EF4444;margin-bottom:8px">DNF</div>
-        <div style="font-size:14px;color:#94A3B8">${finalResult.dnfReason}</div>
-      `:`
-        <div style="font-size:32px;font-weight:900;color:${finalResult.position===1?'#F59E0B':finalResult.position<=5?'#10B981':'#F9FAFB'};margin-bottom:8px">${finalResult.position===1?'🏁 WINNER':ordinal(finalResult.position)}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
-          <div>
-            <div style="font-size:12px;color:#94A3B8">Points Earned</div>
-            <div style="font-size:20px;font-weight:900">${finalResult.points}</div>
-          </div>
-          <div>
-            <div style="font-size:12px;color:#94A3B8">Prize Money</div>
-            <div style="font-size:20px;font-weight:900;color:#10B981">${fmtMoney(finalResult.prize)}</div>
-          </div>
-        </div>
-      `}
-    </div>
-    
-    <div class="modal-actions">
-      <button class="btn btn-primary" onclick="closeModal();showPage('dashboard')">Continue</button>
-    </div>
-  `;
-  
-  showModal(html);
-  
-  pendingRaceResult=null;
-  currentRaceChoices=[];
-  
-  updateHeader(st);
 }
 
 
