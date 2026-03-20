@@ -315,6 +315,7 @@ else if(page==='schedule')renderSchedule();
 else if(page==='standings')renderStandings();
 else if(page==='settings')renderSettings();
 }
+//Dashboard
 function renderDashboard(){
 const active=st.contracts.filter(c=>c.completed<c.races);
 const upcoming=[];
@@ -341,8 +342,12 @@ html+='</div>';
 if(upcoming.length>0){
 html+='<div class="card"><div class="card-title">Next Races</div>';
 upcoming.forEach(u=>{
-html+='<div class="row-item"><div style="flex:1"><div class="row-name">'+u.race.track+'</div><div class="row-sub">'+u.series.name+' - Round '+u.race.round+'</div></div>';
-html+='<button class="btn btn-sm btn-primary" onclick="startQualifying(\''+u.contract.seriesId+'\','+u.race.round+')">Qualify</button></div>';
+const typeColors={superspeedway:'#8B5CF6',intermediate:'#3B82F6',short:'#F59E0B',road:'#10B981',triangle:'#EC4899'};
+const typeColor=typeColors[u.race.type]||'#64748B';
+html+='<div class="row-item"><div style="flex:1">';
+html+='<div class="row-name">'+u.race.track+' <span style="font-size:10px;background:'+typeColor+';color:#000;padding:2px 6px;border-radius:4px;font-weight:900;text-transform:uppercase">'+u.race.type+'</span></div>';
+html+='<div class="row-sub">'+(u.race.city||'TBD')+', '+(u.race.state||'TBD')+' • '+u.series.name+'</div>';
+html+='</div><button class="btn btn-sm btn-primary" onclick="startQualifying(\''+u.contract.seriesId+'\','+u.race.round+')">Qualify</button></div>';
 });
 html+='</div>';
 }else{
