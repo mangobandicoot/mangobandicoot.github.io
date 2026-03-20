@@ -109,6 +109,7 @@ return{
 driverName:name,carNumber:num,homeState:state,
 season:1,money:5000,rep:0,fans:0,
 wins:0,top5s:0,starts:0,poles:0,dnfs:0,totalFinishPos:0,bestFinish:null,
+trackHistory:{},
 contracts:[],offers:[],
 schedules:{},standings:{},
 log:['Season 1 begins.'],
@@ -287,6 +288,22 @@ if(!state.standings[seriesId])state.standings[seriesId]={};
 state.standings[seriesId][state.driverName]=(state.standings[seriesId][state.driverName]||0)+result.points;
 const sched=state.schedules[seriesId];
 sched[raceIdx].result=result;
+
+const track=sched[raceIdx].track;
+if(!state.trackHistory[track]){
+state.trackHistory[track]={starts:0,wins:0,top5s:0,dnfs:0,totalPos:0,bestFinish:null,worstFinish:null};
+}
+const th=state.trackHistory[track];
+th.starts++;
+if(result.position===1)th.wins++;
+if(result.position<=5)th.top5s++;
+if(result.dnf)th.dnfs++;
+if(!result.dnf){
+th.totalPos+=result.position;
+if(!th.bestFinish||result.position<th.bestFinish)th.bestFinish=result.position;
+if(!th.worstFinish||result.position>th.worstFinish)th.worstFinish=result.position;
+}
+
 state.log.push((result.dnf?'DNF':'P'+result.position)+' at '+sched[raceIdx].track+' - '+fmt(playerPrize));
 //Contract Completion
 if(contract&&contract.completed>=contract.races){
@@ -546,6 +563,48 @@ startRace(seriesId,round);
 return;
 }
 
+const trackName=race.track;
+const th=st.trackHistory[trackName];
+let commentary='';
+
+if(!th||th.starts===0){
+const firstTime=['This is your first time at '+trackName+'. The track is new territory—no data, no history, just raw instinct.','You\'ve never raced here before. '+trackName+' is an unknown. Time to make your mark.','First visit to '+trackName+'. No prior results to lean on. Let\'s see what you\'ve got.'];
+commentary=firstTime[rand(0,firstTime.length-1)];
+}else{
+const avgFinish=th.totalPos/th.starts;
+const dnfPct=(th.dnfs/th.starts)*100;
+
+let performance='';
+if(th.wins>=2)performance='You\'re a threat here. '+th.wins+' wins at this track. The field knows your name.';
+else if(th.wins===1)performance='You\'ve won here before. The memory is fresh. Can you do it again?';
+else if(avgFinish<=5)performance='Solid track for you. Average finish of P'+avgFinish.toFixed(1)+'. You run well here.';
+else if(avgFinish<=10)performance='Middle-of-the-pack results here. '+th.starts+' starts, averaging P'+avgFinish.toFixed(1)+'.';
+else performance='This track has been tough. '+th.starts+' starts, best finish P'+th.bestFinish+'. Time to turn it around.';
+
+let dnfNote='';
+if(dnfPct>=30)dnfNote=' Reliability has been an issue—'+th.dnfs+' DNFs in '+th.starts+' starts. Stay clean today.';
+else if(dnfPct>=15)dnfNote=' You\'ve had some trouble here before. Keep the car in one piece.';
+
+let recentNote='';
+if(th.bestFinish===1)recentNote=' Best result: Victory Lane.';
+else if(th.bestFinish<=3)recentNote=' Best result: P'+th.bestFinish+'.';
+else if(th.bestFinish<=10)recentNote=' Best result so far: P'+th.bestFinish+'.';
+
+commentary=performance+dnfNote+recentNote+' Let\'s get after it.';
+}
+
+let html='<div class="modal-title">Pre-Race: '+race.track+'</div>';
+html+='<div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">';
+html+='<div style="font-size:15px;color:#CBD5E1;line-height:1.7;font-style:italic">'+commentary+'</div>';
+html+='</div>';
+html+='<div class="modal-actions"><button class="btn btn-primary" onclick="runQualifying(\''+seriesId+'\','+round+')">Run Qualifying</button></div>';
+showModal(html);
+}
+
+function runQualifying(seriesId,round){
+const sched=st.schedules[seriesId];
+const race=sched[round-1];
+
 const qualResult=simulateQualifying(st,seriesId);
 race.qualifying=qualResult;
 if(qualResult.pole)st.poles++;
@@ -559,7 +618,6 @@ html+='</div>';
 html+='<div class="modal-actions"><button class="btn btn-primary" onclick="startRace(\''+seriesId+'\','+round+')">Continue to Race</button></div>';
 showModal(html);
 }
-
 
 function startRace(seriesId,round){
 const sched=st.schedules[seriesId];
