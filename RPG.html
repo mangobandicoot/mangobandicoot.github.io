@@ -283,6 +283,12 @@ state.standings[seriesId][state.driverName]=(state.standings[seriesId][state.dri
 const sched=state.schedules[seriesId];
 sched[raceIdx].result=result;
 state.log.push((result.dnf?'DNF':'P'+result.position)+' at '+sched[raceIdx].track+' - '+fmt(playerPrize));
+//Contract Completion
+if(contract&&contract.completed>=contract.races){
+const bonus=calculateContractBonus(state,contract);
+state.money+=bonus;
+state.log.push('Contract with '+contract.team+' complete! Bonus: '+fmt(bonus));
+}
 
 const allComplete=state.contracts.every(c=>c.completed>=c.races);
 if(allComplete){
@@ -293,6 +299,7 @@ state.standings={};
 state.offers=generateOffers(state.rep,state.fans);
 state.log.push('--- SEASON '+state.season+' BEGINS ---');
 }
+
 
 save(st);
 }
@@ -652,6 +659,26 @@ const msg=type==='wins'?'Career win #'+count+'!':'Career start #'+count+'!';
 state.milestones.push({type:type,count:count,season:state.season,msg:msg});
 state.log.push('🏆 MILESTONE: '+msg);
 }
+}
+//Contract Bonus
+function calculateContractBonus(state,contract){
+const seriesStandings=state.standings[contract.seriesId]||{};
+const playerPoints=seriesStandings[state.driverName]||0;
+const allDrivers=Object.entries(seriesStandings).map(([name,pts])=>({name:name,points:pts})).sort((a,b)=>b.points-a.points);
+const playerPos=allDrivers.findIndex(d=>d.name===state.driverName)+1;
+
+const s=getSeries(contract.seriesId);
+let bonus=s.pay*2;
+
+if(playerPos===1)bonus+=s.win*5;
+else if(playerPos<=3)bonus+=s.win*2;
+else if(playerPos<=5)bonus+=s.win;
+
+const winPct=contract.races>0?(state.wins/contract.races):0;
+if(winPct>=0.5)bonus*=2;
+else if(winPct>=0.25)bonus*=1.5;
+
+return Math.floor(bonus);
 }
 
 </script>
