@@ -2225,7 +2225,7 @@ function generateScheduleWithRealTracks(seriesId){
 
 //PART 15
 
-function processRaceResultEnhanced(state,seriesId,raceIdx,result){
+function processRaceResult(state,seriesId,raceIdx,result){
   const s=getSeries(seriesId);
   const sched=state.schedules[seriesId];
   const race=sched[raceIdx];
@@ -2386,11 +2386,11 @@ function processRaceResultEnhanced(state,seriesId,raceIdx,result){
   addLog(state,summary);
 }
 
-function finishRaceEnhanced(seriesId,raceIdx){
+function finishRace(seriesId,raceIdx){
   const st=getState();
   const finalResult=resolveRace(pendingRaceResult,currentRaceChoices);
   
-  processRaceResultEnhanced(st,seriesId,raceIdx,finalResult);
+  processRaceResult(st,seriesId,raceIdx,finalResult);
   
   evolveAIRelationships(st);
   
@@ -2513,7 +2513,7 @@ function initStateComplete(name,carNumber,homeState){
   return state;
 }
 
-function doSignContractEnhanced(contractId){
+function doSignContract(contractId){
   const st=getState();
   const offer=st.pendingOffers.find(o=>o.id===contractId);
   if(!offer)return;
@@ -2558,14 +2558,14 @@ function doSignContractEnhanced(contractId){
   updateHeader(st);
 }
 
-function openSimQualModalEnhanced(seriesId,raceIdx){
+function openSimQualModal(seriesId,raceIdx){
   const st=getState();
   const s=getSeries(seriesId);
   const sched=st.schedules[seriesId];
   const race=sched[raceIdx];
   
   if(race.qualifying){
-    openSimRaceModalEnhanced(seriesId,raceIdx);
+    openSimRaceModal(seriesId,raceIdx);
     return;
   }
   
@@ -2582,7 +2582,7 @@ function openSimQualModalEnhanced(seriesId,raceIdx){
       <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${scenario.scene}</div>
       <div style="display:flex;flex-direction:column;gap:7px">
         ${scenario.choices.map((ch,idx)=>`
-          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="resolveQualiEnhanced('${seriesId}',${raceIdx},${ch.modifier})">
+          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="resolveQuali('${seriesId}',${raceIdx},${ch.modifier})">
             <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
           </button>
         `).join('')}
@@ -2597,7 +2597,7 @@ function openSimQualModalEnhanced(seriesId,raceIdx){
   showModal(html);
 }
 
-function resolveQualiEnhanced(seriesId,raceIdx,modifier){
+function resolveQuali(seriesId,raceIdx,modifier){
   const st=getState();
   const qualResult=simulateQualifying(st,seriesId,raceIdx);
   
@@ -2628,14 +2628,14 @@ function resolveQualiEnhanced(seriesId,raceIdx,modifier){
     </div>
     
     <div class="modal-actions">
-      <button class="btn btn-primary" onclick="openSimRaceModalEnhanced('${seriesId}',${raceIdx})">Continue to Race</button>
+      <button class="btn btn-primary" onclick="openSimRaceModal('${seriesId}',${raceIdx})">Continue to Race</button>
     </div>
   `;
   
   showModal(html);
 }
 
-function openSimRaceModalEnhanced(seriesId,raceIdx){
+function openSimRaceModal(seriesId,raceIdx){
   const st=getState();
   const s=getSeries(seriesId);
   const sched=st.schedules[seriesId];
@@ -2648,7 +2648,7 @@ function openSimRaceModalEnhanced(seriesId,raceIdx){
   }
   
   if(!race.qualifying){
-    openSimQualModalEnhanced(seriesId,raceIdx);
+    openSimQualModal(seriesId,raceIdx);
     return;
   }
   
@@ -2656,10 +2656,10 @@ function openSimRaceModalEnhanced(seriesId,raceIdx){
   pendingRaceResult=raceResult;
   currentRaceChoices=[];
   
-  showRaceScenarioEnhanced(seriesId,raceIdx,0);
+  showRaceScenario(seriesId,raceIdx,0);
 }
 
-function showRaceScenarioEnhanced(seriesId,raceIdx,scenarioIdx){
+function showRaceScenario(seriesId,raceIdx,scenarioIdx){
   const st=getState();
   const s=getSeries(seriesId);
   const sched=st.schedules[seriesId];
@@ -2668,7 +2668,7 @@ function showRaceScenarioEnhanced(seriesId,raceIdx,scenarioIdx){
   if(!pendingRaceResult||!pendingRaceResult.scenarios)return;
   
   if(scenarioIdx>=pendingRaceResult.scenarios.length){
-    finishRaceEnhanced(seriesId,raceIdx);
+    finishRace(seriesId,raceIdx);
     return;
   }
   
@@ -2684,7 +2684,7 @@ function showRaceScenarioEnhanced(seriesId,raceIdx,scenarioIdx){
       <div style="font-size:15px;color:#CBD5E1;line-height:1.7;margin-bottom:14px;font-style:italic;border-left:3px solid #8B5CF622;padding-left:12px">${sc.scene({lap:5+scenarioIdx*10,pos:pendingRaceResult.basePos,fieldSize:pendingRaceResult.fieldSize,lapsLeft:50-scenarioIdx*10})}</div>
       <div style="display:flex;flex-direction:column;gap:7px">
         ${sc.choices.map((ch,idx)=>`
-          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="makeRaceChoiceEnhanced('${seriesId}',${raceIdx},${scenarioIdx},${idx})">
+          <button class="btn btn-primary btn-full" style="text-align:left;background:#0B0F1A;border:1px solid #2D3748;color:#E2E8F0" onclick="makeRaceChoice('${seriesId}',${raceIdx},${scenarioIdx},${idx})">
             <span style="margin-right:8px">${ch.icon}</span> ${ch.label}
           </button>
         `).join('')}
@@ -2695,7 +2695,7 @@ function showRaceScenarioEnhanced(seriesId,raceIdx,scenarioIdx){
   showModal(html);
 }
 
-function makeRaceChoiceEnhanced(seriesId,raceIdx,scenarioIdx,choiceIdx){
+function makeRaceChoice(seriesId,raceIdx,scenarioIdx,choiceIdx){
   const scenarioData=pendingRaceResult.scenarios[scenarioIdx];
   const sc=scenarioData.scenario;
   const choice=sc.choices[choiceIdx];
@@ -2720,7 +2720,7 @@ function makeRaceChoiceEnhanced(seriesId,raceIdx,scenarioIdx,choiceIdx){
     </div>
     
     <div class="modal-actions" style="margin-top:20px">
-      <button class="btn btn-primary" onclick="showRaceScenarioEnhanced('${seriesId}',${raceIdx},${scenarioIdx+1})">${scenarioIdx+1<pendingRaceResult.scenarios.length?'Next Scenario':'See Final Results'}</button>
+      <button class="btn btn-primary" onclick="showRaceScenario('${seriesId}',${raceIdx},${scenarioIdx+1})">${scenarioIdx+1<pendingRaceResult.scenarios.length?'Next Scenario':'See Final Results'}</button>
     </div>
   `;
   
@@ -2906,7 +2906,7 @@ window.DEV={
       fanBonus:rand(20,100),
     }));
     const finalResult=resolveRace(raceResult,choiceResults);
-    processRaceResultEnhanced(st,seriesId,raceIdx,finalResult);
+    processRaceResult(st,seriesId,raceIdx,finalResult);
     
     saveState(st);
     updateHeader(st);
@@ -2932,7 +2932,7 @@ window.DEV={
             fanBonus:rand(20,100),
           }));
           const finalResult=resolveRace(raceResult,choiceResults);
-          processRaceResultEnhanced(st,c.seriesId,idx,finalResult);
+          processRaceResult(st,c.seriesId,idx,finalResult);
         }
       });
     });
@@ -2972,8 +2972,6 @@ window.DEV={
   },
 };
 
-window.openSimQualModal=openSimQualModalEnhanced;
-window.doSignContract=doSignContractEnhanced;
 
 console.log('Full Throttle v1.5.2-SIM loaded successfully');
 console.log('Type window.DEV in console for debug commands');
