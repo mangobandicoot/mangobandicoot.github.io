@@ -100,6 +100,54 @@ button:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
 
 <script>
 
+//no start fix hopefully
+// Minimal $ shortcut
+function $(id){
+  return document.getElementById(id);
+}
+
+// Safety check: make sure setup form exists
+document.addEventListener('DOMContentLoaded', () => {
+  const setupForm = $('setup-form');
+  if (!setupForm) {
+    console.error('Setup form not found. Make sure your HTML has id="setup-form"');
+    return;
+  }
+
+  setupForm.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const driverName = $('driver-name-input')?.value.trim();
+    const driverNumber = parseInt($('driver-number-input')?.value);
+    const homeState = $('driver-state-input')?.value;
+
+    if (!driverName) {
+      alert('Please enter your driver name');
+      return;
+    }
+
+    if (isNaN(driverNumber) || driverNumber < 0 || driverNumber > 999) {
+      alert('Please enter a valid car number (0-999)');
+      return;
+    }
+
+    if (typeof initStateComplete !== 'function') {
+      console.error('initStateComplete is not defined');
+      return;
+    }
+
+    const newState = initStateComplete(driverName, driverNumber, homeState);
+    saveState(newState);
+
+    $('setup-screen').classList.add('hidden');
+    $('app').style.display = 'flex';
+
+    updateHeader(newState);
+    updateTabs(newState);
+    showPage('dashboard');
+  });
+});
+
 //PART 2
 
 
