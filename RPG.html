@@ -574,7 +574,7 @@ html+='</div>';
 html+='<div class="modal-actions"><button class="btn btn-primary" onclick="showRaceScenario('+(scenarioIdx+1)+')">'+(scenarioIdx+1<pendingRace.scenarios.length?'Next Scenario':'See Results')+'</button></div>';
 showModal(html);
 }
-
+//race finish
 function finishRace(){
 const result=resolveRace(pendingRace,raceChoices);
 processResult(st,pendingRace.seriesId,pendingRace.round-1,result);
@@ -586,7 +586,10 @@ html+='<div style="font-size:32px;font-weight:900;color:#EF4444">DNF</div>';
 }else{
 html+='<div style="font-size:32px;font-weight:900;color:'+(result.position===1?'#F59E0B':'#F9FAFB')+'">'+(result.position===1?'WINNER':'P'+result.position)+'</div>';
 html+='<div style="margin-top:16px"><div style="font-size:12px;color:#94A3B8">Points</div><div style="font-size:20px;font-weight:900">'+result.points+'</div></div>';
-html+='<div style="margin-top:10px"><div style="font-size:12px;color:#94A3B8">Prize</div><div style="font-size:20px;font-weight:900;color:#10B981">'+fmt(result.prize)+'</div></div>';
+const contract=st.contracts.find(c=>c.seriesId===pendingRace.seriesId);
+const playerPrize=Math.floor(result.prize*(contract?contract.prizeShare:0.7));
+html+='<div style="margin-top:10px"><div style="font-size:12px;color:#94A3B8">Base Prize</div><div style="font-size:16px;font-weight:700;color:#94A3B8">'+fmt(result.prize)+'</div></div>';
+html+='<div style="margin-top:6px"><div style="font-size:12px;color:#94A3B8">Your Share (70%)</div><div style="font-size:20px;font-weight:900;color:#10B981">'+fmt(playerPrize)+'</div></div>';
 }
 html+='</div>';
 html+='<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal();showPage(\'dashboard\')">Continue</button></div>';
