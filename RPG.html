@@ -113,7 +113,23 @@ function fmt(n){return'$'+n.toLocaleString()}
 function $(id){return document.getElementById(id)}
 function getSeries(id){return SERIES.find(s=>s.id===id)}
 function generateAIDriver(){
-return{name:'AI Driver',skill:rand(50,100)};
+const firstNames=['Kyle','Brad','Joey','Denny','Martin','Chase','Ryan','Tyler','Austin','Corey','Ross','Bubba','Daniel','Christopher','Erik','Chris','William','Ricky','AJ','Justin'];
+const lastNames=['Larson','Keselowski','Logano','Hamlin','Truex','Elliott','Blaney','Reddick','Cindric','LaJoie','Chastain','Wallace','Suarez','Bell','Jones','Buescher','Byron','Stenhouse','Allmendinger','Haley'];
+const firstName=firstNames[rand(0,firstNames.length-1)];
+const lastName=lastNames[rand(0,lastNames.length-1)];
+
+const personalities=['aggressive','conservative','clutch','inconsistent','veteran','rookie'];
+const personality=personalities[rand(0,personalities.length-1)];
+
+let skill=rand(60,90);
+if(personality==='veteran')skill+=rand(5,10);
+if(personality==='rookie')skill-=rand(5,10);
+
+return{
+name:firstName+' '+lastName,
+skill:Math.max(40,Math.min(100,skill)),
+personality:personality,
+};
 }
 function generateDriverField(count){
 const drivers=[];
@@ -219,37 +235,32 @@ nascar:[
 {name:'Homestead-Miami Speedway',city:'Homestead',state:'FL',type:'intermediate',series:['trucks','xfinity','cup']},
 ],
 };
-
+//Realistic Schedule
 function generateSchedule(seriesId){
 const s=getSeries(seriesId);
-const tracks=[
-{name:'Daytona',city:'Daytona Beach',state:'FL',type:'superspeedway'},
-{name:'Charlotte',city:'Concord',state:'NC',type:'intermediate'},
-{name:'Bristol',city:'Bristol',state:'TN',type:'short'},
-{name:'Martinsville',city:'Martinsville',state:'VA',type:'short'},
-{name:'Talladega',city:'Talladega',state:'AL',type:'superspeedway'},
-{name:'Richmond',city:'Richmond',state:'VA',type:'short'},
-{name:'Phoenix',city:'Avondale',state:'AZ',type:'intermediate'},
-{name:'Atlanta',city:'Hampton',state:'GA',type:'intermediate'},
-{name:'Las Vegas',city:'Las Vegas',state:'NV',type:'intermediate'},
-{name:'Texas',city:'Fort Worth',state:'TX',type:'intermediate'},
-{name:'Dover',city:'Dover',state:'DE',type:'intermediate'},
-{name:'Kansas',city:'Kansas City',state:'KS',type:'intermediate'},
-{name:'Pocono',city:'Long Pond',state:'PA',type:'triangle'},
-{name:'Michigan',city:'Brooklyn',state:'MI',type:'intermediate'},
-{name:'Watkins Glen',city:'Watkins Glen',state:'NY',type:'road'},
-{name:'Indianapolis',city:'Indianapolis',state:'IN',type:'intermediate'},
-{name:'Darlington',city:'Darlington',state:'SC',type:'intermediate'},
-{name:'Nashville',city:'Nashville',state:'TN',type:'intermediate'},
-];
+let trackPool=[];
+
+if(s.trackType==='local'){
+trackPool=TRACKS.local.filter(t=>t.tier===s.tier);
+}else if(s.trackType==='mixed'){
+const localTracks=TRACKS.local.filter(t=>t.tier===s.tier);
+const nascarTracks=TRACKS.nascar.filter(t=>t.series&&t.series.includes('arca'));
+trackPool=[...localTracks,...nascarTracks];
+}else if(s.trackType==='nascar'){
+const seriesMap={arca:'arca',trucks:'trucks',xfinity:'xfinity',cup:'cup'};
+const seriesKey=seriesMap[seriesId];
+trackPool=TRACKS.nascar.filter(t=>t.series&&t.series.includes(seriesKey));
+}
+
+if(trackPool.length===0)trackPool=TRACKS.local;
+
 const sched=[];
 for(let i=0;i<s.races;i++){
-const t=tracks[rand(0,tracks.length-1)];
+const t=trackPool[rand(0,trackPool.length-1)];
 sched.push({round:i+1,track:t.name,city:t.city,state:t.state,type:t.type,qualifying:null,result:null});
 }
 return sched;
 }
-
 
 //Quali Sim
 function simulateQualifying(state,seriesId){
@@ -356,6 +367,12 @@ if(repGain<0)state.log.push('Lost '+Math.abs(repGain)+' reputation from DNF');
 if(fanGain<0)state.log.push('Lost '+Math.abs(fanGain)+' fans from DNF');
 if(!state.standings[seriesId])state.standings[seriesId]={};
 state.standings[seriesId][state.driverName]=(state.standings[seriesId][state.driverName]||0)+result.points;
+
+const aiDrivers=state.aiDrivers&&state.aiDrivers[seriesId]?state.aiDrivers[seriesId]:[];
+aiDrivers.forEach(d=>{
+const aiPoints=rand(15,40);
+state.standings[seriesId][d.name]=(state.standings[seriesId][d.name]||0)+aiPoints;
+});
 const sched=state.schedules[seriesId];
 sched[raceIdx].result=result;
 updateSponsorGoals(state,seriesId,result);
@@ -674,6 +691,12 @@ if(!offer)return;
 st.contracts.push(offer);
 st.offers=st.offers.filter(o=>o.id!==id);
 st.schedules[offer.seriesId]=generateSchedule(offer.seriesId);
+
+if(!st.aiDrivers)st.aiDrivers={};
+if(!st.aiDrivers[offer.seriesId]){
+st.aiDrivers[offer.seriesId]=generateDriverField(19);
+}
+
 st.log.push('Signed with '+offer.team);
 save(st);
 showPage('contracts');
