@@ -130,17 +130,14 @@ completed:0,
 prizeShare:0.7,
 };
 }
-
+//fans and rep
 function generateOffers(rep,fans){
+rep=Math.floor(rep*0.95);
+fans=Math.floor(fans*0.98);
+
 const offers=[];
 SERIES.forEach(s=>{
-if(rep>=s.reqRep&&fans>=s.reqFans){
-if(Math.random()<0.6)offers.push(makeContract(s.id));
-}
-});
-if(offers.length===0)offers.push(makeContract('mini_stock'));
-return offers.slice(0,3);
-}
+
 
 const TRACKS=[
 {name:'Daytona International Speedway',short:'Daytona',city:'Daytona Beach',state:'FL',type:'superspeedway'},
@@ -276,8 +273,15 @@ if(result.pole)state.poles++;
 checkMilestone(state,'starts',state.starts);
 const playerPrize=Math.floor(result.prize*(contract?contract.prizeShare:0.7));
 state.money+=playerPrize;
-state.rep+=result.position===1?10:result.position<=5?5:1;
-state.fans+=result.position===1?rand(100,300):rand(10,50);
+//rep and fans
+const repGain=result.dnf?-5:result.position===1?10:result.position<=5?5:result.position<=10?2:0;
+const fanGain=result.dnf?-rand(50,150):result.position===1?rand(100,300):result.position<=5?rand(50,150):rand(10,50);
+
+state.rep=Math.max(0,state.rep+repGain);
+state.fans=Math.max(0,state.fans+fanGain);
+
+if(repGain<0)state.log.push('Lost '+Math.abs(repGain)+' reputation from DNF');
+if(fanGain<0)state.log.push('Lost '+Math.abs(fanGain)+' fans from DNF');
 if(!state.standings[seriesId])state.standings[seriesId]={};
 state.standings[seriesId][state.driverName]=(state.standings[seriesId][state.driverName]||0)+result.points;
 const sched=state.schedules[seriesId];
