@@ -70,7 +70,7 @@ button:disabled{opacity:0.35;cursor:not-allowed}
 <option value="TX">Texas</option>
 <option value="FL">Florida</option>
 </select>
-<button type="button" class="btn btn-lg btn-primary btn-full" onclick="startGame()">START CAREER</button>
+<button type="button" class="btn btn-lg btn-primary btn-full" onclick="window.startGame()">START CAREER</button>
 </div>
 <div style="font-size:11px;color:#64748B;margin-top:16px">Build v50 - Complete Edition</div>
 </div>
@@ -1007,6 +1007,84 @@ sp.seasonsLeft=0;
 state.log.push('❌ '+sp.brand+' has terminated their sponsorship due to poor performance');
 }
 });
+}
+
+//Season Summary
+function showSeasonSummary(state){
+const prevSeason=state.season;
+let totalWins=0;
+let totalTop5s=0;
+let totalStarts=0;
+let totalDNFs=0;
+let championships=[];
+
+Object.keys(state.standings).forEach(seriesId=>{
+const s=getSeries(seriesId);
+const pts=state.standings[seriesId];
+const list=Object.entries(pts).map(([name,points])=>({name:name,points:points})).sort((a,b)=>b.points-a.points);
+const playerPos=list.findIndex(d=>d.name===state.driverName)+1;
+if(playerPos===1)championships.push(s.name);
+});
+
+Object.keys(state.schedules).forEach(seriesId=>{
+const sched=state.schedules[seriesId];
+sched.forEach(r=>{
+if(r.result){
+totalStarts++;
+if(r.result.position===1)totalWins++;
+if(r.result.position<=5)totalTop5s++;
+if(r.result.dnf)totalDNFs++;
+}
+});
+});
+
+let para1='Season '+prevSeason+' is in the books. ';
+if(championships.length>0){
+para1+='And what a season it was—you brought home '+(championships.length>1?championships.length+' championships':'a championship')+' in '+championships.join(' and ')+'. The hardware is yours.';
+}else{
+para1+='The championship eluded you this time, but the season had its moments.';
+}
+
+let para2='Across '+totalStarts+' starts, you recorded '+totalWins+' win'+(totalWins===1?'':'s')+' and '+totalTop5s+' top-five finish'+(totalTop5s===1?'':'es')+'. ';
+if(totalDNFs===0){
+para2+='Clean season—zero DNFs. That\'s reliability.';
+}else if(totalDNFs<=2){
+para2+='Only '+totalDNFs+' DNF'+(totalDNFs===1?'':'s')+'. Solid consistency.';
+}else{
+para2+='But '+totalDNFs+' DNFs hurt. Reliability was an issue this year.';
+}
+
+let para3='';
+if(totalWins>=5){
+para3='The wins speak for themselves. You were fast, you were fearless, and you got it done.';
+}else if(totalWins>=2){
+para3='You showed flashes of brilliance. A few more wins and you\'re a serious threat.';
+}else if(totalTop5s>=totalStarts*0.5){
+para3='Consistent top-five runs kept you in the fight. One step away from Victory Lane.';
+}else{
+para3='The results weren\'t there this year. Time to rebuild and come back stronger.';
+}
+
+let para4='The offseason is here. New contracts are on the table. ';
+if(state.sponsorOffers&&state.sponsorOffers.length>0){
+para4+='Sponsors are watching—'+state.sponsorOffers.length+' new offer'+(state.sponsorOffers.length===1?'':'s')+' waiting for you. ';
+}
+para4+='Season '+(prevSeason+1)+' starts soon. Let\'s get after it.';
+
+const narrative=para1+' '+para2+' '+para3+' '+para4;
+
+let html='<div class="modal-title">Season '+prevSeason+' Complete</div>';
+html+='<div style="background:#060A10;border:1px solid #2D3748;border-radius:10px;padding:18px;margin-bottom:12px">';
+html+='<div style="font-size:15px;color:#CBD5E1;line-height:1.8;font-style:italic">'+narrative+'</div>';
+html+='</div>';
+if(championships.length>0){
+html+='<div style="text-align:center;padding:16px;background:linear-gradient(135deg,#F59E0B22,#FBBF2422);border-radius:8px;margin-bottom:12px">';
+html+='<div style="font-size:32px">🏆</div>';
+html+='<div style="font-size:20px;font-weight:900;color:#F59E0B;margin-top:8px">'+championships.join(' & ')+' Champion'+(championships.length>1?'s':'')+'</div>';
+html+='</div>';
+}
+html+='<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal();updateHeader();updateTabs();showPage(\'contracts\')">Continue to Offseason</button></div>';
+showModal(html);
 }
 
 </script>
