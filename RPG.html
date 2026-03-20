@@ -190,21 +190,49 @@ const pos=Math.round(fieldSize*(1-baseRoll/115))+1;
 const position=Math.max(1,Math.min(fieldSize,pos));
 return{position:position,pole:position===1,fieldSize:fieldSize};
 }
-
+//Race Simulation 
 function simulateRace(state,seriesId,qualPos){
 const fieldSize=20;
-const scenarios=[
-{text:'Opening laps - pack racing',choices:[
-{label:'Be aggressive',posMod:2,risk:0.1},
-{label:'Be patient',posMod:0,risk:0.01},
+const allScenarios=[
+{text:'Green flag drops. The field roars into turn 1 in a tight pack. Someone ahead gets loose and causes a chain reaction of checking up.',choices:[
+{label:'Dive low and thread the needle',posMod:3,risk:0.15},
+{label:'Lift early and play it safe',posMod:-1,risk:0.02},
 ]},
-{text:'Mid-race - fuel strategy',choices:[
-{label:'Stretch fuel',posMod:1,risk:0.05},
-{label:'Pit early',posMod:-1,risk:0.01},
+{text:'Lap 45. You\'re running door-to-door with the 22 car. He pinches you toward the wall entering turn 3.',choices:[
+{label:'Stand your ground and hold your line',posMod:2,risk:0.12},
+{label:'Back out and tuck in behind him',posMod:0,risk:0.01},
+]},
+{text:'Caution flag. Crew chief radios: "Two tires or four? Track position or fresh rubber?"',choices:[
+{label:'Take two tires - get out first',posMod:2,risk:0.08},
+{label:'Take four tires - lose spots but gain grip',posMod:-2,risk:0.02},
+]},
+{text:'Restart with 30 to go. The 8 car sends it too hard into turn 1, smoke everywhere. You\'re committed.',choices:[
+{label:'Gas it and hope for a hole',posMod:3,risk:0.18},
+{label:'Check up hard and hope you don\'t get hit',posMod:-1,risk:0.09},
+]},
+{text:'Final 10 laps. You\'re in the lead pack. The 17 car is all over your bumper, looking for a way by.',choices:[
+{label:'Block aggressively - protect your spot',posMod:1,risk:0.11},
+{label:'Run your line and make him work for it',posMod:0,risk:0.03},
+]},
+{text:'White flag - final lap! Three wide coming to the checkers. This is it.',choices:[
+{label:'Send it to the bottom and pray',posMod:4,risk:0.22},
+{label:'Hold your lane and fight for every inch',posMod:1,risk:0.07},
 ]},
 ];
-return{pending:true,scenarios:scenarios,basePos:qualPos,fieldSize:fieldSize,dnfProb:0.1};
+
+const scenarios=[];
+const used=[];
+while(scenarios.length<6&&used.length<allScenarios.length){
+const idx=rand(0,allScenarios.length-1);
+if(!used.includes(idx)){
+used.push(idx);
+scenarios.push(allScenarios[idx]);
 }
+}
+
+return{pending:true,scenarios:scenarios,basePos:qualPos,fieldSize:fieldSize,dnfProb:0.12};
+}
+
 
 function resolveRace(pending,choices){
 let pos=pending.basePos;
