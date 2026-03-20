@@ -687,6 +687,27 @@ const playerPrize=Math.floor(result.prize*(contract?contract.prizeShare:0.7));
 html+='<div style="margin-top:10px"><div style="font-size:12px;color:#94A3B8">Base Prize</div><div style="font-size:16px;font-weight:700;color:#94A3B8">'+fmt(result.prize)+'</div></div>';
 html+='<div style="margin-top:6px"><div style="font-size:12px;color:#94A3B8">Your Share (70%)</div><div style="font-size:20px;font-weight:900;color:#10B981">'+fmt(playerPrize)+'</div></div>';
 }
+
+let narrative='';
+if(result.dnf){
+const dnfReasons=['Mechanical failure ended your day early. The car gave out, and there was nothing you could do.','Contact with another car sent you spinning into the wall. Race over.','Engine blew on the backstretch. Smoke everywhere. DNF.','Lost control in turn 3. Hit the wall hard. That\'s a wrap.'];
+narrative=dnfReasons[rand(0,dnfReasons.length-1)]+' Frustrating day at '+st.schedules[pendingRace.seriesId][pendingRace.round-1].track+'. Time to regroup and come back stronger.';
+}else if(result.position===1){
+narrative='Victory! You held off the field and brought it home. The checkered flag is yours. Crew chief is pumped. Team earned this one. '+result.points+' points, and the trophy goes home with you tonight.';
+}else if(result.position<=3){
+narrative='Solid podium finish. P'+result.position+' today. You ran up front, battled hard, and brought home a top-3. '+result.points+' points in the bank. Good day at the office.';
+}else if(result.position<=5){
+narrative='Top-5 finish. P'+result.position+' when the checkers flew. Not a win, but you were competitive all day. Scored '+result.points+' points. Build on this momentum.';
+}else if(result.position<=10){
+narrative='P'+result.position+'. Middle of the pack. You fought for every spot, but couldn\'t crack the top 5 today. Still picked up '+result.points+' points. Plenty of races left.';
+}else{
+narrative='Tough day. P'+result.position+'. The car wasn\'t there, or the strategy didn\'t work out. Either way, you finish outside the top 10. Only '+result.points+' points to show for it. On to the next one.';
+}
+
+html+='<div style="margin-top:16px;padding:14px;background:#0B0F1A;border-radius:8px;border-left:3px solid #64748B">';
+html+='<div style="font-size:13px;color:#CBD5E1;line-height:1.6;font-style:italic">'+narrative+'</div>';
+html+='</div>';
+
 html+='</div>';
 html+='<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal();showPage(\'dashboard\')">Continue</button></div>';
 showModal(html);
