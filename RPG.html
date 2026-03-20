@@ -298,7 +298,7 @@ let currentPage='dashboard';
 let st=null;
 
 function updateHeader(){
-$('header').innerHTML='<div><div class="driver-name">#'+st.carNumber+' '+st.driverName+'</div></div><div class="hdr-stats"><div class="hdr-stat"><div class="val">'+fmt(st.money)+'</div><div class="lbl">Money</div></div><div class="hdr-stat"><div class="val">'+st.rep+'</div><div class="lbl">Rep</div></div><div class="hdr-stat"><div class="val">'+st.wins+'</div><div class="lbl">Wins</div></div></div>';
+$('header').innerHTML='<div><div class="driver-name">#'+st.carNumber+' '+st.driverName+'</div></div><div class="hdr-stats"><div class="hdr-stat"><div class="val">'+fmt(st.money)+'</div><div class="lbl">Money</div></div><div class="hdr-stat"><div class="val">'+st.rep+'</div><div class="lbl">Rep</div></div><div class="hdr-stat"><div class="val">'+st.fans.toLocaleString()+'</div><div class="lbl">Fans</div></div><div class="hdr-stat"><div class="val">'+st.wins+'</div><div class="lbl">Wins</div></div></div>';
 }
 
 function updateTabs(){
