@@ -2029,12 +2029,12 @@ function relationship(r){
   }
   if(i>=3&&c>=4)return'frenemy';
   if(i>=3)return'rival';
-  if(>=4)return cb>=c*0.7?'racing_rival':'friend';
+  if(c>=4)return cb>=c*0.7?'racing_rival':'friend';
     return'acquaintance';
 }
 
 const REL_COLOR={rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8',chosen_rival:'#DC2626',chosen_friend:'#059669'};
-const REL_LABEL={rival:'RIVAL',friend:'FRIEND',f​​​​​​​​​​​​​​​​
+const REL_LABEL={rival:'RIVAL',friend:'FRIEND',frenemy:'FRENEMY',racing_rival:'RACING RIVAL',acquaintance:'',chosen_rival:'CHOSEN RIVAL',chosen_friend:'CHOSEN FRIEND'};
 
 //PART 12
 
