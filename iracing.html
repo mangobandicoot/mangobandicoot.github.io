@@ -2192,6 +2192,14 @@ function fmtMoney(n) {
   if (n >= 1000)    return `$${(n/1000).toFixed(1)}K`;
   return `$${n}`;
 }
+function getRepTier(rep) {
+  if (rep >= 280) return { label:'Legend',             color:'#F59E0B', icon:'🏆' };
+  if (rep >= 200) return { label:'Household Name',     color:'#EC4899', icon:'⭐' };
+  if (rep >= 130) return { label:'National Contender', color:'#8B5CF6', icon:'📺' };
+  if (rep >= 70)  return { label:'Regional Threat',    color:'#3B82F6', icon:'🔥' };
+  if (rep >= 30)  return { label:'Local Hero',         color:'#10B981', icon:'🏁' };
+  return           { label:'Unknown',                  color:'#94A3B8', icon:'👤' };
+}  
 function fmtFans(n) {
   n = Math.round(n||0);
   if (n >= 1000000) return `${(n/1000000).toFixed(1)}M`;
@@ -2527,7 +2535,43 @@ function maybeFireUnpromptedCallout(state, seriesId, result) {
 // After a race, drivers you had incidents with or finished close to have a
 // chance to call you out publicly. You choose how to respond. The response
 // affects rep, fans, and the rivalry relationship.
-
+const CALLOUT_INCIDENT_LINES_ESCALATED = [
+  '{name} didn\'t hold back this time: "{player} has been pulling this shit all season. I\'m done being diplomatic about it."',
+  '{name} to the media, clearly done being polite: "At some point you have to call it what it is. {player} is a dirty driver. Full stop."',
+  '{name} on social at midnight: "I\'ve kept quiet long enough. {player} knows what they did. The whole paddock knows. I\'m just the one saying it."',
+  '{name} in a post-race presser, jaw tight: "You want my honest reaction? {player} can go straight to hell. That\'s my honest reaction."',
+  '{name} to a paddock reporter: "I\'ve got a list. {player}\'s name is at the top of it. Has been for a while now."',
+  '{name} didn\'t wait for a microphone: "Every single week with this guy. Every. Single. Week. I am so tired of {player}\'s bullshit."',
+  '{name} on the broadcast, barely keeping it together: "I will not be lectured about racing by {player}. Not today. Not ever."',
+  '{name} to anyone who would listen after the race: "That wasn\'t racing. That was assault. {player} should be parked for a month."',
+  '{name} in a long post on social: "I\'ve tried to be professional. I\'ve tried to move on. But {player} has made that impossible and I\'m not going to pretend otherwise."',
+  '{name} on a podcast, no filter: "Ask me about {player}? Really? Fine. That driver is a menace and everyone in this paddock is too scared to say it out loud."',
+  'Hot mic caught {name} after the incident: "I swear to God if {player} touches my car one more time I am going to lose my mind."',
+  '{name} skipped the media scrum and went straight to the officials\' truck. Word is they filed a formal complaint against {player}.',
+  '{name} at the drivers\' meeting the following week, standing up: "I need everyone in this room to hear this. {player} and I are going to have a serious problem if this continues."',
+  '{name} to their crew chief, overheard on scanner: "I don\'t care what it costs me in points. Next time {player} pulls that, I\'m giving it right back."',
+  '{name} on social, all caps: "DONE. Being. Nice. About. This. {player} — you know what you did."',
+  '{name} after the race, not waiting for a mic: "What the fuck was that? Seriously. What the actual fuck was {player} thinking?"',
+  '{name} on social, 1am: "I don\'t usually post like this but I\'ve had a few drinks and I need everyone to know that {player} is an absolute asshole on the race track."',
+  '{name} to a reporter who probably didn\'t expect this: "Off the record? {player} is the dirtiest driver I\'ve ever raced against. On the record? Same answer."',
+  '{name} in the hauler, door open, not caring who heard: "I am so fucking sick of {player}. Season after season of this garbage."',
+  '{name} filed a protest, then posted about it: "Let the officials sort it out. All I know is {player} needs to be held accountable because nobody else is doing it."',
+  '{name} at the autograph table, still hot: "You want me to sign something? Sure. You want to talk about {player}? Absolutely. That driver is out of their damn mind."',
+  '{name} on a livestream, forgetting they were live: "-- oh we\'re live? Good. Everyone should hear this. {player} can kiss my ass."',
+  '{name} to their spotter on the radio, scanner caught it: "If {player} comes anywhere near me in the last ten laps, I want you to say nothing. I know what I\'m doing."',
+  '{name} to a fellow driver in the garage, overheard: "You know what the problem with {player} is? Zero consequences. Every single week, zero consequences."',
+  '{name} issued a statement through their team PR. It was supposed to be measured. It was not: "We are requesting a full stewards review of {player}\'s conduct and if nothing changes we will be exploring every available option."',
+  'Someone asked {name} about the incident at the sponsor dinner that evening. Bad timing. The sponsor heard everything.',
+  '{name} cornered {player} in the drivers\' meeting. Nobody knows exactly what was said but {player} sat down quickly.',
+  '{name} on a rival\'s podcast, probably shouldn\'t have agreed to this one: "You want the truth about {player}? I\'ve got about four seasons worth of truth for you."',
+  '{name} to the broadcast booth after climbing out of the car: "I\'m not going to sugarcoat it. That was a chickenshit move by {player} and everybody saw it."',
+  'Word from the {name} camp is they\'ve retained legal counsel following the latest incident with {player}. Whether that goes anywhere is another question.',
+  '{name} posted a seventeen-second video. No caption. Just in-car footage of the incident with {player}. The comments are not kind.',
+  '{name} was asked to comment on {player}\'s post-race statement. They laughed. Then they said: "Sure, let\'s go with that version of events."',
+  '{name} to the series officials, loud enough for the media to hear: "Either you do something about {player} or I will handle it myself. Your choice."',
+  '{name} in the post-race presser, jaw tight, voice level: "I have nothing to say about {player} that I\'m willing to say in front of cameras. Next question."',
+  '{name} on social the next morning, clearly slept on it and decided to go harder: "Woke up still thinking about what {player} did. Still pissed. Not going away."',
+];
 const CALLOUT_INCIDENT_LINES = [
   "{name} didn't hold back in the post-race interview. \"That move was completely unnecessary. I don't know what the hell {player} was thinking.\"",
   "{name} went straight to social media. \"Shoutout to {player} for ruining my damn night. Hope the points were worth it.\"",
@@ -2719,8 +2763,11 @@ function maybeFireDriverCallout(state, driverName, type, track) {
   const chance = type === 'incident' ? 0.40 : 0.25;
   if (Math.random() > chance) return;
 
-  const lines = type === 'incident' ? CALLOUT_INCIDENT_LINES : CALLOUT_CLOSE_LINES;
-  const line = lines[rand(0, lines.length-1)]
+const rival = (state.rivals||[]).find(function(r){return r.name===driverName;});
+  const incidentCount = rival ? (rival.incidents||0) : 0;
+  const useEscalated = type==='incident' && incidentCount>=5 && Math.random()<0.6;
+  const pool = useEscalated ? CALLOUT_INCIDENT_LINES_ESCALATED : (type==='incident' ? CALLOUT_INCIDENT_LINES : CALLOUT_CLOSE_LINES);
+  const line = pool[rand(0, pool.length-1)]
     .replace(/{name}/g, driverName)
     .replace(/{player}/g, state.driverName);
 
@@ -2730,9 +2777,11 @@ function maybeFireDriverCallout(state, driverName, type, track) {
 
   state.dramaQueue.push({
     id: 'callout_' + uid(),
-    title: type === 'incident'
-      ? `${driverName} Calls You Out`
-      : `${driverName} Gives You Props`,
+title: useEscalated
+      ? `${driverName} Is Done Being Nice`
+      : type === 'incident'
+        ? `${driverName} Calls You Out`
+        : `${driverName} Gives You Props`,
     effect: 'none',
     desc: line,
     valence: type === 'incident' ? 'bad' : 'good',
@@ -3933,18 +3982,46 @@ function resolveSeasonGoals(state) {
 
 // ─── MILESTONES ───────────────────────────────────────────────────────────────
 const MILESTONE_DEFS = [
-  { id:'first_start',    label:'First Start',          icon:'🏁', desc:'You showed up.',                                    check:s=>s.starts>=1 },
-  { id:'first_top5',     label:'First Top 5',           icon:'🔝', desc:'Ran with the fast ones.',                           check:s=>s.top5s>=1 },
-  { id:'first_pole',     label:'First Pole',            icon:'⚡', desc:'Fastest in qualifying.',                            check:s=>s.poles>=1 },
-  { id:'first_win',      label:'First Win',             icon:'🏆', desc:'The one that changes everything.',                  check:s=>s.wins>=1 },
-  { id:'first_national', label:'Gone National',         icon:'📺', desc:'First race in a nationally televised series.',      check:s=>(s.raceHistory||[]).some(r=>(getSeries(r.seriesId)&&getSeries(r.seriesId).tier>=4)) },
-  { id:'ten_wins',       label:'10 Wins',               icon:'💛', desc:'Double digits.',                                    check:s=>s.wins>=10 },
-  { id:'champion',       label:'Champion',              icon:'👑', desc:'Won a series championship.',                        check:s=>(s.seasonHistory||[]).some(h=>(h.championships&&h.championships.some(c=>c.pos===1))) },
-  { id:'iron_man',       label:'Iron Man',              icon:'🔩', desc:'50 career starts.',                                 check:s=>s.starts>=50 },
-  { id:'fan_base',       label:'Fan Base',              icon:'📣', desc:'10,000 fans.',                                      check:s=>s.fans>=10000 },
-  { id:'clean_season',   label:'Clean Season',          icon:'✨', desc:'A full season without a DNF.',                      check:s=>(s.seasonHistory||[]).some(h=>h.dnfs===0&&h.races>=8) },
-  { id:'five_wins',      label:'5 Wins',                icon:'⭐', desc:'Starting to make a habit of it.',                   check:s=>s.wins>=5 },
-  { id:'cup_start',      label:'Cup Series Start',      icon:'🎖️', desc:'Made it to the pinnacle.',                         check:s=>(s.raceHistory||[]).some(r=>r.seriesId==='nascar_cup') },
+  // Early career
+  { id:'first_start',      label:'First Start',              icon:'🏁', desc:'You showed up. That\'s step one.',                                      check:function(s){return s.starts>=1;} },
+  { id:'first_top5',       label:'First Top 5',              icon:'🔝', desc:'Ran with the fast ones.',                                                check:function(s){return s.top5s>=1;} },
+  { id:'first_pole',       label:'First Pole',               icon:'⚡', desc:'Fastest in qualifying.',                                                 check:function(s){return s.poles>=1;} },
+  { id:'first_win',        label:'First Win',                icon:'🏆', desc:'The one that changes everything.',                                       check:function(s){return s.wins>=1;} },
+  { id:'first_rival',      label:'First Rival',              icon:'😤', desc:'Someone in this paddock doesn\'t like you. Good.',                       check:function(s){return (s.rivals||[]).some(function(r){return relationship(r)==='rival';});} },
+  { id:'first_sponsor',    label:'First Sponsor',            icon:'💰', desc:'Someone believed in you enough to write a check.',                       check:function(s){return (s.sponsors||[]).length>=1;} },
+  // Wins milestones
+  { id:'five_wins',        label:'5 Wins',                   icon:'⭐', desc:'Starting to make a habit of it.',                                        check:function(s){return s.wins>=5;} },
+  { id:'ten_wins',         label:'10 Wins',                  icon:'💛', desc:'Double digits.',                                                         check:function(s){return s.wins>=10;} },
+  { id:'twenty_wins',      label:'20 Wins',                  icon:'🔥', desc:'Twenty wins. You\'re not a prospect anymore.',                           check:function(s){return s.wins>=20;} },
+  { id:'fifty_wins',       label:'50 Wins',                  icon:'👑', desc:'Half a hundred. All-time territory.',                                    check:function(s){return s.wins>=50;} },
+  // Starts milestones
+  { id:'iron_man',         label:'Iron Man',                 icon:'🔩', desc:'50 career starts.',                                                      check:function(s){return s.starts>=50;} },
+  { id:'century',          label:'Century',                  icon:'💯', desc:'100 career starts. This is your life now.',                              check:function(s){return s.starts>=100;} },
+  { id:'veteran',          label:'Veteran',                  icon:'🎖️', desc:'250 career starts. You\'ve seen everything.',                           check:function(s){return s.starts>=250;} },
+  // Championships
+  { id:'champion',         label:'Champion',                 icon:'👑', desc:'Won a series championship.',                                             check:function(s){return (s.seasonHistory||[]).some(function(h){return h.championships&&h.championships.some(function(c){return c.pos===1;});});} },
+  { id:'multi_champ',      label:'Multi-Champion',           icon:'👑', desc:'Multiple series championships. Different levels, same result.',          check:function(s){return (s.seasonHistory||[]).reduce(function(a,h){return a+(h.championships||[]).filter(function(c){return c.pos===1;}).length;},0)>=2;} },
+  { id:'clean_season',     label:'Clean Season',             icon:'✨', desc:'A full season without a DNF.',                                           check:function(s){return (s.seasonHistory||[]).some(function(h){return h.dnfs===0&&h.races>=8;});} },
+  // Series progression
+  { id:'first_national',   label:'Gone National',            icon:'📺', desc:'First race in a nationally televised series.',                          check:function(s){return (s.raceHistory||[]).some(function(r){return getSeries(r.seriesId)&&getSeries(r.seriesId).tier>=4;});} },
+  { id:'cup_start',        label:'Cup Series Start',         icon:'🎖️', desc:'Made it to the pinnacle.',                                              check:function(s){return (s.raceHistory||[]).some(function(r){return r.seriesId==='nascar_cup';});} },
+  { id:'ladder_climber',   label:'Ladder Climber',           icon:'📈', desc:'Raced in 4 different series.',                                           check:function(s){return new Set((s.raceHistory||[]).map(function(r){return r.seriesId;})).size>=4;} },
+  // Fans
+  { id:'fan_base',         label:'Fan Base',                 icon:'📣', desc:'10,000 fans.',                                                           check:function(s){return s.fans>=10000;} },
+  { id:'following',        label:'Following',                icon:'📱', desc:'50,000 fans.',                                                           check:function(s){return s.fans>=50000;} },
+  { id:'household_name',   label:'Household Name',           icon:'⭐', desc:'200,000 fans. They know your name at the grocery store.',                check:function(s){return s.fans>=200000;} },
+  // Rivalries
+  { id:'respected',        label:'Respected',                icon:'🤝', desc:'A rivalry that turned into something more.',                             check:function(s){return (s.rivals||[]).some(function(r){return relationship(r)==='frenemy';});} },
+  { id:'crew',             label:'Crew',                     icon:'👥', desc:'Made a real friend in this paddock.',                                    check:function(s){return (s.rivals||[]).some(function(r){return relationship(r)==='friend';});} },
+  { id:'nemesis',          label:'Nemesis',                  icon:'💢', desc:'5 or more incidents with the same driver.',                              check:function(s){return (s.rivals||[]).some(function(r){return (r.incidents||0)>=5;});} },
+  // Money
+  { id:'first_100k',       label:'First $100K',              icon:'💵', desc:'Six figures. The sport is starting to pay.',                             check:function(s){return s.totalPrizeMoney>=100000;} },
+  { id:'millionaire',      label:'Millionaire',              icon:'💰', desc:'$1,000,000 in career prize money.',                                      check:function(s){return s.totalPrizeMoney>=1000000;} },
+  // Injuries
+  { id:'walked_away',      label:'Walked Away',              icon:'🏥', desc:'Came back from an injury. Stronger for it.',                             check:function(s){return (s.seasonHistory||[]).some(function(h){return h.hadInjury;});} },
+  // Longevity
+  { id:'five_seasons',     label:'Five Seasons',             icon:'📅', desc:'Five full seasons. This is a career.',                                   check:function(s){return s.season>=6;} },
+  { id:'decade',           label:'A Decade',                 icon:'🗓️', desc:'Ten seasons. Legendary.',                                               check:function(s){return s.season>=11;} },
 ];
 
 // ─── TRACK TENDENCIES ─────────────────────────────────────────────────────────
@@ -4096,9 +4173,10 @@ function advanceSeason(state) {
     prize:seasonPrize, rep:state.reputation, fans:state.fans, money:state.money,
     championships:champs,
     confidence:state.confidence||0,
+    hadInjury: !!(state.playerInjury===null && state._hadInjuryThisSeason),
   });
   if(state.seasonHistory.length>20) state.seasonHistory=state.seasonHistory.slice(-20);
-
+state._hadInjuryThisSeason = false;
   // Merch revenue
   const merch=calcMerchRevenue(state.fans);
   state.money+=merch;
@@ -4206,7 +4284,8 @@ function buildSeasonSummary(state) {
   });
 
   return { championships, totalRaces, wins, top5s, totalPrize, season: state.season,
-    rep: state.reputation, fans: state.fans, money: state.money };
+    rep: state.reputation, fans: state.fans, money: state.money,
+    hadInjury: !!(state._hadInjuryThisSeason) };
 }
 </script>
 <script>// ═══════════════════════════════════════════════════════════════════════════════
@@ -4469,6 +4548,12 @@ function renderDashboard() {
   ));
   dc.appendChild(statBar('Reputation',Math.min(G.reputation,320),320,'#F59E0B'));
   dc.appendChild(statBar('Fans',Math.min(G.fans,500000),500000,'#EC4899'));
+  const _repTier = getRepTier(G.reputation);
+  dc.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'6px',marginTop:'6px',marginBottom:'4px'}},
+    h('span',{style:{fontSize:'16px'}},_repTier.icon),
+    h('span',{style:{fontSize:'13px',fontWeight:800,color:_repTier.color,letterSpacing:'0.05em'}},_repTier.label),
+    h('span',{style:{fontSize:'12px',color:'#64748B'}},'('+G.reputation+' rep)'),
+  ));
   // Next tier info
   const nextS=SERIES.find(s=>s.reqRep>G.reputation||s.reqFans>G.fans);
   if(nextS){
@@ -6190,7 +6275,68 @@ const SEASON_SUMMARY_WINLESS = [
   "The {series} win column stays empty for {name} after Season {season}. {top5s} top fives from {totalRaces} starts tells you the pace is there. The win is coming. The question is whether the patience holds out until it does.",
   "Zero wins in the {series} in Season {season}. That number is going to drive the offseason work for {name} more than anything else. {top5s} top fives from {totalRaces} starts. The consistency is building. The breakthrough hasn't come yet.",
 ];
+function getSeasonNarrativeLine(summary) {
+  var name = G.driverName;
+  var topRival = (G.rivals||[])
+    .filter(function(r){return ['rival','frenemy'].includes(relationship(r));})
+    .sort(function(a,b){return ((b.incidents||0)+(b.closeRaces||0))-((a.incidents||0)+(a.closeRaces||0));})
+    [0];
+  var topFriend = (G.rivals||[])
+    .filter(function(r){return relationship(r)==='friend';})
+    [0];
+  var hadInjury = summary.hadInjury;
+  var pos = (summary.championships[0]&&summary.championships[0].position)||99;
+  var wins = summary.wins;
 
+  var rivalLines = topRival ? [
+    'The subplot of the season was the running battle with '+topRival.name+'. That one isn\'t over.',
+    topRival.name+' was the name that kept coming up. In the standings. In the drama. In the paddock.',
+    'Whatever happens next season, the unfinished business with '+topRival.name+' is going to be part of the story.',
+    'If there\'s one name from this season that sticks, it\'s '+topRival.name+'.',
+  ] : [];
+
+  var friendLines = topFriend ? [
+    'One unexpected development: the relationship with '+topFriend.name+' that nobody saw coming.',
+    'Not everything was conflict. The connection with '+topFriend.name+' was one of the better things to come out of this season.',
+  ] : [];
+
+  var injuryLines = hadInjury ? [
+    'The injury changed the shape of the season. Coming back from that says something.',
+    'Missing races is one thing. Coming back and running the way '+name+' did is another thing entirely.',
+  ] : [];
+
+  var arcLines = wins>=3 ? [
+    'This was the season where the question stopped being "can they win?" and started being "how many?"',
+    'The wins came. The momentum built. This is what a career starting to peak looks like.',
+  ] : wins===0 ? [
+    'A winless season doesn\'t tell the whole story. The pace was there. The results weren\'t.',
+    'No wins. But this wasn\'t a wasted season. The foundation got stronger.',
+  ] : pos===1 ? [
+    'Championship seasons have their own weight. This was one of them.',
+  ] : [
+    'Not the season '+name+' drew up. But not the end of the story either.',
+    'Somewhere in the middle of this season the direction became clearer. Next year will be different.',
+  ];
+
+  var pool = [].concat(rivalLines, rivalLines, friendLines, injuryLines, arcLines);
+  if (!pool.length) return '';
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function getBroadcastNarrative(summary) {
+  var name = G.driverName;
+  var pos = (summary.championships[0]&&summary.championships[0].position)||99;
+  var wins = summary.wins;
+  var season = summary.season;
+  var repTier = getRepTier(G.reputation);
+
+  if (pos===1) return name+' is the story of Season '+season+'. Championship, wins, and a reputation that is no longer up for debate. The ladder has another rung.';
+  if (pos<=3 && wins>0) return 'Season '+season+' was the season '+name+' announced themselves. Not a champion. Not yet. But the gap is closing and the competition knows it.';
+  if (wins>=3) return 'Three or more wins in a season changes the narrative. '+name+' is no longer just a name to watch. This is a driver who wins races.';
+  if (wins===0 && summary.totalRaces>=8) return 'The results didn\'t come in Season '+season+'. But '+name+' is still here. Still racing. The story isn\'t written yet.';
+  if (G.reputation >= 130) return name+' is a '+repTier.label+' now. The paddock treats them differently. The media asks different questions. Something shifted this season.';
+  return 'Season '+season+' for '+name+': another chapter. Not the defining one. But part of the arc.';
+}
 function getSeasonMadLib(summary) {
   const {wins, top5s, totalRaces, championships, season} = summary;
   const champ = championships[0];
@@ -6258,11 +6404,21 @@ function openSeasonEndModal() {
       miniStatBox('Fans',fmtFans(summary.fans),'#EC4899'),
     ),
 
-    // Mad-libs season blurb
-    h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'14px 16px',marginBottom:'16px',borderLeft:'3px solid #F59E0B'}},
+// Mad-libs season blurb
+    h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'14px 16px',marginBottom:'12px',borderLeft:'3px solid #F59E0B'}},
       h('div',{style:{fontSize:'10px',color:'#F59E0B',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.15em',marginBottom:'7px'}},'📰 Season Wrap-Up'),
       h('div',{style:{fontSize:'14px',color:'#D1D5DB',lineHeight:'1.7',fontStyle:'italic'}},seasonBlurb),
     ),
+    // Broadcast narrative + rival context
+    (function(){
+      var narrativeLine = getSeasonNarrativeLine(summary);
+      var broadcastLine = getBroadcastNarrative(summary);
+      var combined = broadcastLine + (narrativeLine ? ' '+narrativeLine : '');
+      return h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'14px 16px',marginBottom:'16px',borderLeft:'3px solid #EC4899'}},
+        h('div',{style:{fontSize:'10px',color:'#EC4899',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.15em',marginBottom:'7px'}},'📡 Broadcast Narrative'),
+        h('div',{style:{fontSize:'14px',color:'#D1D5DB',lineHeight:'1.7'}},combined),
+      );
+    })(),
 
     // AI series news — promotions and demotions
     (() => {
@@ -6692,7 +6848,7 @@ function getInjuryLength() {
 function processPlayerInjury(state, seriesId, result) {
   if (state.playerInjury) return; // already injured
   if (!rollInjuryChance(result)) return;
-
+  state._hadInjuryThisSeason = true;
   const racesOut = getInjuryLength();
   // Generate substitute driver name
   let subName = generateAIName();
