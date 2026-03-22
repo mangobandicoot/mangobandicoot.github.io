@@ -5978,15 +5978,29 @@ function renderDrivers() {
   // Filter by series
   let filterSeries='all';
   const container=h('div',null);
+    let filterSeries='all';
+  let filterKnown=false;
+  let searchQuery='';
+  const container=h('div',null);
   function renderDriverList(){
     container.innerHTML='';
+    const searchIn=h('input',{type:'text',placeholder:'Search drivers...',style:{flex:1}});
+    searchIn.value=searchQuery;
+    searchIn.addEventListener('input',function(){searchQuery=searchIn.value;renderDriverList();});
+    const knownBtn=mkBtn(filterKnown?'● Met Only':'○ All Drivers','btn btn-xs '+(filterKnown?'btn-primary':'btn-secondary'),function(){filterKnown=!filterKnown;renderDriverList();});
+    container.appendChild(h('div',{style:{display:'flex',gap:'8px',marginBottom:'10px'}},searchIn,knownBtn));
     const filterRow=h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'14px'}},
       ...[['all','All Series'],...SERIES.map(s=>[s.id,s.short])].map(([id,label])=>
         mkBtn(label,`btn btn-xs ${filterSeries===id?'btn-primary':'btn-secondary'}`,()=>{filterSeries=id;renderDriverList();})
       )
     );
     container.appendChild(filterRow);
-    const filtered=(G.drivers||[]).filter(d=>filterSeries==='all'||d.currentSeriesId===filterSeries).sort((a,b)=>b.rep-a.rep);
+    const filtered=(G.drivers||[]).filter(d=>{
+      if(filterSeries!=='all'&&d.currentSeriesId!==filterSeries) return false;
+      if(filterKnown&&d.source!=='known') return false;
+      if(searchQuery&&d.name.toLowerCase().indexOf(searchQuery.toLowerCase())<0) return false;
+      return true;
+    }).sort((a,b)=>b.rep-a.rep);
     if(!filtered.length){container.appendChild(h('div',{style:{color:'#94A3B8',padding:'16px',textAlign:'center'}},'No drivers.'));return;}
     filtered.forEach(d=>{
       const s=getSeries(d.currentSeriesId);
@@ -6025,6 +6039,10 @@ const injBadge=d.injuredOrPenalized?badge('INJ/PEN','#EF4444'):d.substituteFor?b
         ),
         injBadge,
         h('div',{style:{display:'flex',gap:'4px',flexShrink:0}},
+          mkBtn('Profile','btn btn-xs btn-secondary',()=>openDriverProfileModal(d.name)),
+          mkBtn(d.injuredOrPenalized?'Clear INJ':'INJ/PEN',`btn btn-xs ${d.injuredOrPenalized?'btn-secondary':'btn-warn'}`,()=>{d.injuredOrPenalized=!d.injuredOrPenalized;saveGame();renderDriverList();}),
+          mkBtn('Edit','btn btn-xs btn-secondary',()=>openEditDriverModal(d)),
+        )
           mkBtn(d.injuredOrPenalized?'Clear INJ':'INJ/PEN',`btn btn-xs ${d.injuredOrPenalized?'btn-secondary':'btn-warn'}`,()=>{d.injuredOrPenalized=!d.injuredOrPenalized;saveGame();renderDriverList();}),
           mkBtn('Edit','btn btn-xs btn-secondary',()=>openEditDriverModal(d)),
         )
