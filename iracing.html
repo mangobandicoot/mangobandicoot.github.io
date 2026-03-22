@@ -747,7 +747,57 @@ const DRAMA = [
 
 // ─── MEDIA DAY SYSTEM ────────────────────────────────────────────────────────
 // Tier-scaled press interactions. Low tiers = local reporter. Cup = full circus.
-const MEDIA_RESPONSES = [
+var MEDIA_DAY = {
+  tier12: {
+    label: 'Local Reporter',
+    color: '#94A3B8',
+    icon: '📰',
+    questions: [
+      "Local paper caught you after the race. \"How'd tonight go for you?\"",
+      "A reporter from the county paper wants a quote for their racing column.",
+      "Someone with a voice recorder and a press pass found you near your trailer.",
+      "The track announcer wants a word for the Facebook livestream.",
+      "A high school journalism student is covering the race for their school paper. They seem nervous.",
+    ],
+  },
+  tier3: {
+    label: 'Regional Beat Writer',
+    color: '#3B82F6',
+    icon: '🎙️',
+    questions: [
+      "The regional motorsport outlet caught you in the paddock. \"What's the plan for the rest of the season?\"",
+      "A beat writer who covers your series wants your take on the championship picture.",
+      "You're doing a quick spot for a regional racing podcast. They have about 8,000 listeners.",
+      "A reporter from the state's biggest paper is doing a motorsport feature. You made the list.",
+      "The series official media guy needs a quote for the weekly newsletter.",
+    ],
+  },
+  tier4: {
+    label: 'National Outlet',
+    color: '#F59E0B',
+    icon: '📡',
+    questions: [
+      "A national motorsport outlet has you scheduled for a proper sit-down. Cameras rolling.",
+      "You're doing a feature interview for one of the bigger racing publications. Sponsors are watching this one.",
+      "Pre-race media availability. Several outlets are present. Someone is going to ask about your rivals.",
+      "National TV wants a brief comment before qualifying. Keep it tight.",
+      "Your sponsor's PR team set up a media session. It's friendly but there are microphones.",
+    ],
+  },
+  tier567: {
+    label: 'Full Press Conference',
+    color: '#EC4899',
+    icon: '🎥',
+    questions: [
+      "Full pre-race press conference. Multiple outlets, cameras, the works. Someone is going to ask about the championship.",
+      "You're in the media center. The room is full. A reporter from a major outlet leads off: \"How are you feeling about your championship chances?\"",
+      "Post-race press conference. The result was notable enough to fill the room. Someone's going to ask about your rival.",
+      "National broadcast wants you for a segment. Prime time. Your sponsor bought ad space during the same show.",
+      "The series put you in the official post-race press conference. Top finishers only. The cameras are on.",
+    ],
+  },
+};
+  const MEDIA_RESPONSES = [
   {
     label: 'Keep it professional',
     type: 'safe',
@@ -1102,6 +1152,40 @@ const PADDOCK_RUMORS = [
   'Unverified, but someone is claiming a driver failed a routine check this week and the team is managing it quietly.',
 ];
 
+function maybeFireFanMail(state) {
+  // Once per season, weighted toward good results
+  if ((state.offTrackDone||[]).includes('fan_mail_s'+state.season)) return;
+  if (Math.random() > 0.15) return;
+  state.offTrackDone = state.offTrackDone||[];
+  state.offTrackDone.push('fan_mail_s'+state.season);
+
+  const name = state.driverName;
+  const lines = [
+    'A letter showed up at the track addressed to you. Handwritten. Kid from two states over says you\'re the reason they want to race. No return address.',
+    'Someone emailed the team asking if you\'d sign a photo for their dad who just got out of the hospital. The team forwarded it. You said yes.',
+    'A fan drove six hours to watch you race last weekend. They left before the finish because of a family thing. Left a note on the hauler anyway. "Worth every mile."',
+    'Got a message through the team\'s social account. Someone\'s been following your career since mini stocks. They just wanted to say they noticed the improvement.',
+    'A kid held up a sign with your name on it at the last race. Your crew chief took a photo and sent it to you. Still on your phone.',
+    'Someone sent a handwritten note to the team. They said watching '+name+' race is the only thing that made their week better lately. Team pinned it in the hauler.',
+    'Fan mail came through this week. Most of it is form stuff but one letter stood out — someone who lost their job recently said coming to the races is the one thing they still look forward to.',
+    'A message from a kid who says they built a model of your car for a school project. Sent a photo. The number is wrong but the effort is right.',
+    'Someone wrote to say they named their dog after you. You\'re not sure how to feel about that but the photo they attached is pretty great.',
+    'A veteran wrote in to say watching short-track racing reminds him of when he used to go with his father. You\'re part of keeping that alive for him.',
+  ];
+
+  state.dramaQueue.push({
+    id: 'fan_mail_'+uid(),
+    title: '📬 Fan Mail',
+    effect: 'rep_fans',
+    value: rand(2,4),
+    fans: rand(100,300),
+    desc: lines[Math.floor(Math.random()*lines.length)],
+    valence: 'good',
+    _isFanMail: true,
+  });
+  state.reputation = Math.max(0, state.reputation + rand(2,4));
+  state.fans = Math.max(0, state.fans + rand(100,300));
+}
 function maybeFireRivalWin(state, seriesId, result) {
   if (!result.finishOrder || !result.finishOrder.length) return;
   const winner = result.finishOrder[0];
@@ -1132,8 +1216,7 @@ function maybeFireRivalWin(state, seriesId, result) {
     desc: useLines[Math.floor(Math.random()*useLines.length)],
     valence: rel==='friend'?'neutral':'bad',
   });
-}
-
+}  
 function maybeFirePaddockRumor(state) {
   // ~20% chance per race
   if (Math.random() > 0.20) return;
