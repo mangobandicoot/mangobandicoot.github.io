@@ -2389,9 +2389,10 @@ function touchRival(rivals, name, type, clean=true) {
 
 function relationship(r) {
   const i=r.incidents||0, c=r.closeRaces||0, cb=r.cleanBattles||0;
-  if (i>=3 && c>=4) return 'frenemy';
-  if (i>=3)          return 'rival';
-  if (c>=4)          return cb>=c*0.7 ? 'racing_rival' : 'friend'; // mostly clean = racing rival
+  if (i>=5 && c>=6) return 'frenemy';
+  if (i>=5)          return 'rival';
+  if (c>=6)          return cb>=c*0.7 ? 'racing_rival' : 'friend';
+  if (c>=4 && i<=1)  return 'racing_rival';
   return 'acquaintance';
 }
 const REL_COLOR = {rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8'};
@@ -6812,9 +6813,94 @@ function doDismissDrama(idx) {
 }
 
 // ─── SEASON ADVANCE ──────────────────────────────────────────────────────────
-function doAdvanceSeason() {
+function openOffseasonSummaryModal() {
+  var seasonHistory = G.seasonHistory||[];
+  var last = seasonHistory[seasonHistory.length-1];
+  if (!last) { render(); return; }
+
+  var topRival = (G.rivals||[])
+    .filter(function(r){return ['rival','frenemy'].includes(relationship(r));})
+    .sort(function(a,b){return ((b.incidents||0)+(b.closeRaces||0))-((a.incidents||0)+(a.closeRaces||0));})
+    [0];
+  var topFriend = (G.rivals||[])
+    .filter(function(r){return relationship(r)==='friend'||relationship(r)==='racing_rival';})
+    .sort(function(a,b){return (b.closeRaces||0)-(a.closeRaces||0);})
+    [0];
+
+  var seasonRaces = (G.raceHistory||[]).filter(function(r){return r.season===last.season;});
+  var bestRace = seasonRaces.filter(function(r){return !r.dnf&&!r.dq;}).sort(function(a,b){return a.pos-b.pos;})[0];
+  var worstRace = seasonRaces.filter(function(r){return !r.dnf&&!r.dq;}).sort(function(a,b){return b.pos-a.pos;})[0];
+  var dnfs = seasonRaces.filter(function(r){return r.dnf;});
+  var fansGained = seasonRaces.reduce(function(a,r){return a+(r.fans||0);},0);
+
+  var repTier = getRepTier(G.reputation);
+
+  openModal(h('div',null,
+    h('div',{className:'modal-eyebrow'},'Offseason'),
+    h('div',{className:'modal-title',style:{fontSize:'24px',fontWeight:900,color:'#F9FAFB'}},'Season '+last.season+' — Year in Review'),
+    h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'20px'}},'Before free agency opens, here\'s what Season '+last.season+' looked like.'),
+
+    // Quick stats
+    h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'10px',marginBottom:'16px'}},
+      miniStatBox('Wins',last.wins,'#F59E0B'),
+      miniStatBox('Top 5s',last.top5s,'#10B981'),
+      miniStatBox('DNFs',last.dnfs,'#EF4444'),
+      miniStatBox('Prize Money',fmtMoney(last.prize),'#10B981'),
+      miniStatBox('Fans Gained',fmtFans(Math.max(0,fansGained)),'#EC4899'),
+      miniStatBox('Rep',last.rep,'#F59E0B'),
+    ),
+
+    // Reputation tier
+    h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px',display:'flex',alignItems:'center',gap:'10px'}},
+      h('span',{style:{fontSize:'24px'}},repTier.icon),
+      h('div',null,
+        h('div',{style:{fontSize:'13px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.1em'}},'Paddock Standing'),
+        h('div',{style:{fontSize:'16px',fontWeight:800,color:repTier.color}},repTier.label),
+      ),
+    ),
+
+    // Best and worst
+    h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px',marginBottom:'12px'}},
+      bestRace?h('div',{style:{background:'#060A10',border:'1px solid #10B98133',borderRadius:'8px',padding:'12px'}},
+        h('div',{style:{fontSize:'11px',color:'#10B981',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'4px'}},'Best Result'),
+        h('div',{style:{fontSize:'20px',fontWeight:900,color:'#10B981'}},'P'+bestRace.pos),
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},bestRace.track),
+      ):null,
+      worstRace&&worstRace.pos>10?h('div',{style:{background:'#060A10',border:'1px solid #EF444433',borderRadius:'8px',padding:'12px'}},
+        h('div',{style:{fontSize:'11px',color:'#EF4444',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'4px'}},'Toughest Night'),
+        h('div',{style:{fontSize:'20px',fontWeight:900,color:'#EF4444'}},'P'+worstRace.pos),
+        h('div',{style:{fontSize:'13px',color:'#94A3B8'}},worstRace.track),
+      ):null,
+    ),
+
+    // Rivalries
+    (topRival||topFriend)?h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'8px',fontWeight:700}},'Notable Relationships'),
+      topRival?h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'6px'}},
+        h('span',{style:{fontSize:'14px',color:'#EF4444',fontWeight:700}},topRival.name),
+        h('span',{style:{fontSize:'13px',color:'#94A3B8'}},(topRival.incidents||0)+' incidents · unfinished business'),
+      ):null,
+      topFriend?h('div',{style:{display:'flex',justifyContent:'space-between'}},
+        h('span',{style:{fontSize:'14px',color:'#10B981',fontWeight:700}},topFriend.name),
+        h('span',{style:{fontSize:'13px',color:'#94A3B8'}},(topFriend.closeRaces||0)+' clean battles'),
+      ):null,
+    ):null,
+
+    // DNF note
+    dnfs.length?h('div',{style:{fontSize:'14px',color:'#94A3B8',fontStyle:'italic',marginBottom:'16px'}},
+      dnfs.length+' DNF'+(dnfs.length>1?'s':'')+' this season. '+
+      (dnfs.length>=3?'Reliability was a real issue.':dnfs.length>=2?'Two DNFs hurt the points.':'One DNF in an otherwise clean season.'),
+    ):h('div',{style:{fontSize:'14px',color:'#10B981',marginBottom:'16px'}},'✨ Zero DNFs. Clean season.'),
+
+    h('div',{className:'modal-actions'},
+      mkBtn('Open Free Agency →','btn btn-lg btn-primary',function(){closeModal();render();}),
+    ),
+  ));
+}
+  function doAdvanceSeason() {
   advanceSeason(G);
-  saveGame(); render();
+  saveGame();
+  openOffseasonSummaryModal();
 }
 
 // ─── INDEPENDENT RACING ───────────────────────────────────────────────────────
