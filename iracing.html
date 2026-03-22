@@ -2394,7 +2394,7 @@ function relationship(r) {
   return 'acquaintance';
 }
 const REL_COLOR = {rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8'};
-const REL_LABEL = {rival:'RIVAL',friend:'FRIEND',frenemy:'FRENEMY',racing_rival:'RACING RIVAL',acquaintance:''};
+const REL_LABEL = {rival:'RIVAL',friend:'FRIEND',frenemy:'HEATED',racing_rival:'RACING RIVAL',acquaintance:''};
 const REL_DESC  = {
   rival:'Keeps wrecking you. Remember everything.',
   friend:'Good, clean racing. Mutual respect.',
@@ -5282,7 +5282,7 @@ function renderRivals() {
   f.appendChild(h('div',{className:'page-sub'},'Built from your race entries. Close finishes (within 0.05s) build racing rivalries. Incidents build enemies. Both = frenemy. Persists across all seasons and series.'));
 
   f.appendChild(h('div',{className:'grid-4',style:{marginBottom:'20px'}},
-    ...[['Friends','#10B981','friend'],['Racing Rivals','#F97316','racing_rival'],['Rivals','#EF4444','rival'],['Frenemies','#F59E0B','frenemy']]
+    ...[['Friends','#10B981','friend'],['Racing Rivals','#F97316','racing_rival'],['Rivals','#EF4444','rival'],['Heated','#F59E0B','frenemy']]
       .map(([l,c,rel])=>h('div',{className:'card'},
         h('div',{style:{fontSize:'12px',color:'#94A3B8',textTransform:'uppercase'}},l),
         h('div',{style:{fontSize:'28px',fontWeight:900,color:c}},(G.rivals||[]).filter(r=>relationship(r)===rel).length),
