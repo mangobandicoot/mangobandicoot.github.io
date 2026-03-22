@@ -2792,6 +2792,105 @@ title: useEscalated
     _venue: venue,
   });
 }
+// ─── DRIVER PROFILE MODAL ────────────────────────────────────────────────────
+function openDriverProfileModal(driverName) {
+  var driver = (G.drivers||[]).find(function(d){return d.name===driverName;});
+  var myRivalEntry = (G.rivals||[]).find(function(r){return r.name===driverName;});
+  var myRel = myRivalEntry ? relationship(myRivalEntry) : 'acquaintance';
+  var myRelColor = REL_COLOR[myRel]||'#94A3B8';
+  var myRelLabel = REL_LABEL[myRel]||'';
+  var s = driver ? getSeries(driver.currentSeriesId) : null;
+  var isTm = (G.teammates||[]).some(function(t){return t.name===driverName;});
+  var isInjured = driver && driver.injuredOrPenalized;
+
+  // Check if callout is appropriate
+  var inCurrentSeries = driver && G.contracts.some(function(c){return c.seriesId===driver.currentSeriesId;});
+  var isNotableRival = myRival && ['rival','frenemy','racing_rival'].includes(myRel);
+  var canCallout = inCurrentSeries || isNotableRival;
+
+  // Their relationships with other drivers
+  var theirRivals = (driver&&driver.aiRivals||[]).map(function(name){
+    var d2 = (G.drivers||[]).find(function(d){return d.name===name;});
+    return {name:name, series:d2?(getSeries(d2.currentSeriesId)&&getSeries(d2.currentSeriesId).short)||'':''};
+  });
+  var theirFriends = (driver&&driver.aiFriends||[]).map(function(name){
+    var d2 = (G.drivers||[]).find(function(d){return d.name===name;});
+    return {name:name, series:d2?(getSeries(d2.currentSeriesId)&&getSeries(d2.currentSeriesId).short)||'':''};
+  });
+
+  openModal(h('div',null,
+    // Header
+    h('div',{className:'modal-eyebrow'},s?s.short+' · '+driver.currentTeam:'Driver Profile'),
+    h('div',{className:'modal-title'},driverName,
+      isInjured?h('span',{style:{fontSize:'13px',color:'#EF4444',marginLeft:'8px'}},'⛑️ INJURED'):null,
+      isTm?h('span',{style:{fontSize:'13px',color:'#3B82F6',marginLeft:'8px'}},'TEAMMATE'):null,
+    ),
+    s?h('div',{className:'modal-sub'},s.name):null,
+
+    // Stats row
+    driver?h('div',{style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'8px',marginBottom:'14px'}},
+      miniStatBox('Wins',driver.wins,'#F59E0B'),
+      miniStatBox('Starts',driver.starts,'#3B82F6'),
+      miniStatBox('Rep',driver.rep,'#F59E0B'),
+      miniStatBox('Fans',fmtFans(driver.fans),'#EC4899'),
+    ):null,
+
+    // Your relationship with them
+    h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'8px',fontWeight:700}},'Your Relationship'),
+      myRelLabel
+        ? h('div',{style:{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}},
+            h('span',{style:{fontSize:'14px',fontWeight:800,color:myRelColor,background:myRelColor+'22',border:'1px solid '+myRelColor+'44',padding:'3px 10px',borderRadius:'4px'}},myRelLabel),
+            myRivalEntry?h('span',{style:{fontSize:'13px',color:'#94A3B8'}},
+              (myRivalEntry.incidents||0)+' incidents · '+(myRivalEntry.closeRaces||0)+' close races'
+            ):null,
+          )
+        : h('span',{style:{fontSize:'14px',color:'#64748B'}},'No history yet.'),
+    ),
+
+    // Their relationships with others
+    (theirRivals.length||theirFriends.length)?h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'8px',fontWeight:700}},'Paddock Relationships'),
+      theirRivals.length?h('div',{style:{marginBottom:'8px'}},
+        h('div',{style:{fontSize:'12px',color:'#EF4444',fontWeight:700,marginBottom:'4px'}},'Rivals'),
+        h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
+          ...theirRivals.map(function(r){
+            return h('span',{style:{fontSize:'12px',background:'#EF444422',border:'1px solid #EF444444',borderRadius:'4px',padding:'2px 8px',color:'#FCA5A5'}},
+              r.name+(r.series?' ('+r.series+')':'')
+            );
+          })
+        ),
+      ):null,
+      theirFriends.length?h('div',null,
+        h('div',{style:{fontSize:'12px',color:'#10B981',fontWeight:700,marginBottom:'4px'}},'Friends'),
+        h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
+          ...theirFriends.map(function(f){
+            return h('span',{style:{fontSize:'12px',background:'#10B98122',border:'1px solid #10B98144',borderRadius:'4px',padding:'2px 8px',color:'#6EE7B7'}},
+              f.name+(f.series?' ('+f.series+')':'')
+            );
+          })
+        ),
+      ):null,
+    ):null,
+
+    // Callout buttons
+    canCallout?h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},
+      mkBtn('Call Them Out','btn btn-sm btn-danger',function(){
+        closeModal();
+        openPlayerCalloutModal(driverName,'incident',null);
+      }),
+      mkBtn('Give Props','btn btn-sm btn-secondary',function(){
+        closeModal();
+        openPlayerCalloutModal(driverName,'close',null);
+      }),
+    ):null,
+
+    h('div',{className:'modal-actions'},
+      mkBtn('Close','btn btn-ghost',closeModal),
+    ),
+  ));
+}
+
 // ─── PLAYER CALLOUT MODAL ────────────────────────────────────────────────────
 function openPlayerCalloutModal(name, type, track) {
 const lines = type==='incident' ? CALLOUT_INCIDENT_LINES : CALLOUT_CLOSE_LINES;
@@ -3759,7 +3858,8 @@ function simulateAISeasons(state) {
     // Rep and fan changes
     const repChange = seasonWins>2?rand(8,15):seasonWins>0?rand(3,8):skillRoll>60?rand(0,3):-rand(0,3);
 const _sFanMult = [1,1,2,4,12,40,100,250][s.tier||1]||1;
-    const fanChange = Math.round((seasonWins>2?rand(200,800):seasonWins>0?rand(50,300):rand(-50,100))*_sFanMult);    d.rep   = clamp(d.rep+repChange,0,400);
+    const fanChange = Math.round((seasonWins>2?rand(200,800):seasonWins>0?rand(50,300):rand(-50,100))*_sFanMult);
+        d.rep   = clamp(d.rep+repChange,0,400);
     d.fans  = clamp(d.fans+fanChange,0,2000000);
     d.wins  += seasonWins;
     d.top5s += seasonTop5;
@@ -5299,7 +5399,7 @@ function renderRivals() {
     f.appendChild(h('div',{className:'row-item',style:{borderColor:rc+'30',marginBottom:'8px'}},
       accent(rc),
       h('div',{style:{flex:1}},
-        h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB'}},r.name),
+        h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB',cursor:'pointer'},onClick:function(){openDriverProfileModal(r.name);}},r.name,' →'),
         h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},`${r.incidents||0} incidents · ${r.closeRaces||0} close finishes · ${r.cleanBattles||0} clean battles`),
       ),
       REL_LABEL[rel]?badge(REL_LABEL[rel],rc):null,
@@ -5376,7 +5476,8 @@ function renderStandings() {
       }
       const tr=h('tr',{className:isP?'player-row':''},
         h('td',{style:{color:idx===0?'#F59E0B':idx<=2?'#CBD5E1':'#94A3B8',fontWeight:800}},idx+1),
-        h('td',{style:{color:nameColor}},row.name,
+        h('td',{style:{color:nameColor,cursor:isP?'default':'pointer'},onClick:isP?null:function(){openDriverProfileModal(row.name);}},row.name,
+
           isP?h('span',{style:{fontSize:'10px',color:s.color,marginLeft:'5px',fontWeight:700}},'YOU'):null,
           relBadge,
           isInjured?h('span',{style:{fontSize:'10px',color:'#EF4444',marginLeft:'5px',fontWeight:700,background:'#7F1D1D22',border:'1px solid #EF444444',padding:'1px 4px',borderRadius:'3px'}},'INJ'):null,
@@ -7820,11 +7921,13 @@ function openRaceHistoryModal(seriesId, raceIdx) {
             }
             return h('tr',{style:{background:entry.isPlayer?'rgba(245,158,11,0.1)':''}},
               h('td',{style:{fontWeight:entry.isPlayer?800:400,color:i===0?'#F59E0B':i<=2?'#CBD5E1':'#94A3B8'}},i+1),
-              h('td',{style:{fontWeight:entry.isPlayer?800:400,color:entry.isPlayer?'#F59E0B':'#D1D5DB'}},
+              h('td',{style:{fontWeight:entry.isPlayer?800:400,color:entry.isPlayer?'#F59E0B':'#D1D5DB',cursor:entry.isPlayer?'default':'pointer'},
+                onClick:entry.isPlayer?null:function(){openDriverProfileModal(entry.name);}},
                 entry.name,
                 entry.isPlayer?h('span',{style:{fontSize:'10px',color:'#F59E0B',marginLeft:'5px'}},'YOU'):null,
                 entryRelBadge,
               ),
+
               h('td',{style:{color:'#94A3B8'}},entry.gap||'—'),
               h('td',{style:{color:lapColor,fontWeight:isFastest?700:400}},
                 entry.lapTime||'—',
