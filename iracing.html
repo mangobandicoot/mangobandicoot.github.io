@@ -2805,7 +2805,7 @@ function openDriverProfileModal(driverName) {
 
   // Check if callout is appropriate
   var inCurrentSeries = driver && G.contracts.some(function(c){return c.seriesId===driver.currentSeriesId;});
-  var isNotableRival = myRival && ['rival','frenemy','racing_rival'].includes(myRel);
+  var isNotableRival = myRivalEntry && ['rival','frenemy','racing_rival'].includes(myRel);
   var canCallout = inCurrentSeries || isNotableRival;
 
   // Their relationships with other drivers
