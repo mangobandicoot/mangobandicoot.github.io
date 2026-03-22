@@ -1673,7 +1673,8 @@ function generateAIName() {
 //
 // The parser auto-detects which format is present.
 
-function parseRaceResults(raw, isMultiClass=false) {
+function parseRaceResults(raw, isMultiClass) {
+  if (isMultiClass === undefined) isMultiClass = false;
   const lines = raw.split(/\n/).map(l => l.trim()).filter(Boolean);
   const results = [];
 
@@ -5978,10 +5979,8 @@ function renderDrivers() {
   // Filter by series
   let filterSeries='all';
   const container=h('div',null);
-    let filterSeries='all';
   let filterKnown=false;
   let searchQuery='';
-  const container=h('div',null);
   function renderDriverList(){
     container.innerHTML='';
     const searchIn=h('input',{type:'text',placeholder:'Search drivers...',style:{flex:1}});
@@ -6040,9 +6039,6 @@ const injBadge=d.injuredOrPenalized?badge('INJ/PEN','#EF4444'):d.substituteFor?b
         injBadge,
         h('div',{style:{display:'flex',gap:'4px',flexShrink:0}},
           mkBtn('Profile','btn btn-xs btn-secondary',()=>openDriverProfileModal(d.name)),
-          mkBtn(d.injuredOrPenalized?'Clear INJ':'INJ/PEN',`btn btn-xs ${d.injuredOrPenalized?'btn-secondary':'btn-warn'}`,()=>{d.injuredOrPenalized=!d.injuredOrPenalized;saveGame();renderDriverList();}),
-          mkBtn('Edit','btn btn-xs btn-secondary',()=>openEditDriverModal(d)),
-        )
           mkBtn(d.injuredOrPenalized?'Clear INJ':'INJ/PEN',`btn btn-xs ${d.injuredOrPenalized?'btn-secondary':'btn-warn'}`,()=>{d.injuredOrPenalized=!d.injuredOrPenalized;saveGame();renderDriverList();}),
           mkBtn('Edit','btn btn-xs btn-secondary',()=>openEditDriverModal(d)),
         )
@@ -8239,6 +8235,7 @@ function showSummaryToast(text, color, seriesShort) {
   // Auto-dismiss after 30s
   setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 30000);
 }
+const $ = id => document.getElementById(id);
 
 // ─── BOOT ────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
