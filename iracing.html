@@ -2187,6 +2187,15 @@ const shuffle = a => [...a].sort(()=>Math.random()-0.5);
 const clamp = (v,lo,hi) => Math.max(lo,Math.min(hi,v));
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2);
 
+function getCarCondition(state, seriesId) {
+  if (!state.carCondition) state.carCondition = {};
+  if (!state.carCondition[seriesId]) {
+    state.carCondition[seriesId] = {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  }
+  return state.carCondition[seriesId];
+}
+
+
 function fmtMoney(n) {
   n = Math.round(n||0);
   if (n >= 1000000) return `$${(n/1000000).toFixed(2)}M`;
@@ -3194,13 +3203,8 @@ function initState(name) {
     playerInjury: null,  // { racesOut, subName, seriesId } or null
     offseasonOffers: [],
     offseasonPhase: false,
-    carCondition: {
-      engine: 100,
-      suspension: 100,
-      chassis: 100,
-      tires: 100,
-      brakes: 100,
-    },
+        carCondition: {},
+
     specialResults: [],
     raceHistory: [],
     trackPools: {
@@ -3747,18 +3751,17 @@ maybeFireFanMail(state);
   }
 
   // Car condition degradation — 5 components
-  if (!state.carCondition) state.carCondition = {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  const cc = getCarCondition(state, seriesId);
   const cond = CONDITIONS.find(c=>c.id===(race.condition||'clear'))||CONDITIONS[0];
   const hardRace = result.position <= 5;
   const incidentRace = (result.incidentDrivers||[]).length > 0 || result.dnf;
-  state.carCondition.tires      = clamp(state.carCondition.tires      - rand(8,14) * (cond.tireWear||1) - (hardRace?5:0), 0, 100);
-  state.carCondition.brakes     = clamp(state.carCondition.brakes     - rand(4,8)  - (hardRace?4:0), 0, 100);
-  state.carCondition.engine     = clamp(state.carCondition.engine     - rand(3,7)  - (result.dnf&&(result.dnfReason&&result.dnfReason.match(/engine|motor|rod/i))?40:0), 0, 100);
-  state.carCondition.chassis    = clamp(state.carCondition.chassis    - rand(2,5)  - (incidentRace?rand(8,15):0), 0, 100);
-  state.carCondition.suspension = clamp(state.carCondition.suspension - rand(3,7)  - (incidentRace?rand(10,20):0), 0, 100);
-
-  // Warn if any component is critically low
-  const criticals = Object.entries(state.carCondition).filter(([,v])=>v<25).map(([k])=>k);
+  cc.tires      = clamp(cc.tires      - rand(8,14) * (cond.tireWear||1) - (hardRace?5:0), 0, 100);
+  cc.brakes     = clamp(cc.brakes     - rand(4,8)  - (hardRace?4:0), 0, 100);
+  cc.engine     = clamp(cc.engine     - rand(3,7)  - (result.dnf&&(result.dnfReason&&result.dnfReason.match(/engine|motor|rod/i))?40:0), 0, 100);
+  cc.chassis    = clamp(cc.chassis    - rand(2,5)  - (incidentRace?rand(8,15):0), 0, 100);
+  cc.suspension = clamp(cc.suspension - rand(3,7)  - (incidentRace?rand(10,20):0), 0, 100);
+  const criticals = Object.entries(cc).filter(([,v])=>v<25).map(([k])=>k);
+//warn if criticals are too high
   if (criticals.length && !result.dnf) {
     state.dramaQueue.push({id:'car_warn_'+uid(),title:'⚠️ Car Needs Attention',effect:'none',
       desc:`Post-race inspection flagged: ${criticals.join(', ')} in the red. Race it as-is and you're gambling.`,valence:'bad'});
@@ -4361,11 +4364,15 @@ state._hadInjuryThisSeason = false;
   state._elimNotified=null;
   state.teammates=state.teammates.filter(t=>state.contracts.find(c=>c.seriesId===t.seriesId));
 
-  // Car condition: partial offseason restoration
-  if (!state.carCondition) state.carCondition={engine:100,suspension:100,chassis:100,tires:100,brakes:100};
-  Object.keys(state.carCondition).forEach(k=>{
-    state.carCondition[k]=Math.min(100, (state.carCondition[k]||0)+35);
+  // Car condition: partial offseason restoration per series
+  if (!state.carCondition) state.carCondition={};
+  Object.keys(state.carCondition).forEach(function(sid){
+    var cc = state.carCondition[sid];
+    if (cc && typeof cc === 'object' && cc.engine !== undefined) {
+      Object.keys(cc).forEach(function(k){ cc[k]=Math.min(100,(cc[k]||0)+35); });
+    }
   });
+
 
   // Free agency replaces normal offers — 3-click expiry window
   state.offseasonOffers = generateFreeAgencyOffers(state);
@@ -4557,7 +4564,15 @@ function loadGame() {
           return racesLeft > 0 || seasonsLeft > 0;
         });
       }
-      if (!G.carCondition) G.carCondition = {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+      if (G.carCondition && G.carCondition.engine !== undefined) {
+        var oldCC = G.carCondition;
+        G.carCondition = {};
+        if (G.contracts && G.contracts.length) {
+          G.contracts.forEach(function(c){ G.carCondition[c.seriesId] = Object.assign({},oldCC); });
+        }
+      }
+      if (!G.carCondition) G.carCondition = {};
+
       if (!G.homeState) G.homeState = 'NC'; // migration: default for saves before v1.5
       if (!G.playerBio) G.playerBio = '';
       if (!G.playerInjury) G.playerInjury = null;
@@ -4826,7 +4841,9 @@ function renderDashboard() {
   }
 
   // Car Condition — always visible on dashboard
-  const dashCC = G.carCondition || {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  const activeSeriesId = G.contracts.length ? G.contracts[0].seriesId : null;
+  const dashCC = activeSeriesId ? getCarCondition(G, activeSeriesId) : {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+
   const ccComponents = [
     {key:'engine',    label:'Engine',     color:'#EF4444'},
     {key:'suspension',label:'Suspension', color:'#F97316'},
@@ -7474,8 +7491,8 @@ function openRaceModal(seriesId, raceIdx) {
     // ── Mechanical failure roll ─────────────────────────────────────────────
     // If any component is critically low, the app may force a DNF regardless
     // of what actually happened in the sim
-    if (!G.carCondition) G.carCondition={engine:100,suspension:100,chassis:100,tires:100,brakes:100};
-    const cc = G.carCondition;
+     const cc = getCarCondition(G, seriesId);
+
     const failChances = [
       {part:'engine',     val:cc.engine,     threshold:20, chance:0.45, reason:'engine failure'},
       {part:'tires',      val:cc.tires,      threshold:15, chance:0.40, reason:'tire blowout'},
@@ -8679,7 +8696,8 @@ function openRepairModal(seriesId, result, afterClose) {
 
     // Car condition bars
     (() => {
-      const cc = G.carCondition||{engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+  const cc = getCarCondition(G, seriesId);
+
       const components = [
         {key:'engine',    label:'Engine',     color:'#EF4444'},
         {key:'suspension',label:'Suspension', color:'#F97316'},
@@ -8737,16 +8755,17 @@ function openRepairModal(seriesId, result, afterClose) {
         const items = REPAIR_ITEMS.filter(i=>checked[i.id]);
         if (items.length) addLog(G, `🔧 Repairs @ ${(s&&s.short)||''}: ${items.map(i=>i.label).join(', ')} — ${fmtMoney(total)}`);
         // Restore car condition for repaired items
-        if (!G.carCondition) G.carCondition={engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+              var _cc = getCarCondition(G, seriesId);
         items.forEach(item=>{
-          if(item.id==='tires'||item.id==='tires')        G.carCondition.tires=Math.min(100,G.carCondition.tires+60);
-          if(item.id==='brakes')                           G.carCondition.brakes=Math.min(100,G.carCondition.brakes+60);
-          if(item.id==='engine_tune'||item.id==='engine_rebuild') G.carCondition.engine=Math.min(100,G.carCondition.engine+70);
-          if(item.id==='suspension'||item.id==='suspension_d')    G.carCondition.suspension=Math.min(100,G.carCondition.suspension+65);
-          if(item.id==='bodywork'||item.id==='front_clip'||item.id==='rear_clip'||item.id==='hard_crash'||item.id==='rollover') G.carCondition.chassis=Math.min(100,G.carCondition.chassis+60);
-          if(item.id==='fire_damage')  { G.carCondition.engine=Math.min(100,G.carCondition.engine+80); G.carCondition.chassis=Math.min(100,G.carCondition.chassis+50); }
-          if(item.id==='trans_rebuild'){ G.carCondition.engine=Math.min(100,G.carCondition.engine+50); }
+          if(item.id==='tires')        _cc.tires=Math.min(100,_cc.tires+60);
+          if(item.id==='brakes')       _cc.brakes=Math.min(100,_cc.brakes+60);
+          if(item.id==='engine_tune'||item.id==='engine_rebuild') _cc.engine=Math.min(100,_cc.engine+70);
+          if(item.id==='suspension'||item.id==='suspension_d')    _cc.suspension=Math.min(100,_cc.suspension+65);
+          if(item.id==='bodywork'||item.id==='front_clip'||item.id==='rear_clip'||item.id==='hard_crash'||item.id==='rollover') _cc.chassis=Math.min(100,_cc.chassis+60);
+          if(item.id==='fire_damage')  { _cc.engine=Math.min(100,_cc.engine+80); _cc.chassis=Math.min(100,_cc.chassis+50); }
+          if(item.id==='trans_rebuild'){ _cc.engine=Math.min(100,_cc.engine+50); }
         });
+
         saveGame(); closeModal(); if(afterClose) afterClose();
       }),
     )
