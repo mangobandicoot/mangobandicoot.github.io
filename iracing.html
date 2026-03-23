@@ -4593,6 +4593,8 @@ function loadGame() {
       if (!G.seasonHistory) G.seasonHistory = [];
       if (G.confidence === undefined) G.confidence = 0;
       // Migrate old salary-model contracts to prize share model
+      if (G._preseasonSeen === undefined) G._preseasonSeen = 0;
+
       if (!G.savedForOffseason) G.savedForOffseason = [];
       if (G.contracts) {
         G.contracts.forEach(c => {
