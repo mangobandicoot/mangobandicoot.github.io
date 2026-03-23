@@ -5274,9 +5274,116 @@ function renderContracts() {
 }
 
 // ─── SCHEDULE ─────────────────────────────────────────────────────────────────
+function openPreseasonModal() {
+  G._preseasonSeen = G.season;
+  saveGame();
+
+  var repTier = getRepTier(G.reputation);
+  var contract = G.contracts[0];
+  var s = contract ? getSeries(contract.seriesId) : null;
+  var sched = contract ? (G.schedules[contract.seriesId]||[]) : [];
+  var goals = (G.seasonGoals||[]).filter(function(g){return g.status==='active';});
+  var rivals = (G.rivals||[]).filter(function(r){
+    var rel = relationship(r);
+    return rel==='rival'||rel==='frenemy'||rel==='racing_rival';
+  }).slice(0,4);
+  var friends = (G.rivals||[]).filter(function(r){
+    return relationship(r)==='friend';
+  }).slice(0,2);
+
+  openModal(h('div',null,
+    h('div',{className:'modal-eyebrow'},'Season '+G.season+' — Preseason'),
+    h('div',{className:'modal-title',style:{fontSize:'24px',fontWeight:900,color:'#F59E0B'}},'Welcome Back'),
+    h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'20px'}},
+      'Season '+G.season+' is about to begin. Here\'s where things stand.'
+    ),
+
+    // Rep tier
+    h('div',{style:{background:'#060A10',border:'1px solid '+repTier.color+'44',borderRadius:'8px',padding:'12px',marginBottom:'12px',display:'flex',alignItems:'center',gap:'12px'}},
+      h('span',{style:{fontSize:'28px'}},repTier.icon),
+      h('div',null,
+        h('div',{style:{fontSize:'12px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.1em'}},'Your Standing'),
+        h('div',{style:{fontSize:'18px',fontWeight:900,color:repTier.color}},repTier.label),
+        h('div',{style:{fontSize:'13px',color:'#64748B'}},G.reputation+' reputation · '+fmtFans(G.fans)+' fans'),
+      ),
+    ),
+
+    // Contract summary
+    contract&&s?h('div',{style:{background:'#060A10',border:'1px solid '+s.color+'33',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:s.color,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'6px'}},'This Season'),
+      h('div',{style:{fontSize:'16px',fontWeight:800,color:'#F9FAFB',marginBottom:'4px'}},s.name),
+      h('div',{style:{fontSize:'14px',color:'#94A3B8'}},contract.team+' · '+sched.length+' races · '+Math.round((contract.prizeShare||0.7)*100)+'% prize share'),
+      h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},'Win bonus: '+fmtMoney(contract.winBonus)+' · Entry fee: '+fmtMoney(contract.entryFee||s.fee)+'/race'),
+    ):null,
+
+    // Schedule preview — first 5 races
+    sched.length?h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:'#94A3B8',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'8px'}},'Schedule — '+sched.length+' Races'),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:'4px'}},
+        ...sched.slice(0,5).map(function(race,i){
+          var isHome = race.state&&G.homeState&&race.state===G.homeState;
+          return h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',padding:'3px 0',borderBottom:'1px solid #0D1117'}},
+            h('span',{style:{color:'#94A3B8'}},'R'+(i+1)),
+            h('span',{style:{color:'#F9FAFB',flex:1,marginLeft:'10px'}},race.track,
+              isHome?h('span',{style:{color:'#F59E0B',marginLeft:'6px',fontSize:'11px'}},'🏠'):null
+            ),
+            h('span',{style:{color:'#64748B'}},race.city+', '+race.state),
+          );
+        }),
+        sched.length>5?h('div',{style:{fontSize:'12px',color:'#64748B',marginTop:'4px'}},
+          '+ '+(sched.length-5)+' more races...'
+        ):null,
+      ),
+    ):null,
+
+    // Goals
+    goals.length?h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:'#94A3B8',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'8px'}},'Season Goals'),
+      ...goals.map(function(goal){
+        var typeColor = goal.type==='fan_promise'?'#EC4899':goal.type==='sponsor'?'#10B981':'#8B5CF6';
+        return h('div',{style:{fontSize:'13px',color:'#E2E8F0',padding:'4px 0',borderBottom:'1px solid #0D1117',display:'flex',gap:'8px',alignItems:'flex-start'}},
+          h('span',{style:{color:typeColor,fontWeight:700,fontSize:'11px',flexShrink:0,marginTop:'2px'}},
+            goal.type==='fan_promise'?'🤝':goal.type==='sponsor'?'💰':'⭐'
+          ),
+          h('span',null,goal.desc.split('.')[0]+'.'),
+        );
+      }),
+    ):null,
+
+    // Rivals and friends
+    (rivals.length||friends.length)?h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+      h('div',{style:{fontSize:'11px',color:'#94A3B8',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'8px'}},'People to Watch'),
+      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
+        ...rivals.map(function(r){
+          var rel = relationship(r);
+          var col = REL_COLOR[rel]||'#EF4444';
+          return h('div',{style:{fontSize:'13px',background:col+'18',border:'1px solid '+col+'44',borderRadius:'6px',padding:'4px 10px',color:col,fontWeight:700}},
+            r.name+' · '+(REL_LABEL[rel]||rel)
+          );
+        }),
+        ...friends.map(function(r){
+          return h('div',{style:{fontSize:'13px',background:'#10B98118',border:'1px solid #10B98144',borderRadius:'6px',padding:'4px 10px',color:'#10B981',fontWeight:700}},
+            r.name+' · '+REL_LABEL[relationship(r)]
+          );
+        }),
+      ),
+    ):null,
+
+    h('div',{className:'modal-actions'},
+      mkBtn('Let\'s Race →','btn btn-lg btn-primary',function(){closeModal();}),
+    ),
+  ));
+}
+
+
 function renderSchedule() {
+  // Show preseason modal once at the start of each new season
+  if (G.week===1 && G.contracts.length && (!G._preseasonSeen||G._preseasonSeen<G.season)) {
+    setTimeout(function(){openPreseasonModal();},100);
+  }
   const f=document.createDocumentFragment();
   f.appendChild(h('div',{className:'page-title'},'Race Schedule'));
+
   f.appendChild(h('div',{className:'page-sub'},'Click any completed race for details. Use ↑↓ to reorder upcoming rounds — scheduling conflict, whatever you need.'));
   if(!G.contracts.length){
     f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'24px',color:'#94A3B8'}},'No active contracts.'));
