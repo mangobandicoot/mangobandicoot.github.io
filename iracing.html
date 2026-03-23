@@ -3068,18 +3068,37 @@ function buildPreRaceNote(seriesId, raceIdx) {
   const race  = sched[raceIdx];
   if (!race) return null;
   const notes = [];
+  const repTier = getRepTier(G.reputation);
+  const tierLabel = repTier.label;
 
+  // Recent form
   const last5 = G.raceHistory.slice(-5).filter(r=>!r.dq);
   if (last5.length >= 3) {
     const wins   = last5.filter(r=>r.pos===1&&!r.dnf).length;
     const dnfs   = last5.filter(r=>r.dnf).length;
     const avgPos = last5.filter(r=>!r.dnf).reduce((a,r,_,arr)=>a+(r.pos/arr.length),0);
-    if (wins >= 2)        notes.push(`${wins} wins in the last ${last5.length} races. Momentum is real right now.`);
+    if (wins >= 2) {
+      if (G.reputation >= 130)
+        notes.push(`${wins} wins in the last ${last5.length}. A ${tierLabel} on a run is a dangerous thing.`);
+      else
+        notes.push(`${wins} wins in the last ${last5.length} races. Momentum is real right now.`);
+    }
     else if (dnfs >= 2)   notes.push(`Two DNFs in the last stretch. Car needs to finish today.`);
-    else if (avgPos <= 4) notes.push(`Averaging P${avgPos.toFixed(1)} over the last few races. Quietly on a run.`);
-    else if (avgPos > 12) notes.push(`Results have been tough lately. Something needs to change today.`);
+    else if (avgPos <= 4) {
+      if (G.reputation >= 200)
+        notes.push(`Averaging P${avgPos.toFixed(1)} lately. This is what ${tierLabel} form looks like.`);
+      else
+        notes.push(`Averaging P${avgPos.toFixed(1)} over the last few races. Quietly on a run.`);
+    }
+    else if (avgPos > 12) {
+      if (G.reputation >= 130)
+        notes.push(`Results have been off lately. The paddock is starting to ask questions about a ${tierLabel}.`);
+      else
+        notes.push(`Results have been tough lately. Something needs to change today.`);
+    }
   }
 
+  // Track history
   const trackHistory = G.raceHistory.filter(r=>r.track===race.track&&!r.dq);
   if (trackHistory.length >= 2) {
     const wins    = trackHistory.filter(r=>r.pos===1&&!r.dnf).length;
@@ -3093,10 +3112,14 @@ function buildPreRaceNote(seriesId, raceIdx) {
     notes.push(`First time at ${race.track}. No data. Just go find out.`);
   }
 
+  // Rivals
   const knownRivals  = (G.rivals||[]).filter(r=>['rival','frenemy'].includes(relationship(r)));
   const knownFriends = (G.rivals||[]).filter(r=>['friend','racing_rival'].includes(relationship(r)));
   if (knownRivals.length === 1) {
-    notes.push(`${knownRivals[0].name} is in this series. Keep your head on a swivel.`);
+    if (G.reputation >= 130)
+      notes.push(`${knownRivals[0].name} is out there. People expect fireworks when a ${tierLabel} and a rival share a track.`);
+    else
+      notes.push(`${knownRivals[0].name} is in this series. Keep your head on a swivel.`);
   } else if (knownRivals.length >= 2) {
     notes.push(`${knownRivals[0].name} and ${knownRivals[1].name} are both out there. Could be a long day.`);
   }
@@ -3104,6 +3127,7 @@ function buildPreRaceNote(seriesId, raceIdx) {
     notes.push(`${knownFriends[0].name} has been one of the cleaner racers out here. Good person to be near.`);
   }
 
+  // Championship
   const myPts = G.championshipPoints[seriesId]||0;
   const field = G.seriesFields[seriesId]||{};
   const allPts = [{pts:myPts,isPlayer:true},...Object.entries(field).map(([n,d])=>({pts:d.points,name:n}))].sort((a,b)=>b.pts-a.pts);
@@ -3111,10 +3135,30 @@ function buildPreRaceNote(seriesId, raceIdx) {
   const racesLeft = sched.filter(r=>!r.result).length;
   if (myPos === 1 && allPts.length > 1 && racesLeft <= 4) {
     const gap = myPts - ((allPts[1]&&allPts[1].pts)||0);
-    notes.push(`Championship leader by ${gap} points with ${racesLeft} to go. Protect it.`);
+    if (G.reputation >= 130)
+      notes.push(`Championship leader by ${gap} with ${racesLeft} to go. A ${tierLabel} doesn't blow leads like this.`);
+    else
+      notes.push(`Championship leader by ${gap} points with ${racesLeft} to go. Protect it.`);
   } else if (myPos > 1 && racesLeft <= 4 && allPts.length > 1) {
     const gap = ((allPts[0]&&allPts[0].pts)||0) - myPts;
-    notes.push(`${gap} points back with ${racesLeft} races left. Need a strong run.`);
+    if (G.reputation >= 130)
+      notes.push(`${gap} back with ${racesLeft} left. A ${tierLabel} doesn't go down without a fight.`);
+    else
+      notes.push(`${gap} points back with ${racesLeft} races left. Need a strong run.`);
+  }
+
+  // Rep tier flavor — fires occasionally when nothing else fills the note
+  if (!notes.length || Math.random() < 0.20) {
+    if (G.reputation >= 280)
+      notes.push(`The Legend walks into another race weekend. The paddock watches differently now.`);
+    else if (G.reputation >= 200)
+      notes.push(`${G.driverName} is a Household Name now. Every result gets analyzed. Every move gets noticed.`);
+    else if (G.reputation >= 130)
+      notes.push(`National Contender status means the pre-race chatter includes your name. Own it.`);
+    else if (G.reputation >= 70)
+      notes.push(`Regional Threat. People in this paddock know the name. Time to make sure they remember it.`);
+    else if (G.reputation >= 30)
+      notes.push(`Local Hero walking into their home territory. The crowd has expectations.`);
   }
 
   if (!notes.length) return null;
