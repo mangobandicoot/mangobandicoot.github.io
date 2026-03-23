@@ -2195,6 +2195,22 @@ function getCarCondition(state, seriesId) {
   return state.carCondition[seriesId];
 }
 
+function _notifyRosterChange(state, driver, direction, toSeriesId, replacedBy) {
+  const toS = getSeries(toSeriesId);
+  const arrow = direction==='promoted' ? '📈' : '📉';
+  const verb  = direction==='promoted' ? 'promoted to' : 'dropped to';
+  state.dramaQueue.push({
+    id: 'roster_'+uid(),
+    title: arrow+' Roster Change — '+driver.name,
+    effect: 'none',
+    desc: driver.name+' has been '+verb+' '+(toS&&toS.name||toSeriesId)+'. Update your iRacing roster before racing.'+
+      (replacedBy ? ' Replaced by: '+replacedBy+'.' : ''),
+    valence: 'neutral',
+    _requiresAction: true,
+    _actionLabel: 'Roster Updated in iRacing',
+    _isPaddock: true,
+  });
+}
 
 function fmtMoney(n) {
   n = Math.round(n||0);
@@ -2332,6 +2348,124 @@ function sponsorOffersForSeries(seriesId) {
   if (s.tier>=3 && Math.random()<0.6) out.push(makeSponsor(seriesId,'contingency'));
   return out;
 }
+// ─── PADDOCK ─────────────────────────────────────────────────────────────────
+function renderPaddock() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Paddock'));
+  f.appendChild(h('div',{className:'page-sub'},'Action required items stay pinned until confirmed. Everything else dismisses normally.'));
+
+  const queue = G.dramaQueue || [];
+
+  if (!queue.length) {
+    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'28px',color:'#94A3B8',fontSize:'15px'}},'Nothing requiring your attention right now.'));
+    return f;
+  }
+
+  const indexed = queue.map(function(d,i){return {d,i};});
+  indexed.sort(function(a,b){
+    const pri = function(d){
+      if(d._requiresAction) return 0;
+      if(d.title&&d.title.includes('Injur')) return 1;
+      if(d._isCallout) return 2;
+      if(d._isTeamOrder) return 3;
+      if(d._isNews||d._isRumor) return 5;
+      return 4;
+    };
+    return pri(a.d)-pri(b.d);
+  });
+
+  indexed.forEach(function({d,i}){
+    const isAction = !!d._requiresAction;
+    const borderColor = isAction?'#F59E0B44':d.valence==='bad'?'#EF444444':d.valence==='good'?'#10B98133':'#1E2433';
+    const bg = isAction?'#1a1200':'#0B0F1A';
+
+    let effectTag=null;
+    if(d.effect==='rep_hit'&&d.value){
+      const repTxt='Rep '+d.value;
+      const fanTxt=d.fans?' · Fans '+d.fans:'';
+      effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:'#EF4444',background:'#7F1D1D22',padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},repTxt+fanTxt);
+    } else if(d.effect==='money'&&d.value){
+      const col=d.value>0?'#10B981':'#EF4444';
+      const bg2=d.value>0?'#06513422':'#7F1D1D22';
+      effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:col,background:bg2,padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},(d.value>0?'+':'')+fmtMoney(d.value));
+    } else if(d.effect==='rep_fans'){
+      const parts=[];
+      if(d.value) parts.push('Rep +'+d.value);
+      if(d.fans)  parts.push('Fans +'+fmtFans(d.fans));
+      if(parts.length) effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:'#10B981',background:'#06513422',padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},parts.join(' · '));
+    }
+
+    const banner = h('div',{style:{
+      background:bg,
+      border:'1px solid '+borderColor,
+      borderRadius:'8px',
+      padding:'14px 16px',
+      marginBottom:'10px',
+    }});
+
+    banner.appendChild(h('div',{style:{display:'flex',alignItems:'center',marginBottom:'5px'}},
+      h('div',{style:{fontSize:'15px',fontWeight:800,color:isAction?'#FBBF24':'#F9FAFB'}},d.title),
+      effectTag,
+    ));
+    banner.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'10px'}},d.desc));
+
+    if(isAction){
+      const cb=h('input',{type:'checkbox'});
+      const lbl=h('label',{style:{display:'flex',gap:'8px',alignItems:'center',cursor:'pointer',fontSize:'14px',color:'#F59E0B',fontWeight:700}},
+        cb, d._actionLabel||'Mark as done'
+      );
+      cb.addEventListener('change',function(){
+        if(cb.checked){
+          G.dramaQueue.splice(i,1);
+          addLog(G,'✅ Acknowledged: '+d.title);
+          saveGame(); render();
+        }
+      });
+      banner.appendChild(lbl);
+    } else if(d._isTeamOrder){
+      banner.appendChild(h('div',{style:{display:'flex',gap:'8px'}},
+        mkBtn('Race Your Own Race','btn btn-sm btn-primary',function(){
+          const c=(G.contracts||[]).find(function(c){return c.seriesId===d._seriesId;});
+          if(c) c.missedFinishWarnings=(c.missedFinishWarnings||0)+0.5;
+          G.log.push('[S'+G.season+' W'+G.week+'] 🏁 Team orders: raced your own race.');
+          G.dramaQueue.splice(i,1); saveGame(); render();
+        }),
+        mkBtn('Hold Position','btn btn-sm btn-ghost',function(){
+          G.reputation=Math.max(0,G.reputation-1);
+          G.fans=Math.max(0,G.fans-100);
+          G.log.push('[S'+G.season+' W'+G.week+'] 🤝 Team orders: held position behind '+d._teammate+'.');
+          G.dramaQueue.splice(i,1); saveGame(); render();
+        }),
+      ));
+    } else if(d._isCallout){
+      banner.appendChild(h('div',{style:{marginTop:'4px'}},
+        h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},'How do you respond to '+d._calloutDriver+'?'),
+        h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
+          ...(CALLOUT_RESPONSES[d._calloutType]||[]).map(function(resp){
+            return mkBtn(resp.label,'btn btn-sm '+resp.btnClass,function(){
+              G.reputation=Math.max(0,G.reputation+resp.rep);
+              G.fans=Math.max(0,G.fans+resp.fans);
+              if(resp.rivalEffect==='incident') touchRival(G.rivals,d._calloutDriver,'incident',false);
+              else if(resp.rivalEffect==='close_clean') touchRival(G.rivals,d._calloutDriver,'close',true);
+              const repStr=resp.rep!==0?' Rep '+(resp.rep>0?'+':'')+resp.rep:'';
+              const fanStr=resp.fans!==0?' Fans '+(resp.fans>0?'+':'')+fmtFans(resp.fans):'';
+              G.log.push('[S'+G.season+' W'+G.week+'] 💬 '+d._calloutDriver+' callout — '+resp.label+'.'+repStr+fanStr+'. '+resp.log);
+              G.dramaQueue.splice(i,1); saveGame(); render();
+            });
+          })
+        )
+      ));
+    } else {
+      banner.appendChild(h('div',{style:{textAlign:'right'}},
+        mkBtn('Dismiss','btn btn-sm btn-primary',function(){doDismissDrama(i);})
+      ));
+    }
+
+    f.appendChild(banner);
+  });
+
+  return f;
+}
 
 // ─── DRIVER DATABASE ─────────────────────────────────────────────────────────
 function createDriver(name, skill=null, seriesId=null, source='generated') {
@@ -2339,7 +2473,7 @@ function createDriver(name, skill=null, seriesId=null, source='generated') {
   return {
     id: uid(),
     name,
-    source,           // 'known' | 'generated'
+    source,
     skill: skill !== null ? skill : rand(30,75),
     currentSeriesId: seriesId || 'mini_stock',
     currentTeam: (() => { const tl=TEAMS[seriesId||'mini_stock']||['']; return tl[rand(0,tl.length-1)]; })(),
@@ -2354,13 +2488,49 @@ function createDriver(name, skill=null, seriesId=null, source='generated') {
     seasonWins: 0,
     active: true,
     injuredOrPenalized: false,
-    substituteFor: null,  // id of driver they're subbing for
+    substituteFor: null,
     notes: '',
-    careerHistory: [], // [{season, seriesId, rep, fans, pos}]
-    aliases: [],       // other names this person might go by
+    careerHistory: [],
+    aliases: [],
     homeState: randomHomeState(),
+    // AI Racing stats
+    aiStats: {
+      relativeSkill:  rand(30,70),
+      aggression:     rand(20,80),
+      optimism:       rand(30,70),
+      smoothness:     rand(30,70),
+      age:            rand(18,45),
+      pitCrewSkill:   rand(30,70),
+      pittingRisk:    rand(20,60),
+    },
+    carNumber: null,
+    _carNumberSeniority: 0,
   };
 }
+function resolveCarNumberConflicts(seriesId) {
+  const drivers = (G.drivers||[]).filter(function(d) {
+    return d.active && d.currentSeriesId === seriesId && d.carNumber;
+  });
+  const byNumber = {};
+  drivers.forEach(function(d) {
+    const n = String(d.carNumber);
+    if (!byNumber[n]) byNumber[n] = [];
+    byNumber[n].push(d);
+  });
+  const conflicts = [];
+  Object.entries(byNumber).forEach(function([num, group]) {
+    if (group.length < 2) return;
+    // Most senior (highest starts) keeps the number
+    group.sort(function(a,b) { return (b._carNumberSeniority||b.starts||0) - (a._carNumberSeniority||a.starts||0); });
+    group.slice(1).forEach(function(d) {
+      const oldNum = d.carNumber;
+      d.carNumber = null; // cleared — user should assign
+      conflicts.push({ driver: d.name, hadNumber: oldNum, keeperName: group[0].name });
+    });
+  });
+  return conflicts;
+}
+
 
 // Realistic field sizes per series
 const SERIES_FIELD_SIZE = {
@@ -2896,9 +3066,65 @@ function openDriverProfileModal(driverName) {
       }),
     ):null,
 
-    h('div',{className:'modal-actions'},
-      mkBtn('Close','btn btn-ghost',closeModal),
+    // AI Stats section
+h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'12px'}},
+  h('div',{style:{fontSize:'11px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'10px',fontWeight:700}},'iRacing AI Stats'),
+  h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}},
+    ...([
+      ['relativeSkill','Relative Skill'],
+      ['aggression','Aggression'],
+      ['optimism','Optimism'],
+      ['smoothness','Smoothness'],
+      ['pitCrewSkill','Pit Crew Skill'],
+      ['pittingRisk','Pitting Risk'],
+    ].map(function([key,label]){
+      const val = (driver&&driver.aiStats&&driver.aiStats[key])||50;
+      const inp = h('input',{type:'number',min:0,max:100,value:val,style:{width:'100%'}});
+      inp.addEventListener('change',function(){
+        if(!driver.aiStats) driver.aiStats={};
+        driver.aiStats[key]=clamp(parseInt(inp.value)||0,0,100);
+        saveGame();
+      });
+      return h('div',null,
+        h('div',{style:{fontSize:'12px',color:'#94A3B8',marginBottom:'3px'}},label),
+        inp,
+      );
+    })),
+  ),
+  h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginTop:'8px'}},
+    h('div',null,
+      h('div',{style:{fontSize:'12px',color:'#94A3B8',marginBottom:'3px'}},'Age (13-65)'),
+      (function(){
+        const ageInp = h('input',{type:'number',min:13,max:65,value:(driver&&driver.aiStats&&driver.aiStats.age)||30,style:{width:'100%'}});
+        ageInp.addEventListener('change',function(){
+          if(!driver.aiStats) driver.aiStats={};
+          driver.aiStats.age=clamp(parseInt(ageInp.value)||30,13,65);
+          saveGame();
+        });
+        return ageInp;
+      })(),
     ),
+    h('div',null,
+      h('div',{style:{fontSize:'12px',color:'#94A3B8',marginBottom:'3px'}},'Car Number'),
+      (function(){
+        const numInp = h('input',{type:'text',placeholder:'e.g. 24',value:driver&&driver.carNumber||'',style:{width:'100%'}});
+        numInp.addEventListener('change',function(){
+          if(driver){
+            driver.carNumber = numInp.value.trim()||null;
+            driver._carNumberSeniority = driver.starts||0;
+            saveGame();
+          }
+        });
+        return numInp;
+      })(),
+    ),
+  ),
+),
+
+h('div',{className:'modal-actions'},
+  mkBtn('Close','btn btn-ghost',closeModal),
+),
+   ),
   ));
 }
 
@@ -3259,7 +3485,18 @@ if (!d) {
         if (!(peer.aiFriends||[]).includes(d.name)) { peer.aiFriends=peer.aiFriends||[]; peer.aiFriends.push(d.name); }
       }
     }
-    addLog(state, `📋 New driver added to database: ${name}`);
+addLog(state, '📋 New driver added to database: '+name);
+if (source === 'known') {
+  state.dramaQueue.push({
+    id: 'newdriver_'+uid(),
+    title: '📋 New Driver: '+name,
+    effect: 'none',
+    desc: name+' has been added to the driver database from your race results. Check their profile and set AI stats if needed.',
+    valence: 'neutral',
+    _isPaddock: true,
+  });
+}
+
   } else if (d.source==='generated') {
     d.source = 'known';
     if (!d.aiRivals)  d.aiRivals  = [];
@@ -3899,9 +4136,33 @@ function simulateAISeasons(state) {
     if(!s) return;
 
     // Simulate season outcome based on skill
-    const skillRoll = d.skill + randF(-20,20);
-    const estPos = clamp(Math.round(((100-skillRoll)/100)*(s.races*1.5)+1),1,40);
-    const seasonWins = skillRoll>75?rand(1,5):skillRoll>60?rand(0,3):skillRoll>40?rand(0,1):0;
+    // Only apply AI stats modifiers if player is NOT in this series
+const playerInSeries = G.contracts && G.contracts.some(function(c){return c.seriesId===d.currentSeriesId;});
+let skillRoll = d.skill + randF(-20,20);
+if (!playerInSeries && d.aiStats) {
+  // Age curve: peak at 28-32, slight decline after 45
+  const age = d.aiStats.age || 30;
+  const ageMult = age < 18 ? 0.85
+    : age < 25 ? 0.90 + (age-18)*0.02
+    : age < 33 ? 1.0
+    : age < 45 ? 1.0 - (age-33)*0.008
+    : 0.85 - (age-45)*0.005;
+  // Optimism affects consistency (variance)
+  const optimismVariance = (50 - (d.aiStats.optimism||50)) * 0.15;
+  // Pit crew skill affects DNF chance
+  const pitFactor = (d.aiStats.pitCrewSkill||50) / 100;
+  skillRoll = (skillRoll + (d.aiStats.relativeSkill||50)*0.3) * ageMult + optimismVariance;
+  // Aggression increases incident chance which can hurt season result
+  if (d.aiStats.aggression > 65 && Math.random() < (d.aiStats.aggression-65)*0.008) {
+    skillRoll -= rand(5,15);
+  }
+  // Poor pit crew increases DNF chance
+  if (pitFactor < 0.4 && Math.random() < (0.4-pitFactor)*0.3) {
+    skillRoll -= rand(10,20);
+  }
+}
+const estPos = clamp(Math.round(((100-skillRoll)/100)*(s.races*1.5)+1),1,40);
+   const seasonWins = skillRoll>75?rand(1,5):skillRoll>60?rand(0,3):skillRoll>40?rand(0,1):0;
     const seasonTop5 = Math.max(seasonWins, Math.round(skillRoll/20));
 
     // Rep and fan changes
@@ -3916,6 +4177,13 @@ const _sFanMult = [1,1,2,4,12,40,100,250][s.tier||1]||1;
     d.seasonPoints = rand(50,500);
     d.careerHistory.push({season:state.season, seriesId:d.currentSeriesId, rep:d.rep, wins:seasonWins, pos:estPos});
     if(d.careerHistory.length>20) d.careerHistory=d.careerHistory.slice(-20);
+    // Age and skill progression
+if (d.aiStats && d.aiStats.age < 65) d.aiStats.age++;
+if (d.aiStats) {
+  const age = d.aiStats.age;
+  if (age >= 45 && d.skill > 20) d.skill = Math.max(20, d.skill - rand(0,1));
+  if (age < 25 && d.skill < 85)  d.skill = Math.min(85, d.skill + rand(0,1));
+}
 
     // Promotion/demotion
     const nextSeries = SERIES.find(ns=>ns.tier===s.tier+1);
@@ -3927,20 +4195,76 @@ const _sFanMult = [1,1,2,4,12,40,100,250][s.tier||1]||1;
     }
   });
 
-  /// Apply promotions/demotions
-  promotions.forEach(({driver,to})=>{
-    driver.currentSeriesId=to;
+  // Tier 1-3: loose promotion/demotion
+promotions.filter(function(p){return (getSeries(p.from)&&getSeries(p.from).tier)||0 < 4;}).forEach(function({driver,to}){
+  driver.currentSeriesId=to;
+  const teamList=TEAMS[to]||['Independent'];
+  driver.currentTeam=teamList[rand(0,teamList.length-1)];
+  driver._carNumberSeniority = 0;
+  addLog(state,'📈 '+driver.name+' promoted to '+(getSeries(to)&&getSeries(to).short)||to);
+  if (driver.source==='known') _notifyRosterChange(state, driver, 'promoted', to, null);
+});
+
+demotions.filter(function(p){return (getSeries(p.from)&&getSeries(p.from).tier)||0 < 4;}).forEach(function({driver,to}){
+  driver.currentSeriesId=to;
+  const teamList=TEAMS[to]||['Independent'];
+  driver.currentTeam=teamList[rand(0,teamList.length-1)];
+  driver._carNumberSeniority = 0;
+  addLog(state,'📉 '+driver.name+' dropped to '+(getSeries(to)&&getSeries(to).short)||to);
+  if (driver.source==='known') _notifyRosterChange(state, driver, 'demoted', to, null);
+  if ((getSeries(to)&&getSeries(to).tier)===1) retireDriverAsJrCandidate(driver);
+});
+
+// Tier 4+: slot-balanced
+const NATIONAL_TIERS = [4,5,6,7];
+NATIONAL_TIERS.forEach(function(tier){
+  const seriesAtTier = SERIES.find(function(s){return s.tier===tier;});
+  const seriesBelow  = SERIES.find(function(s){return s.tier===tier-1;});
+  if (!seriesAtTier || !seriesBelow) return;
+
+  const movingUp   = promotions.filter(function(p){return p.to===seriesAtTier.id;});
+  const movingDown = demotions.filter(function(p){return p.from===seriesAtTier.id;});
+  const count = movingUp.length;
+
+  // Apply promotions
+  movingUp.forEach(function({driver,to}){
+    driver.currentSeriesId = to;
     const teamList=TEAMS[to]||['Independent'];
     driver.currentTeam=teamList[rand(0,teamList.length-1)];
-    addLog(state,`📈 ${driver.name} promoted to ${getSeries(to).short}`);
+    driver._carNumberSeniority = 0;
+    addLog(state,'📈 '+driver.name+' promoted to '+(getSeries(to)&&getSeries(to).short));
+    if (driver.source==='known') _notifyRosterChange(state, driver, 'promoted', to, null);
   });
-  demotions.forEach(({driver,to})=>{
-    driver.currentSeriesId=to;
-    const teamList=TEAMS[to]||['Independent'];
+
+  // Force matching demotions if needed
+  let actualDemotions = movingDown.slice(0, count);
+  if (actualDemotions.length < count) {
+    // Need more demotions — find worst performers in this series not already demoted
+    const alreadyDemoted = new Set(actualDemotions.map(function(d){return d.driver.name;}));
+    const candidates = state.drivers.filter(function(d){
+      return d.active &&
+        d.currentSeriesId === seriesAtTier.id &&
+        !alreadyDemoted.has(d.name) &&
+        d.name.toLowerCase() !== state.driverName.toLowerCase();
+    }).sort(function(a,b){
+      return ((a.skill||50) + (a.seasonPoints||0)*0.1) - ((b.skill||50) + (b.seasonPoints||0)*0.1);
+    });
+    const needed = count - actualDemotions.length;
+    candidates.slice(0, needed).forEach(function(d){
+      actualDemotions.push({driver:d, from:seriesAtTier.id, to:seriesBelow.id});
+    });
+  }
+
+  actualDemotions.forEach(function({driver,to}){
+    const fromId = driver.currentSeriesId;
+    driver.currentSeriesId = seriesBelow.id;
+    const teamList=TEAMS[seriesBelow.id]||['Independent'];
     driver.currentTeam=teamList[rand(0,teamList.length-1)];
-    addLog(state,`📉 ${driver.name} dropped to ${getSeries(to).short}`);
-    if ((getSeries(to)&&getSeries(to).tier) === 1) retireDriverAsJrCandidate(driver);
+    driver._carNumberSeniority = 0;
+    addLog(state,'📉 '+driver.name+' dropped to '+(getSeries(seriesBelow.id)&&getSeries(seriesBelow.id).short));
+    if (driver.source==='known') _notifyRosterChange(state, driver, 'demoted', seriesBelow.id, null);
   });
+});
 
   state.drivers.forEach(d => {
     if (!d.active) { retireDriverAsJrCandidate(d); return; }
@@ -3956,7 +4280,8 @@ const _sFanMult = [1,1,2,4,12,40,100,250][s.tier||1]||1;
     if(Math.random()<0.15){
       const teamList=TEAMS[d.currentSeriesId]||['Independent'];
       d.currentTeam=teamList[rand(0,teamList.length-1)];
-    }
+    
+  }
   });
 
   // Reset seasonal stats
@@ -4353,6 +4678,40 @@ state._hadInjuryThisSeason = false;
   // Simulate AI careers
   const aiNews = simulateAISeasons(state);
   state._lastSeasonAiNews = aiNews || {promotions:[],demotions:[]};
+  // Car number conflict resolution for national series
+SERIES.filter(function(s){return s.tier>=4;}).forEach(function(s){
+  const conflicts = resolveCarNumberConflicts(s.id);
+  conflicts.forEach(function(c){
+    addLog(state,'🔢 Car number conflict: '+c.driver+' lost #'+c.hadNumber+' to '+c.keeperName+' — assign new number');
+    state.dramaQueue.push({
+      id: 'carnumber_'+uid(),
+      title: '🔢 Car Number Conflict — '+c.driver,
+      effect: 'none',
+      desc: c.driver+' lost car number #'+c.hadNumber+' to '+c.keeperName+' (more senior). Assign '+c.driver+' a new number in iRacing before next season.',
+      valence: 'neutral',
+      _requiresAction: true,
+      _actionLabel: 'Number Assigned',
+      _isPaddock: true,
+    });
+  });
+});
+
+  SERIES.filter(function(s){return s.tier>=4;}).forEach(function(s){
+  const conflicts = resolveCarNumberConflicts(s.id);
+  conflicts.forEach(function(c){
+    addLog(G, '🔢 Car number conflict: '+c.driver+' lost #'+c.hadNumber+' to '+c.keeperName+' — assign new number');
+    G.dramaQueue.push({
+      id: 'carnumber_'+uid(),
+      title: '🔢 Car Number Conflict — '+c.driver,
+      effect: 'none',
+      desc: c.driver+' lost car number #'+c.hadNumber+' to '+c.keeperName+' (more senior). Assign '+c.driver+' a new number in iRacing before next season.',
+      valence: 'neutral',
+      _requiresAction: true,
+      _actionLabel: 'Number Assigned',
+    });
+  });
+});
+
 
   state.season++;
   state.week=1;
@@ -4609,8 +4968,26 @@ function loadGame() {
       if (G.confidence === undefined) G.confidence = 0;
       // Migrate old salary-model contracts to prize share model
       if (G._preseasonSeen === undefined) G._preseasonSeen = 0;
-
       if (!G.savedForOffseason) G.savedForOffseason = [];
+      // Migration: backfill AI stats on all existing drivers
+if (G.drivers) {
+  G.drivers.forEach(function(d) {
+    if (!d.aiStats) {
+      d.aiStats = {
+        relativeSkill:  rand(30,70),
+        aggression:     rand(20,80),
+        optimism:       rand(30,70),
+        smoothness:     rand(30,70),
+        age:            rand(18,45),
+        pitCrewSkill:   rand(30,70),
+        pittingRisk:    rand(20,60),
+      };
+    }
+    if (d.carNumber === undefined) d.carNumber = null;
+    if (d._carNumberSeniority === undefined) d._carNumberSeniority = d.starts || 0;
+  });
+}
+
       if (G.contracts) {
         G.contracts.forEach(c => {
           if (!c.indie && c.prizeShare === undefined) {
@@ -4643,6 +5020,7 @@ function importSave(file) {
 const TABS = [
   {id:'dashboard', label:'Dashboard'},
   {id:'contracts', label:'Contracts'},
+  {id:'paddock',   label:'Paddock'},
   {id:'schedule',  label:'Schedule'},
   {id:'special',   label:'Special'},
   {id:'rivals',    label:'Rivals'},
@@ -4659,7 +5037,9 @@ function renderTabs() {
   TABS.forEach(t => {
     let bc=0;
     if(t.id==='contracts') bc=(G.pendingOffers||[]).length;
-    if(t.id==='business')  bc=(G.dramaQueue||[]).length+(G.sponsorOffers||[]).length;
+if(t.id==='paddock')   bc=(G.dramaQueue||[]).length;
+if(t.id==='business')  bc=(G.sponsorOffers||[]).length;
+
     const tab = h('button',{className:'tab'+(activeTab===t.id?' active':''),onClick:()=>setTab(t.id)},
       t.label,
       bc>0?h('span',{className:'tab-badge'},bc):null
@@ -4694,7 +5074,7 @@ function render() { renderHeader(); renderTabs(); renderContent(); }
 function renderContent() {
   const c=$('content'); c.innerHTML='';
   const page=h('div',{className:'page'});
-const map={dashboard:renderDashboard,contracts:renderContracts,schedule:renderSchedule,special:renderSpecial,rivals:renderRivals,standings:renderStandings,business:renderBusiness,drivers:renderDrivers,log:renderLog,history:renderHistory,settings:renderSettings};  if(map[activeTab]) page.appendChild(map[activeTab]());
+const map={dashboard:renderDashboard,contracts:renderContracts,paddock:renderPaddock,schedule:renderSchedule,special:renderSpecial,rivals:renderRivals,standings:renderStandings,business:renderBusiness,drivers:renderDrivers,log:renderLog,history:renderHistory,settings:renderSettings};  if(map[activeTab]) page.appendChild(map[activeTab]());
   c.appendChild(page);
 }
 
@@ -5272,6 +5652,66 @@ function renderContracts() {
       })
     ),
   ));
+
+  return f;
+}
+//==paddock ==
+function renderPaddock() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Paddock'));
+  f.appendChild(h('div',{className:'page-sub'},'Action required items. Roster changes and injuries stay pinned until you confirm them.'));
+
+  const queue = G.dramaQueue || [];
+
+  // Sort: _requiresAction first, then injuries, then rest
+  const sorted = [...queue].map(function(d,i){return {d,i};}).sort(function(a,b){
+    const ap = a.d._requiresAction?0:a.d.title&&a.d.title.includes('Injur')?1:2;
+    const bp = b.d._requiresAction?0:b.d.title&&b.d.title.includes('Injur')?1:2;
+    return ap-bp;
+  });
+
+  if (!sorted.length) {
+    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'28px',color:'#94A3B8',fontSize:'15px'}},'Nothing requiring your attention right now.'));
+    return f;
+  }
+
+  sorted.forEach(function({d, i}) {
+    const isAction = !!d._requiresAction;
+    const borderColor = isAction ? '#F59E0B' : d.valence==='bad' ? '#EF444444' : '#1E2433';
+
+    const banner = h('div',{style:{
+      background: isAction ? '#1a1200' : '#0B0F1A',
+      border: '1px solid '+borderColor,
+      borderRadius:'8px',
+      padding:'14px 16px',
+      marginBottom:'10px',
+    }});
+
+    banner.appendChild(h('div',{style:{fontSize:'15px',fontWeight:800,color:isAction?'#FBBF24':'#F9FAFB',marginBottom:'5px'}},d.title));
+    banner.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'10px'}},d.desc));
+
+    if (isAction) {
+      // Pinned item with explicit acknowledgement
+      const cb = h('input',{type:'checkbox'});
+      const lbl = h('label',{style:{display:'flex',gap:'8px',alignItems:'center',cursor:'pointer',fontSize:'14px',color:'#F59E0B',fontWeight:700}},
+        cb, d._actionLabel || 'Mark as done'
+      );
+      cb.addEventListener('change', function(){
+        if (cb.checked) {
+          G.dramaQueue.splice(i, 1);
+          addLog(G, '✅ Acknowledged: '+d.title);
+          saveGame(); render();
+        }
+      });
+      banner.appendChild(lbl);
+    } else {
+      banner.appendChild(mkBtn('Dismiss','btn btn-sm btn-primary',function(){
+        doDismissDrama(i);
+      }));
+    }
+
+    f.appendChild(banner);
+  });
 
   return f;
 }
@@ -5949,82 +6389,7 @@ function renderBusiness() {
   smCard.appendChild(btnRow);
   f.appendChild(smCard);;
 
-  // Drama queue
-  if((G.dramaQueue||[]).length){
-    f.appendChild(h('div',{style:{marginBottom:'18px'}},
-      h('div',{style:{fontSize:'14px',color:'#F59E0B',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'10px'}},'⚡ Attention Required'),
-      ...(G.dramaQueue||[]).map((d,i)=>{
-        // Build effect preview tag
-        let effectTag=null;
-        if(d.effect==='rep_hit'&&d.value){
-          const repTxt=`Rep ${d.value}`;
-          const fanTxt=d.fans?` · Fans ${d.fans}`:'';
-          effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:'#EF4444',background:'#7F1D1D22',padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},repTxt+fanTxt);
-        } else if(d.effect==='money'&&d.value){
-          const col=d.value>0?'#10B981':'#EF4444';
-          const bg=d.value>0?'#06513422':'#7F1D1D22';
-          effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:col,background:bg,padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},`${d.value>0?'+':''}${fmtMoney(d.value)}`);
-        } else if(d.effect==='rep_fans'){
-          const parts=[];
-          if(d.value) parts.push(`Rep +${d.value}`);
-          if(d.fans) parts.push(`Fans +${fmtFans(d.fans)}`);
-          if(parts.length) effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:'#10B981',background:'#06513422',padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},parts.join(' · '));
-        }
-        return h('div',{className:'drama-banner'},
-          h('div',{style:{display:'flex',alignItems:'center',marginBottom:'5px'}},
-            h('div',{className:'drama-title',style:{margin:0}},d.title),
-            effectTag,
-          ),
-          h('div',{className:'drama-desc'},d.desc),
-          d._isNews
-            ? h('div',{style:{marginTop:'6px',textAlign:'right'}},
-                mkBtn('Dismiss','btn btn-xs btn-ghost',()=>{G.dramaQueue.splice(i,1);saveGame();render();})
-              )
-            : d._isTeamOrder
-            ? h('div',{style:{display:'flex',gap:'8px',marginTop:'4px'}},
-                mkBtn('Race Your Own Race','btn btn-sm btn-primary',()=>{
-                  const c=(G.contracts||[]).find(c=>c.seriesId===d._seriesId);
-                  if(c){c.missedFinishWarnings=(c.missedFinishWarnings||0)+0.5;}
-                  G.log.push(`[S${G.season} W${G.week}] 🏁 Team orders: raced your own race. Team noted it.`);
-                  G.dramaQueue.splice(i,1); saveGame(); render();
-                }),
-                mkBtn('Hold Position','btn btn-sm btn-ghost',()=>{
-                  G.reputation=Math.max(0,G.reputation-1);
-                  G.fans=Math.max(0,G.fans-100);
-                  G.log.push(`[S${G.season} W${G.week}] 🤝 Team orders: held position behind ${d._teammate}. Team appreciates it.`);
-                  G.dramaQueue.splice(i,1); saveGame(); render();
-                }),
-              )
-            : d._isCallout
-            ? h('div',{style:{marginTop:'8px'}},
-                h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},
-                  `How do you respond to ${d._calloutDriver}?`
-                ),
-                h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
-                  ...(CALLOUT_RESPONSES[d._calloutType]||[]).map(resp=>
-                    mkBtn(resp.label, `btn btn-sm ${resp.btnClass}`, ()=>{
-                      // Apply rep + fans
-                      G.reputation = Math.max(0, G.reputation + resp.rep);
-                      G.fans       = Math.max(0, G.fans + resp.fans);
-                      // Update rivalry
-                      if (resp.rivalEffect === 'incident') {
-                        touchRival(G.rivals, d._calloutDriver, 'incident', false);
-                      } else if (resp.rivalEffect === 'close_clean') {
-                        touchRival(G.rivals, d._calloutDriver, 'close', true);
-                      }
-                      const repStr  = resp.rep  !== 0 ? ` Rep ${resp.rep>0?'+':''}${resp.rep}` : '';
-                      const fanStr  = resp.fans  !== 0 ? ` Fans ${resp.fans>0?'+':''}${fmtFans(resp.fans)}` : '';
-                      G.log.push(`[S${G.season} W${G.week}] 💬 ${d._calloutDriver} callout — ${resp.label}.${repStr}${fanStr}. ${resp.log}`);
-                      G.dramaQueue.splice(i,1); saveGame(); render();
-                    })
-                  )
-                )
-              )
-            : mkBtn('Acknowledge','btn btn-sm btn-primary',()=>doDismissDrama(i)),
-        );
-      })
-    ));
-  }
+  
 
   // Merch
   const merch=calcMerchRevenue(G.fans);
@@ -6218,6 +6583,127 @@ function generateDriverBio(d) {
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   return `${pick(openers)} ${pick(middles)} ${pick(closers)}`;
 }
+function renderPaddock() {
+  const f = document.createDocumentFragment();
+  f.appendChild(h('div',{className:'page-title'},'Paddock'));
+  f.appendChild(h('div',{className:'page-sub'},'Action required items stay pinned until confirmed. Everything else dismisses normally.'));
+
+  const queue = G.dramaQueue || [];
+
+  if (!queue.length) {
+    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'28px',color:'#94A3B8',fontSize:'15px'}},'Nothing requiring your attention right now.'));
+    return f;
+  }
+
+  // Sort: _requiresAction first, then injuries, then callouts, then rest
+  const indexed = queue.map(function(d,i){return {d,i};});
+  indexed.sort(function(a,b){
+    const pri = function(d){
+      if(d._requiresAction) return 0;
+      if(d.title&&d.title.includes('Injur')) return 1;
+      if(d._isCallout) return 2;
+      if(d._isTeamOrder) return 3;
+      if(d._isNews||d._isRumor) return 5;
+      return 4;
+    };
+    return pri(a.d)-pri(b.d);
+  });
+
+  indexed.forEach(function({d,i}){
+    const isAction = !!d._requiresAction;
+    const borderColor = isAction?'#F59E0B44':d.valence==='bad'?'#EF444444':d.valence==='good'?'#10B98133':'#1E2433';
+    const bg = isAction?'#1a1200':'#0B0F1A';
+
+    // Effect tag
+    let effectTag=null;
+    if(d.effect==='rep_hit'&&d.value){
+      const repTxt='Rep '+d.value;
+      const fanTxt=d.fans?' · Fans '+d.fans:'';
+      effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:'#EF4444',background:'#7F1D1D22',padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},repTxt+fanTxt);
+    } else if(d.effect==='money'&&d.value){
+      const col=d.value>0?'#10B981':'#EF4444';
+      const bg2=d.value>0?'#06513422':'#7F1D1D22';
+      effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:col,background:bg2,padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},(d.value>0?'+':'')+fmtMoney(d.value));
+    } else if(d.effect==='rep_fans'){
+      const parts=[];
+      if(d.value) parts.push('Rep +'+d.value);
+      if(d.fans)  parts.push('Fans +'+fmtFans(d.fans));
+      if(parts.length) effectTag=h('span',{style:{fontSize:'14px',fontWeight:700,color:'#10B981',background:'#06513422',padding:'2px 8px',borderRadius:'4px',marginLeft:'8px'}},parts.join(' · '));
+    }
+
+    const banner = h('div',{style:{
+      background:bg,
+      border:'1px solid '+borderColor,
+      borderRadius:'8px',
+      padding:'14px 16px',
+      marginBottom:'10px',
+    }});
+
+    banner.appendChild(h('div',{style:{display:'flex',alignItems:'center',marginBottom:'5px'}},
+      h('div',{style:{fontSize:'15px',fontWeight:800,color:isAction?'#FBBF24':'#F9FAFB'}},d.title),
+      effectTag,
+    ));
+    banner.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'10px'}},d.desc));
+
+    // Action buttons
+    if(isAction){
+      const cb=h('input',{type:'checkbox'});
+      const lbl=h('label',{style:{display:'flex',gap:'8px',alignItems:'center',cursor:'pointer',fontSize:'14px',color:'#F59E0B',fontWeight:700}},
+        cb, d._actionLabel||'Mark as done'
+      );
+      cb.addEventListener('change',function(){
+        if(cb.checked){
+          G.dramaQueue.splice(i,1);
+          addLog(G,'✅ Acknowledged: '+d.title);
+          saveGame(); render();
+        }
+      });
+      banner.appendChild(lbl);
+    } else if(d._isTeamOrder){
+      banner.appendChild(h('div',{style:{display:'flex',gap:'8px'}},
+        mkBtn('Race Your Own Race','btn btn-sm btn-primary',function(){
+          const c=(G.contracts||[]).find(function(c){return c.seriesId===d._seriesId;});
+          if(c) c.missedFinishWarnings=(c.missedFinishWarnings||0)+0.5;
+          G.log.push('[S'+G.season+' W'+G.week+'] 🏁 Team orders: raced your own race.');
+          G.dramaQueue.splice(i,1); saveGame(); render();
+        }),
+        mkBtn('Hold Position','btn btn-sm btn-ghost',function(){
+          G.reputation=Math.max(0,G.reputation-1);
+          G.fans=Math.max(0,G.fans-100);
+          G.log.push('[S'+G.season+' W'+G.week+'] 🤝 Team orders: held position behind '+d._teammate+'.');
+          G.dramaQueue.splice(i,1); saveGame(); render();
+        }),
+      ));
+    } else if(d._isCallout){
+      banner.appendChild(h('div',{style:{marginTop:'4px'}},
+        h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},'How do you respond to '+d._calloutDriver+'?'),
+        h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
+          ...(CALLOUT_RESPONSES[d._calloutType]||[]).map(function(resp){
+            return mkBtn(resp.label,'btn btn-sm '+resp.btnClass,function(){
+              G.reputation=Math.max(0,G.reputation+resp.rep);
+              G.fans=Math.max(0,G.fans+resp.fans);
+              if(resp.rivalEffect==='incident') touchRival(G.rivals,d._calloutDriver,'incident',false);
+              else if(resp.rivalEffect==='close_clean') touchRival(G.rivals,d._calloutDriver,'close',true);
+              const repStr=resp.rep!==0?' Rep '+(resp.rep>0?'+':'')+resp.rep:'';
+              const fanStr=resp.fans!==0?' Fans '+(resp.fans>0?'+':'')+fmtFans(resp.fans):'';
+              G.log.push('[S'+G.season+' W'+G.week+'] 💬 '+d._calloutDriver+' callout — '+resp.label+'.'+repStr+fanStr+'. '+resp.log);
+              G.dramaQueue.splice(i,1); saveGame(); render();
+            });
+          })
+        )
+      ));
+    } else {
+      banner.appendChild(h('div',{style:{textAlign:'right'}},
+        mkBtn('Dismiss','btn btn-sm btn-primary',function(){doDismissDrama(i);})
+      ));
+    }
+
+    f.appendChild(banner);
+  });
+
+  return f;
+}
+
 
 // ─── DRIVERS DATABASE ─────────────────────────────────────────────────────────
 function renderDrivers() {
