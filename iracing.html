@@ -5230,12 +5230,11 @@ function renderSchedule() {
       h('span',{style:{marginLeft:'auto',fontSize:'15px',color:s.color,fontWeight:900}},`${pts} pts`),
     ));
 
-    function renderRows() {
+        function renderRows() {
       const old=section.querySelector('.sched-rows');
       if(old) old.remove();
       const rc=h('div',{className:'sched-rows'});
-      // Indices of undone races only (not completed, not skipped) — used for reorder bounds
-      const undoneIdx=sched.map((_,idx)=>(sched[idx].result)?null:idx).filter(v=>v!==null);
+      let dragSrc=null;
 
       sched.forEach((race,i)=>{
         const done=!!race.result&&!(race.result&&race.result.skipped);
@@ -5246,13 +5245,25 @@ function renderSchedule() {
         const isDQd=done&&(race.result&&race.result.dq);
         const pc=done&&race.result.dnf?'#EF4444':isDQd?'#F97316':done&&race.result.position===1?'#F59E0B':done&&race.result.position<=5?'#10B981':'#94A3B8';
         const resultLabel=isDQd?'DQ':(race.result&&race.result.dnf)?'DNF':done?`P${race.result.position}`:'';
-        const myUndonePos=undoneIdx.indexOf(i);
-        const canUp=!done&&!skipped&&myUndonePos>0;
-        const canDn=!done&&!skipped&&myUndonePos<undoneIdx.length-1;
-        function swap(a,b){[sched[a],sched[b]]=[sched[b],sched[a]];saveGame();renderRows();}
+        const draggable = !done && !skipped;
 
-        const row=h('div',{style:{display:'flex',alignItems:'center',gap:'10px',background:isNext?'#0D1117':'transparent',border:isNext?'1px solid #2D3748':'1px solid transparent',borderRadius:'7px',padding:'8px 11px',marginBottom:'3px',opacity:done?'0.7':skipped?'0.35':'1',cursor:done?'pointer':'default'},
-          onClick:done?()=>openRaceHistoryModal(contract.seriesId,i):undefined},
+        const dragHandle = draggable ? h('span',{style:{
+          color:'#64748B',fontSize:'18px',cursor:'grab',padding:'0 4px',flexShrink:0,userSelect:'none',
+        }},'⠿') : h('span',{style:{width:'22px',flexShrink:0}});
+
+        const row=h('div',{
+          draggable: draggable,
+          style:{
+            display:'flex',alignItems:'center',gap:'10px',
+            background:isNext?'#0D1117':'transparent',
+            border:isNext?'1px solid #2D3748':'1px solid transparent',
+            borderRadius:'7px',padding:'8px 11px',marginBottom:'3px',
+            opacity:done?'0.7':skipped?'0.35':'1',
+            cursor:done?'pointer':draggable?'default':'default',
+          },
+          onClick:done?()=>openRaceHistoryModal(contract.seriesId,i):undefined,
+        },
+          dragHandle,
           h('div',{style:{width:'26px',height:'26px',borderRadius:'4px',background:done?'#060A10':isNext?s.color+'18':'#060A10',border:`1px solid ${done?'#1E2433':isNext?s.color:'#1E2433'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:800,color:isNext?s.color:'#94A3B8',flexShrink:0}},i+1),
           h('div',{style:{flex:1}},
             h('div',{style:{fontSize:'14px',fontWeight:700,color:'#F9FAFB'}},
@@ -5275,21 +5286,53 @@ function renderSchedule() {
             : skipped
             ? h('span',{style:{fontSize:'13px',color:'#374151',fontStyle:'italic'}},'Skipped — joined mid-season')
             : h('div',{style:{display:'flex',gap:'4px',alignItems:'center'}},
-                h('div',{style:{display:'flex',flexDirection:'column',gap:'1px',marginRight:'2px'}},
-                  mkBtn('↑','btn btn-xs btn-secondary',e=>{e.stopPropagation();swap(i,undoneIdx[myUndonePos-1]);},!canUp),
-                  mkBtn('↓','btn btn-xs btn-secondary',e=>{e.stopPropagation();swap(i,undoneIdx[myUndonePos+1]);},!canDn),
-                ),
                 !race.qualifying?mkBtn('Qualify','btn btn-sm btn-secondary',()=>openQualModal(contract.seriesId,i)):null,
                 mkBtn('Enter Result →','btn btn-sm btn-success',()=>openRaceModal(contract.seriesId,i)),
               ),
         );
+
+        if (draggable) {
+          row.addEventListener('dragstart',function(e){
+            dragSrc=i;
+            row.style.opacity='0.4';
+            e.dataTransfer.effectAllowed='move';
+          });
+          row.addEventListener('dragend',function(){
+            row.style.opacity='1';
+            dragSrc=null;
+            rc.querySelectorAll('.drag-over').forEach(function(el){el.classList.remove('drag-over');});
+          });
+          row.addEventListener('dragover',function(e){
+            e.preventDefault();
+            e.dataTransfer.dropEffect='move';
+            if (!sched[i].result) row.classList.add('drag-over');
+          });
+          row.addEventListener('dragleave',function(){
+            row.classList.remove('drag-over');
+          });
+          row.addEventListener('drop',function(e){
+            e.preventDefault();
+            row.classList.remove('drag-over');
+            if (dragSrc===null||dragSrc===i) return;
+            // Only allow swapping undone races
+            if (sched[dragSrc].result||sched[i].result) return;
+            var tmp=sched[dragSrc];
+            sched[dragSrc]=sched[i];
+            sched[i]=tmp;
+            // Re-number rounds
+            sched.forEach(function(r,idx){r.round=idx+1;});
+            saveGame();
+            renderRows();
+          });
+        }
+
         rc.appendChild(row);
         if(race.fig8){
           rc.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginLeft:'24px',marginTop:'2px',marginBottom:'3px',padding:'5px 11px',background:bonusNow?'#100A1A':'transparent',border:bonusNow?'1px dashed #6D28D9':'1px dashed #1E2433',borderRadius:'6px',opacity:bonusDone?'0.5':'1'}},
             h('span',{style:{fontSize:'14px'}},'🔀'),
             h('div',{style:{flex:1,fontSize:'14px'}},
               h('span',{style:{fontWeight:700,color:'#8B5CF6'}},'BONUS: Figure-8 '),
-              h('span',{style:{color:'#94A3B8'}},'— Slinger · Unranked · 45% DNF rate'),
+              h('span',{style:{color:'#94A3B8'}},'— Slinger · Unranked'),
             ),
             bonusDone?h('span',{style:{fontSize:'14px',fontWeight:800,color:race.bonusResult.dnf?'#EF4444':'#8B5CF6'}},race.bonusResult.dnf?'DNF':`P${race.bonusResult.position}`):
             bonusNow?mkBtn('Why Not →','btn btn-sm btn-chaos',()=>openFig8BonusModal(contract.seriesId,i)):
@@ -5302,7 +5345,7 @@ function renderSchedule() {
     renderRows();
     f.appendChild(section);
   });
-  f.appendChild(h('div',{style:{fontSize:'14px',color:'#64748B',fontStyle:'italic'}},'Completed races: click for details. Upcoming: use ↑↓ to reorder anytime.'));
+  f.appendChild(h('div',{style:{fontSize:'14px',color:'#64748B',fontStyle:'italic'}},'Completed races: click for details. Upcoming: drag ⠿ to reorder.'));
 
   // Add Race button — only shown when there's at least one active contract
   if(G.contracts.length){
