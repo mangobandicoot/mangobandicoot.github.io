@@ -2414,9 +2414,10 @@ function renderPaddock() {
       const lbl=h('label',{style:{display:'flex',gap:'8px',alignItems:'center',cursor:'pointer',fontSize:'14px',color:'#F59E0B',fontWeight:700}},
         cb, d._actionLabel||'Mark as done'
       );
-      cb.addEventListener('change',function(){
+            cb.addEventListener('change',function(){
         if(cb.checked){
-          G.dramaQueue.splice(i,1);
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+          if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1);
           addLog(G,'✅ Acknowledged: '+d.title);
           saveGame(); render();
         }
@@ -2428,13 +2429,17 @@ function renderPaddock() {
           const c=(G.contracts||[]).find(function(c){return c.seriesId===d._seriesId;});
           if(c) c.missedFinishWarnings=(c.missedFinishWarnings||0)+0.5;
           G.log.push('[S'+G.season+' W'+G.week+'] 🏁 Team orders: raced your own race.');
-          G.dramaQueue.splice(i,1); saveGame(); render();
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1);
+  saveGame(); render();
         }),
         mkBtn('Hold Position','btn btn-sm btn-ghost',function(){
           G.reputation=Math.max(0,G.reputation-1);
           G.fans=Math.max(0,G.fans-100);
           G.log.push('[S'+G.season+' W'+G.week+'] 🤝 Team orders: held position behind '+d._teammate+'.');
-          G.dramaQueue.splice(i,1); saveGame(); render();
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1); 
+saveGame(); render();
         }),
       ));
     } else if(d._isCallout){
@@ -2450,14 +2455,19 @@ function renderPaddock() {
               const repStr=resp.rep!==0?' Rep '+(resp.rep>0?'+':'')+resp.rep:'';
               const fanStr=resp.fans!==0?' Fans '+(resp.fans>0?'+':'')+fmtFans(resp.fans):'';
               G.log.push('[S'+G.season+' W'+G.week+'] 💬 '+d._calloutDriver+' callout — '+resp.label+'.'+repStr+fanStr+'. '+resp.log);
-              G.dramaQueue.splice(i,1); saveGame(); render();
+              const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1);
+ saveGame(); render();
             });
           })
         )
       ));
     } else {
-      banner.appendChild(h('div',{style:{textAlign:'right'}},
-        mkBtn('Dismiss','btn btn-sm btn-primary',function(){doDismissDrama(i);})
+            banner.appendChild(h('div',{style:{textAlign:'right'}},
+        mkBtn('Dismiss','btn btn-sm btn-primary',function(){
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+          if(actualIdx>=0) doDismissDrama(actualIdx);
+        })
       ));
     }
 
