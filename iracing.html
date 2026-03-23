@@ -5253,6 +5253,7 @@ function renderSchedule() {
 
         const row=h('div',{
           draggable: draggable,
+          'data-sched-idx': String(i),
           style:{
             display:'flex',alignItems:'center',gap:'10px',
             background:isNext?'#0D1117':'transparent',
