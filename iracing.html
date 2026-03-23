@@ -6745,29 +6745,41 @@ function openNegotiateModal(offer) {
           offer.winBonus = newWin;
           offer._countered = true;
           if (repHit) G.reputation = Math.max(0, G.reputation + repHit);
-          addLog(G, '🤝 '+offer.team+' accepted counter: '+newPrize+'% prize share, '+fmtMoney(newWin)+' win bonus.');
-          G.dramaQueue.push({
-            id:'counter_accept_'+uid(),
-            title:offer.team+' Accepted Your Counter',
-            effect:'none',
-            desc:offer.team+' came back with a yes. '+newPrize+'% prize share and '+fmtMoney(newWin)+' win bonus. Sign before they change their mind.',
-            valence:'good',
-          });
-          saveGame(); closeModal(); render();
+                    addLog(G, '🤝 '+offer.team+' accepted counter: '+newPrize+'% prize share, '+fmtMoney(newWin)+' win bonus.');
+          saveGame();
+          openModal(h('div',null,
+            h('div',{className:'modal-eyebrow'},offer.team+' — Response'),
+            h('div',{className:'modal-title',style:{color:'#10B981'}},'✅ Counter Accepted'),
+            h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'14px',marginBottom:'16px',fontSize:'14px',color:'#E2E8F0',lineHeight:'1.7'}},
+              offer.team+' came back with a yes. The updated terms are now active on the offer.',
+              h('div',{style:{marginTop:'10px',display:'flex',gap:'16px'}},
+                h('div',null,h('div',{style:{fontSize:'12px',color:'#94A3B8'}},'PRIZE SHARE'),h('div',{style:{fontSize:'20px',fontWeight:900,color:'#10B981'}},newPrize+'%')),
+                h('div',null,h('div',{style:{fontSize:'12px',color:'#94A3B8'}},'WIN BONUS'),h('div',{style:{fontSize:'20px',fontWeight:900,color:'#F59E0B'}},fmtMoney(newWin))),
+              ),
+            ),
+            h('div',{className:'modal-actions'},
+              mkBtn('Sign Now','btn btn-success',function(){closeModal();doSignContract(offer);}),
+              mkBtn('Sign Later','btn btn-ghost',function(){closeModal();render();}),
+            ),
+          ));
         } else {
           // Rejected — offer disappears
           G.pendingOffers = (G.pendingOffers||[]).filter(function(o){return o.id!==offer.id;});
           G.offseasonOffers = (G.offseasonOffers||[]).filter(function(o){return o.id!==offer.id;});
           G.reputation = Math.max(0, G.reputation - 2);
-          addLog(G, '❌ '+offer.team+' rejected the counter offer. Offer pulled. Rep -2.');
-          G.dramaQueue.push({
-            id:'counter_reject_'+uid(),
-            title:offer.team+' Walked Away',
-            effect:'none',
-            desc:offer.team+' didn\'t like the counter. The offer is off the table. Rep took a small hit — word gets around when negotiations go sideways.',
-            valence:'bad',
-          });
-          saveGame(); closeModal(); render();
+                    addLog(G, '❌ '+offer.team+' rejected the counter offer. Offer pulled. Rep -2.');
+          saveGame();
+          openModal(h('div',null,
+            h('div',{className:'modal-eyebrow'},offer.team+' — Response'),
+            h('div',{className:'modal-title',style:{color:'#EF4444'}},'❌ Counter Rejected'),
+            h('div',{style:{background:'#060A10',borderRadius:'8px',padding:'14px',marginBottom:'16px',fontSize:'14px',color:'#E2E8F0',lineHeight:'1.7'}},
+              offer.team+' didn\'t like the counter. The offer is off the table. Word gets around when negotiations go sideways.',
+              h('div',{style:{marginTop:'8px',fontSize:'14px',color:'#EF4444',fontWeight:700}},'Rep -2. Offer removed.'),
+            ),
+            h('div',{className:'modal-actions'},
+              mkBtn('Close','btn btn-ghost',function(){closeModal();render();}),
+            ),
+          ));
         }
       }),
     ),
