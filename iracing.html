@@ -3123,12 +3123,11 @@ h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8p
 
 h('div',{className:'modal-actions'},
   mkBtn('Close','btn btn-ghost',closeModal),
-),
    ),
   ));
 }
 
-// ─── PLAYER CALLOUT MODAL ────────────────────────────────────────────────────
+// ─── PLAYER CALLOUT MyODAL ────────────────────────────────────────────────────
 function openPlayerCalloutModal(name, type, track) {
 const lines = type==='incident' ? CALLOUT_INCIDENT_LINES : CALLOUT_CLOSE_LINES;
   const line = lines[rand(0,lines.length-1)]
