@@ -5322,7 +5322,50 @@ function renderSchedule() {
             // Re-number rounds
             sched.forEach(function(r,idx){r.round=idx+1;});
             saveGame();
-            renderRows();
+                        renderRows();
+          });
+          // Touch drag for mobile
+          var touchStartY=0, touchItem=null, touchClone=null, touchOrigIdx=null;
+          row.addEventListener('touchstart',function(e){
+            touchStartY=e.touches[0].clientY;
+            touchOrigIdx=i;
+            row.style.opacity='0.5';
+          },{passive:true});
+          row.addEventListener('touchmove',function(e){
+            e.preventDefault();
+            var touch=e.touches[0];
+            var els=rc.querySelectorAll('[data-sched-idx]');
+            var target=null;
+            els.forEach(function(el){
+              var rect=el.getBoundingClientRect();
+              if(touch.clientY>=rect.top&&touch.clientY<=rect.bottom){
+                target=el;
+              }
+            });
+            rc.querySelectorAll('.drag-over').forEach(function(el){el.classList.remove('drag-over');});
+            if(target&&target!==row) target.classList.add('drag-over');
+          },{passive:false});
+          row.addEventListener('touchend',function(e){
+            row.style.opacity='1';
+            rc.querySelectorAll('.drag-over').forEach(function(el){el.classList.remove('drag-over');});
+            var touch=e.changedTouches[0];
+            var els=rc.querySelectorAll('[data-sched-idx]');
+            var targetIdx=null;
+            els.forEach(function(el){
+              var rect=el.getBoundingClientRect();
+              if(touch.clientY>=rect.top&&touch.clientY<=rect.bottom){
+                var idx=parseInt(el.getAttribute('data-sched-idx'));
+                if(!isNaN(idx)&&idx!==i&&!sched[idx].result) targetIdx=idx;
+              }
+            });
+            if(targetIdx!==null){
+              var tmp=sched[i];
+              sched[i]=sched[targetIdx];
+              sched[targetIdx]=tmp;
+              sched.forEach(function(r,idx){r.round=idx+1;});
+              saveGame();
+              renderRows();
+            }
           });
         }
 
