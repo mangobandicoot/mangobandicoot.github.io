@@ -4841,9 +4841,7 @@ function renderDashboard() {
   }
 
   // Car Condition — always visible on dashboard
-  const activeSeriesId = G.contracts.length ? G.contracts[0].seriesId : null;
-  const dashCC = activeSeriesId ? getCarCondition(G, activeSeriesId) : {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
-
+  const ccCard = h('div',{className:'card',style:{borderColor:criticalParts.length?'#EF444444':warningParts.length?'#F59E0B44':'#1E2433'}});
   const ccComponents = [
     {key:'engine',    label:'Engine',     color:'#EF4444'},
     {key:'suspension',label:'Suspension', color:'#F97316'},
@@ -4853,15 +4851,55 @@ function renderDashboard() {
   ];
   const criticalParts = ccComponents.filter(comp=>(dashCC[comp.key]||0)<25);
   const warningParts  = ccComponents.filter(comp=>(dashCC[comp.key]||0)<50&&(dashCC[comp.key]||0)>=25);
-  const ccCard = h('div',{className:'card',style:{borderColor:criticalParts.length?'#EF444444':warningParts.length?'#F59E0B44':'#1E2433'}});
-  ccCard.appendChild(h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'12px'}},
-    h('div',{className:'card-title',style:{margin:0}},'Car Condition'),
-    criticalParts.length
-      ? h('div',{style:{fontSize:'13px',fontWeight:700,color:'#EF4444',background:'#7F1D1D22',padding:'3px 10px',borderRadius:'20px'}},`⚠️ ${criticalParts.length} CRITICAL`)
-      : warningParts.length
-      ? h('div',{style:{fontSize:'13px',fontWeight:700,color:'#F59E0B',background:'#78350F22',padding:'3px 10px',borderRadius:'20px'}},`${warningParts.length} Low`)
-      : h('div',{style:{fontSize:'13px',fontWeight:700,color:'#10B981',background:'#06513422',padding:'3px 10px',borderRadius:'20px'}},'All Good'),
-  ));
+  const carsToShow = G.contracts.length ? G.contracts : [];
+  if (!carsToShow.length) {
+    const dashCC = {engine:100,suspension:100,chassis:100,tires:100,brakes:100};
+    carsToShow.push({seriesId:null, _dashCC:dashCC});
+  }
+  G.contracts.forEach(function(contract){
+    const sid = contract.seriesId;
+    const s2 = getSeries(sid);
+    const dashCC = getCarCondition(G, sid);
+    const ccComponents = [
+      {key:'engine',    label:'Engine',     color:'#EF4444'},
+      {key:'suspension',label:'Suspension', color:'#F97316'},
+      {key:'chassis',   label:'Chassis',    color:'#F59E0B'},
+      {key:'tires',     label:'Tires',      color:'#10B981'},
+      {key:'brakes',    label:'Brakes',     color:'#3B82F6'},
+    ];
+    const criticalParts = ccComponents.filter(function(comp){return (dashCC[comp.key]||0)<25;});
+    const warningParts  = ccComponents.filter(function(comp){return (dashCC[comp.key]||0)<50&&(dashCC[comp.key]||0)>=25;});
+    const ccCard = h('div',{className:'card',style:{borderColor:criticalParts.length?'#EF444444':warningParts.length?'#F59E0B44':'#1E2433',marginBottom:'10px'}});
+    ccCard.appendChild(h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'12px'}},
+      h('div',{className:'card-title',style:{margin:0}},s2?h('span',{style:{color:s2.color}},'● '):'','Car Condition'+(s2?' — '+s2.short:'')),
+      criticalParts.length
+        ? h('div',{style:{fontSize:'13px',fontWeight:700,color:'#EF4444',background:'#7F1D1D22',padding:'3px 10px',borderRadius:'20px'}},`⚠️ ${criticalParts.length} CRITICAL`)
+        : warningParts.length
+        ? h('div',{style:{fontSize:'13px',fontWeight:700,color:'#F59E0B',background:'#78350F22',padding:'3px 10px',borderRadius:'20px'}},`${warningParts.length} Low`)
+        : h('div',{style:{fontSize:'13px',fontWeight:700,color:'#10B981',background:'#06513422',padding:'3px 10px',borderRadius:'20px'}},'All Good'),
+    ));
+    const ccGrid = h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px 16px',marginBottom:criticalParts.length?'10px':'0'}});
+    ccComponents.forEach(function(comp){
+      const val = Math.round(dashCC[comp.key]||0);
+      const barColor = val>60?comp.color:val>30?'#F59E0B':'#EF4444';
+      ccGrid.appendChild(h('div',null,
+        h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'3px'}},
+          h('span',{style:{color:'#94A3B8'}},comp.label),
+          h('span',{style:{color:barColor,fontWeight:700}},val+'%'),
+        ),
+        h('div',{style:{height:'5px',background:'#1E2433',borderRadius:'3px',overflow:'hidden'}},
+          h('div',{style:{height:'100%',width:val+'%',background:barColor,borderRadius:'3px'}}),
+        ),
+      ));
+    });
+    ccCard.appendChild(ccGrid);
+    if (criticalParts.length) {
+      ccCard.appendChild(h('div',{style:{fontSize:'13px',color:'#EF4444',marginTop:'6px',fontWeight:600}},
+        '⚠️ '+criticalParts.map(function(p){return p.label;}).join(', ')+' in the red. DNF risk elevated.'
+      ));
+    }
+    f.appendChild(ccCard);
+  });
   const ccGrid = h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px 16px',marginBottom: criticalParts.length?'10px':'0'}});
   ccComponents.forEach(comp => {
     const val = Math.round(dashCC[comp.key]||0);
