@@ -7745,9 +7745,12 @@ function tickAIInjuries(state, seriesId) {
         id:'ai_rec_'+uid(),
         title:`${d.name} Returns`,
         effect:'none',
-        desc:`${d.name} has been medically cleared and returns to racing this week.${subName?` Remove ${subName} from your iRacing lineup.`:''}${extra}`,
+        desc:`${d.name} has been medically cleared and returns to racing this week.${extra}`,
         valence,
+        _requiresAction: true,
+        _actionLabel: 'Roster updated in iRacing',
       });
+
       addLog(state,`✅ ${d.name} recovered from injury. ${subName||'Sub'} relieved.`);
     } else {
       // Still injured — pre-race reminder if notable
@@ -7856,12 +7859,14 @@ function processAIInjuries(state, seriesId, finishOrder) {
     if (isTm)     { title = `Teammate Injured: ${driver.name}`; valence='bad';  extra=' The team will need to adjust.'; }
 
     state.dramaQueue.push({
-      id:'ai_inj_'+uid(),
-      title,
-      effect:'none',
-desc:`${driver.name} is out for ${racesOut} race${racesOut>1?'s':''}. ${subName} steps in.${extra}`,
-      valence,
-    });
+        id:'ai_inj_'+uid(),
+        title,
+        effect:'none',
+        desc:`${driver.name} is out for ${racesOut} race${racesOut>1?'s':''}. ${subName} steps in.${extra}`,
+        valence,
+        _requiresAction: true,
+        _actionLabel: 'Roster updated in iRacing',
+      });
     addLog(state,`⛑️ ${driver.name} injured — out ${racesOut} races. Sub: ${subName}`);
   });
 }
