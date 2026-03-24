@@ -8652,16 +8652,17 @@ function buildRaceModal({eyebrow,title,sub,seriesId,raceIdx,qualNote,crewPkg,exp
         }
 
         // Normal race or DNF — onSubmit first (stores result), then repair modal
-        if(!isFig8&&!isSpecial){
+                if(!isFig8&&!isSpecial){
           onSubmit(result);
-          // Attach condition to result for repair modal
           const _raceSnap=(G.schedules[seriesId]||[])[raceIdx];
           const _condId=(_raceSnap&&_raceSnap.condition)||'clear';
           result.condition=_condId;
-          openRepairModal(seriesId, result, ()=>{
-            maybeFireCalendarEvent();
-            saveGame(); render();
-          });
+          setTimeout(function(){
+            openRepairModal(seriesId, result, ()=>{
+              maybeFireCalendarEvent();
+              saveGame(); render();
+            });
+          }, 50);
         } else {
           onSubmit(result);
           saveGame(); render();
