@@ -4016,6 +4016,12 @@ maybeFireFanMail(state);
   cc.chassis    = clamp(cc.chassis    - chassisDeg, 0, 100);
   cc.suspension = clamp(cc.suspension - suspDeg, 0, 100);
 //warn if criticals are too high
+const criticals = [];
+if (cc.engine < 25)     criticals.push('Engine');
+if (cc.tires < 15)      criticals.push('Tires');
+if (cc.suspension < 20) criticals.push('Suspension');
+if (cc.brakes < 15)     criticals.push('Brakes');
+if (cc.chassis < 20)    criticals.push('Chassis');
   if (criticals.length && !result.dnf) {
     state.dramaQueue.push({id:'car_warn_'+uid(),title:'⚠️ Car Needs Attention',effect:'none',
       desc:`Post-race inspection flagged: ${criticals.join(', ')} in the red. Race it as-is and you're gambling.`,valence:'bad'});
