@@ -7808,7 +7808,8 @@ function processPlayerInjury(state, seriesId, result) {
   if (!state.seriesFields[seriesId][subName]) {
     state.seriesFields[seriesId][subName] = {points:0, wins:0, top5s:0, starts:0};
   }
-  const desc = `${state.driverName} has been injured and will miss the next ${racesOut} race${racesOut>1?'s':''}. ${subName} will substitute. Add ${subName} to your iRacing lineup.`;
+const desc = `${state.driverName} has been injured and will miss the next ${racesOut} race${racesOut>1?'s':''}. ${subName} will drive in your place — submit results as usual and they will be recorded under their name.`;
+
   state.dramaQueue.push({
     id:'player_inj_'+uid(),
     title:'⛑️ You Are Injured',
@@ -7858,7 +7859,7 @@ function processAIInjuries(state, seriesId, finishOrder) {
       id:'ai_inj_'+uid(),
       title,
       effect:'none',
-      desc:`${driver.name} is out for ${racesOut} race${racesOut>1?'s':''}. ${subName} steps in as substitute. Add ${subName} to your iRacing lineup.${extra}`,
+desc:`${driver.name} is out for ${racesOut} race${racesOut>1?'s':''}. ${subName} steps in.${extra}`,
       valence,
     });
     addLog(state,`⛑️ ${driver.name} injured — out ${racesOut} races. Sub: ${subName}`);
@@ -7876,7 +7877,7 @@ function tickPlayerInjury(state) {
       id:'player_rec_'+uid(),
       title:'✅ You Are Cleared to Race',
       effect:'none',
-      desc:`${state.driverName} has been medically cleared. Remove ${state.playerInjury.subName} from your iRacing lineup and race your own car.`,
+desc:`${state.driverName} is cleared and will drive the next race.`,
       valence:'good',
     });
     addLog(state,`✅ Player recovered from injury. ${state.playerInjury.subName} relieved.`);
