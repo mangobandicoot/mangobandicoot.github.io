@@ -3911,12 +3911,12 @@ const _fanMult = [1,1,1.5,2,5,15,40,100][(getSeries(seriesId)&&getSeries(seriesI
     const recentAvg = state.raceHistory
       .filter(r=>r.seriesId===seriesId&&r.season===state.season&&!r.dnf)
       .reduce((s,r,_,a)=>s+r.pos/a.length,0);
-   if(!result.dnf&&!result._injuryRace&&result.position>contract.reqFinish&&contract.racesCompleted>3) {
+if(!result.dnf&&!result._injuryRace&&result.position>contract.reqFinish&&contract.racesCompleted>5) {
       contract.missedFinishWarnings=(contract.missedFinishWarnings||0)+1;
       if(contract.missedFinishWarnings===1) {
         state.dramaQueue.push({id:'warn_'+uid(),title:'Team Warning',effect:'none',
           desc:`${contract.team} is unhappy. You're averaging P${Math.round(recentAvg||0)} — they want top ${contract.reqFinish}. One more stretch like this and you're gone.`});
-      } else if(contract.missedFinishWarnings>=2) {
+} else if(contract.missedFinishWarnings>=3) {
         state.contracts=state.contracts.filter(c=>c.seriesId!==seriesId);
         state.teammates=state.teammates.filter(t=>t.seriesId!==seriesId);
         state.reputation=Math.max(0,state.reputation-8);
