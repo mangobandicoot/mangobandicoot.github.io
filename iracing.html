@@ -1906,7 +1906,7 @@ const REPAIR_ITEMS = [
 ];
 
 // Tier cost multipliers — lower tiers pay more relative to income
-const REPAIR_TIER_MULT = { 1:1.0, 2:1.1, 3:1.3, 4:1.6, 5:2.0, 6:2.8, 7:4.0 };
+const REPAIR_TIER_MULT = { 1:0.5, 2:0.65, 3:1.0, 4:1.4, 5:1.8, 6:2.5, 7:3.5 };
 
 // Map DNF reasons to mandatory repairs — checks ALL keywords, stacks multiple items
 function getDNFRepairs(dnfReason) {
@@ -3986,16 +3986,35 @@ maybeFireFanMail(state);
   }
 
   // Car condition degradation — 5 components
-  const cc = getCarCondition(state, seriesId);
+    const cc = getCarCondition(state, seriesId);
   const cond = CONDITIONS.find(c=>c.id===(race.condition||'clear'))||CONDITIONS[0];
   const hardRace = result.position <= 5;
   const incidentRace = (result.incidentDrivers||[]).length > 0 || result.dnf;
-  cc.tires      = clamp(cc.tires      - rand(8,14) * (cond.tireWear||1) - (hardRace?5:0), 0, 100);
-  cc.brakes     = clamp(cc.brakes     - rand(4,8)  - (hardRace?4:0), 0, 100);
-  cc.engine     = clamp(cc.engine     - rand(3,7)  - (result.dnf&&(result.dnfReason&&result.dnfReason.match(/engine|motor|rod/i))?40:0), 0, 100);
-  cc.chassis    = clamp(cc.chassis    - rand(2,5)  - (incidentRace?rand(8,15):0), 0, 100);
-  cc.suspension = clamp(cc.suspension - rand(3,7)  - (incidentRace?rand(10,20):0), 0, 100);
-  const criticals = Object.entries(cc).filter(([,v])=>v<25).map(([k])=>k);
+  const tier = s ? s.tier : 1;
+
+  // Tire degradation scales by tier — lower tiers swap fresh rubber every race
+  const tireDeg = tier<=2 ? rand(2,4) : tier===3 ? rand(4,7) : tier<=5 ? rand(6,10) : rand(8,14);
+
+  // Brakes — consistent wear across tiers, harder races wear faster
+  const brakeDeg = rand(3,6) + (hardRace?3:0);
+
+  // Engine — baseline wear, big hit only on engine-related DNF
+  const engineDNFHit = result.dnf&&result.dnfReason&&/engine|motor|rod|bearing|blown/i.test(result.dnfReason||'') ? 40 : 0;
+  const engineDeg = rand(2,5) + engineDNFHit;
+
+  // Chassis — minor wear per race, meaningful hit only on actual incidents
+  const chassisIncidentHit = incidentRace ? rand(5,10) : 0;
+  const chassisDeg = rand(1,3) + chassisIncidentHit;
+
+  // Suspension — similar to chassis, incident penalty reduced from original
+  const suspIncidentHit = incidentRace ? rand(6,12) : 0;
+  const suspDeg = rand(2,5) + suspIncidentHit;
+
+  cc.tires      = clamp(cc.tires      - tireDeg  * (cond.tireWear||1), 0, 100);
+  cc.brakes     = clamp(cc.brakes     - brakeDeg, 0, 100);
+  cc.engine     = clamp(cc.engine     - engineDeg, 0, 100);
+  cc.chassis    = clamp(cc.chassis    - chassisDeg, 0, 100);
+  cc.suspension = clamp(cc.suspension - suspDeg, 0, 100);
 //warn if criticals are too high
   if (criticals.length && !result.dnf) {
     state.dramaQueue.push({id:'car_warn_'+uid(),title:'⚠️ Car Needs Attention',effect:'none',
