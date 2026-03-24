@@ -7196,8 +7196,8 @@ function openSeasonEndModal() {
       mkBtn(`Start Season ${summary.season+1} →`,'btn btn-lg btn-primary',()=>{closeModal();doAdvanceSeason();}),
     )
   );
-  openModal(content);
-}
+$('modal-overlay').dataset.repairOpen = 'true';
+openModal(content);}
 </script>
 <script>// ═══════════════════════════════════════════════════════════════════════════════
 // FULL THROTTLE — Actions & Modals
@@ -9095,12 +9095,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(importEl) importEl.addEventListener('change',e=>{if(e.target.files[0])importSave(e.target.files[0]);});
 $('modal-overlay').addEventListener('click',e=>{
   if(e.target===$('modal-overlay')){
-    // Don't allow clicking outside to close the repair modal
-    // Check if we're in a repair context by looking for the repair modal title
-    const box = $('modal-box');
-    if(box && box.querySelector && box.innerHTML.includes('Repair & Maintenance')){
-      return; // block outside-click dismissal for repair modal
-    }
+    if($('modal-overlay').dataset.repairOpen === 'true') return;
     closeModal();
   }
 });
@@ -9242,10 +9237,12 @@ function openRepairModal(seriesId, result, afterClose) {
     ),
 
     h('div',{className:'modal-actions'},
-     mkBtn('Skip All Repairs','btn btn-ghost',()=>{
-  if(afterClose) afterClose();
-  closeModal();
-  render();
+    mkBtn('Skip All Repairs','btn btn-ghost',()=>{
+  delete $('modal-overlay').dataset.repairOpen;
+  delete $('modal-overlay').dataset.repairOpen;
+if(afterClose) afterClose();
+closeModal();
+render();
 }),
       mkBtn('Pay & Continue','btn btn-success',()=>{
         const total = calcTotal();
