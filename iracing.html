@@ -4828,10 +4828,19 @@ function h(tag, attrs, ...children) {
       else el.setAttribute(k, v);
     }
   }
+  for (const c of children.flat()) {
+    if (c == null || c === false) continue;
+    el.appendChild(typeof c === 'string' || typeof c === 'number'
+      ? document.createTextNode(String(c)) : c);
+  }
+  return el;
+}
 
+function badge(text, color) {
   color = color||'#64748B';
   return h('span',{className:'badge',style:{color,borderColor:color+'55',background:color+'20'}},text);
 }
+
 
 function mkBtn(text, cls, onClick, disabled) {
   return h('button',{className:`btn ${cls}`,onClick,disabled:!!disabled},text);
