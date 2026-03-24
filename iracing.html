@@ -5664,66 +5664,6 @@ function renderContracts() {
 
   return f;
 }
-//==paddock ==
-function renderPaddock() {
-  const f = document.createDocumentFragment();
-  f.appendChild(h('div',{className:'page-title'},'Paddock'));
-  f.appendChild(h('div',{className:'page-sub'},'Action required items. Roster changes and injuries stay pinned until you confirm them.'));
-
-  const queue = G.dramaQueue || [];
-
-  // Sort: _requiresAction first, then injuries, then rest
-  const sorted = [...queue].map(function(d,i){return {d,i};}).sort(function(a,b){
-    const ap = a.d._requiresAction?0:a.d.title&&a.d.title.includes('Injur')?1:2;
-    const bp = b.d._requiresAction?0:b.d.title&&b.d.title.includes('Injur')?1:2;
-    return ap-bp;
-  });
-
-  if (!sorted.length) {
-    f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'28px',color:'#94A3B8',fontSize:'15px'}},'Nothing requiring your attention right now.'));
-    return f;
-  }
-
-  sorted.forEach(function({d, i}) {
-    const isAction = !!d._requiresAction;
-    const borderColor = isAction ? '#F59E0B' : d.valence==='bad' ? '#EF444444' : '#1E2433';
-
-    const banner = h('div',{style:{
-      background: isAction ? '#1a1200' : '#0B0F1A',
-      border: '1px solid '+borderColor,
-      borderRadius:'8px',
-      padding:'14px 16px',
-      marginBottom:'10px',
-    }});
-
-    banner.appendChild(h('div',{style:{fontSize:'15px',fontWeight:800,color:isAction?'#FBBF24':'#F9FAFB',marginBottom:'5px'}},d.title));
-    banner.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'10px'}},d.desc));
-
-    if (isAction) {
-      // Pinned item with explicit acknowledgement
-      const cb = h('input',{type:'checkbox'});
-      const lbl = h('label',{style:{display:'flex',gap:'8px',alignItems:'center',cursor:'pointer',fontSize:'14px',color:'#F59E0B',fontWeight:700}},
-        cb, d._actionLabel || 'Mark as done'
-      );
-      cb.addEventListener('change', function(){
-        if (cb.checked) {
-          G.dramaQueue.splice(i, 1);
-          addLog(G, '✅ Acknowledged: '+d.title);
-          saveGame(); render();
-        }
-      });
-      banner.appendChild(lbl);
-    } else {
-      banner.appendChild(mkBtn('Dismiss','btn btn-sm btn-primary',function(){
-        doDismissDrama(i);
-      }));
-    }
-
-    f.appendChild(banner);
-  });
-
-  return f;
-}
 
 // ─── SCHEDULE ─────────────────────────────────────────────────────────────────
 function openPreseasonModal() {
