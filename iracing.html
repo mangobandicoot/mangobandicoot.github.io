@@ -2353,7 +2353,9 @@ function renderPaddock() {
   var f = document.createDocumentFragment();
   f.appendChild(h('div',{className:'page-title'},'Paddock'));
   f.appendChild(h('div',{className:'page-sub'},'Action required items stay pinned until confirmed. Everything else dismisses normally.'));
-  var queue = G.dramaQueue || [];
+const queue = (G.dramaQueue || []).filter(function(d){
+  return d.effect !== 'money' && d.effect !== 'sponsor_warning' && !d._isFanMail;
+});
   if (!queue.length) {
     f.appendChild(h('div',{className:'card',style:{textAlign:'center',padding:'28px',color:'#94A3B8',fontSize:'15px'}},'Nothing requiring your attention right now.'));
     return f;
@@ -6245,6 +6247,27 @@ function renderBusiness() {
   const f=document.createDocumentFragment();
   f.appendChild(h('div',{className:'page-title'},'Business'));
   f.appendChild(h('div',{className:'page-sub'},'Sponsorships, off-track events, crew packages, and merch.'));
+const bizQueue = (G.dramaQueue || []).filter(function(d){
+  return d.effect === 'money' || d.effect === 'sponsor_warning' || d._isFanMail;
+});
+if(bizQueue.length){
+  const bq = h('div',{className:'card',style:{marginBottom:'18px'}});
+  bq.appendChild(cardTitle('Notifications'));
+  bizQueue.forEach(function(d){
+    const valColor = d.valence==='bad'?'#EF4444':d.valence==='good'?'#10B981':'#94A3B8';
+    const item = h('div',{style:{padding:'10px 0',borderBottom:'1px solid #0D1117'}});
+    item.appendChild(h('div',{style:{fontSize:'15px',fontWeight:700,color:'#F9FAFB',marginBottom:'4px'}},d.title));
+    item.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'8px'}},d.desc));
+    item.appendChild(h('div',{style:{textAlign:'right'}},
+      mkBtn('Dismiss','btn btn-sm btn-primary',function(){
+        const idx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+        if(idx>=0) doDismissDrama(idx);
+      })
+    ));
+    bq.appendChild(item);
+  });
+  f.appendChild(bq);
+}
 // ── Media Day ───────────────────────────────────────────────────────────────
   const activeTier = G.contracts.length
     ? Math.max(...G.contracts.map(c=>(getSeries(c.seriesId)&&getSeries(c.seriesId).tier)||1))
