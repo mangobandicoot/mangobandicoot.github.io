@@ -6605,7 +6605,7 @@ function renderPaddock() {
     ));
     banner.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'10px'}},d.desc));
 
-    // Action buttons
+        // Action buttons
     if(isAction){
       const cb=h('input',{type:'checkbox'});
       const lbl=h('label',{style:{display:'flex',gap:'8px',alignItems:'center',cursor:'pointer',fontSize:'14px',color:'#F59E0B',fontWeight:700}},
@@ -6613,7 +6613,8 @@ function renderPaddock() {
       );
       cb.addEventListener('change',function(){
         if(cb.checked){
-          G.dramaQueue.splice(i,1);
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+          if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1);
           addLog(G,'✅ Acknowledged: '+d.title);
           saveGame(); render();
         }
@@ -6625,20 +6626,25 @@ function renderPaddock() {
           const c=(G.contracts||[]).find(function(c){return c.seriesId===d._seriesId;});
           if(c) c.missedFinishWarnings=(c.missedFinishWarnings||0)+0.5;
           G.log.push('[S'+G.season+' W'+G.week+'] 🏁 Team orders: raced your own race.');
-          G.dramaQueue.splice(i,1); saveGame(); render();
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+          if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1);
+          saveGame(); render();
         }),
         mkBtn('Hold Position','btn btn-sm btn-ghost',function(){
           G.reputation=Math.max(0,G.reputation-1);
           G.fans=Math.max(0,G.fans-100);
           G.log.push('[S'+G.season+' W'+G.week+'] 🤝 Team orders: held position behind '+d._teammate+'.');
-          G.dramaQueue.splice(i,1); saveGame(); render();
+          const actualIdx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+          if(actualIdx>=0) G.dramaQueue.splice(actualIdx,1);
+          saveGame(); render();
         }),
       ));
     } else if(d._isCallout){
+      const responses = CALLOUT_RESPONSES[d._calloutType]||[];
       banner.appendChild(h('div',{style:{marginTop:'4px'}},
-        h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},'How do you respond to '+d._calloutDriver+'?'),
+        h('div',{style:{fontSize:'13px',color:'#64748B',marginBottom:'8px'}},'How do you respond to '+(d._calloutDriver||'them')+'?'),
         h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}},
-          ...(CALLOUT_RESPONSES[d._calloutType]||[]).map(function(resp){
+          ...responses.map(function(resp){
             return mkBtn(resp.label,'btn btn-sm '+resp.btnClass,function(){
               G.reputation=Math.max(0,G.reputation+resp.rep);
               G.fans=Math.max(0,G.fans+resp.fans);
@@ -6646,24 +6652,8 @@ function renderPaddock() {
               else if(resp.rivalEffect==='close_clean') touchRival(G.rivals,d._calloutDriver,'close',true);
               const repStr=resp.rep!==0?' Rep '+(resp.rep>0?'+':'')+resp.rep:'';
               const fanStr=resp.fans!==0?' Fans '+(resp.fans>0?'+':'')+fmtFans(resp.fans):'';
-              G.log.push('[S'+G.season+' W'+G.week+'] 💬 '+d._calloutDriver+' callout — '+resp.label+'.'+repStr+fanStr+'. '+resp.log);
-              G.dramaQueue.splice(i,1); saveGame(); render();
-            });
-          })
-        )
-      ));
-    } else {
-      banner.appendChild(h('div',{style:{textAlign:'right'}},
-        mkBtn('Dismiss','btn btn-sm btn-primary',function(){doDismissDrama(i);})
-      ));
-    }
-
-    f.appendChild(banner);
-  });
-
-  return f;
-}
-
+              G.log.push('[S'+G.season+' W'+G.week+'] 💬 '+(d._calloutDriver||'driver')+' callout — '+resp.label+'.'+repStr+fanStr+'. '+resp.log);
+              const actualIdx = G.dramaQueue.findIndex​​​​​​​​​​​​​​​​
 
 // ─── DRIVERS DATABASE ─────────────────────────────────────────────────────────
 function renderDrivers() {
