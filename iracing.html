@@ -6418,7 +6418,12 @@ function renderBusiness() {
       ...(G.sponsorOffers||[]).map(sp=>h('div',{className:'row-item'},
         h('div',{style:{flex:1}},
           h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB',display:'flex',gap:'8px',alignItems:'center'}},sp.brand,sp.international?badge('INTERNATIONAL','#F59E0B'):null),
-          h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},`${(SPONSOR_TYPES[sp.type]||{}).label||sp.type} · ${fmtMoney(sp.valuePerSeason)}/season · ${sp.seasonsLeft} season(s) · Win bonus: ${fmtMoney(sp.winBonus)}`),
+h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
+  ((SPONSOR_TYPES[sp.type]||{}).label||sp.type)+' · '+
+  ((getSeries(sp.seriesId)&&getSeries(sp.seriesId).short)||sp.seriesId||'All Series')+' · '+
+  fmtMoney(sp.valuePerSeason)+'/season · '+
+  sp.seasonsLeft+' season(s) · Win bonus: '+fmtMoney(sp.winBonus)
+),
         ),
         h('div',{style:{display:'flex',gap:'6px'}},
           mkBtn('Decline','btn btn-sm btn-ghost',()=>{G.sponsorOffers=G.sponsorOffers.filter(s=>s.id!==sp.id);saveGame();render();}),
@@ -6437,7 +6442,13 @@ function renderBusiness() {
       return h('div',{className:'row-item'},
         h('div',{style:{flex:1}},
           h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB'}},sp.brand,sp.international?badge('INTL','#F59E0B'):null),
-          h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},`${(SPONSOR_TYPES[sp.type]||{}).label} · ${fmtMoney(sp.valuePerSeason)}/season · ${sp.seasonsLeft} season(s) left`),
+h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
+  (SPONSOR_TYPES[sp.type]||{}).label+' · '+
+  ((getSeries(sp.seriesId)&&getSeries(sp.seriesId).short)||sp.seriesId||'All Series')+' · '+
+  fmtMoney(sp.valuePerSeason)+'/season · '+
+  sp.seasonsLeft+' season(s) left'
+),
+
         ),
         h('div',{style:{textAlign:'right',flexShrink:0}},
           h('div',{style:{fontSize:'12px',color:'#94A3B8'}},'HAPPINESS'),
@@ -9095,16 +9106,29 @@ function openEditDriverModal(driver) {
     h('div',{style:{marginBottom:'16px'}},h('label',{className:'modal-label'},'Notes'),notesIn),
     h('div',{className:'modal-actions'},
       mkBtn('Cancel','btn btn-ghost',closeModal),
-      mkBtn('Save','btn btn-primary',()=>{
-        if(!isPlayer){
-          const ni=$('edit-driver-name');
-          if(ni&&ni.value.trim()) driver.name=ni.value.trim();
-        }
-        driver.notes=notesIn.value.trim();
-        driver.currentSeriesId=seriesSel.value;
-        driver.currentTeam=(TEAMS[seriesSel.value]||['Independent'])[0];
-        saveGame();closeModal();render();
-      })
+mkBtn('Save','btn btn-primary',()=>{
+  if(!isPlayer){
+    const ni=$('edit-driver-name');
+    if(ni&&ni.value.trim()) driver.name=ni.value.trim();
+  }
+  driver.notes=notesIn.value.trim();
+  const oldSeriesId = driver.currentSeriesId;
+  driver.currentSeriesId=seriesSel.value;
+  driver.currentTeam=(TEAMS[seriesSel.value]||['Independent'])[0];
+  driver._carNumberSeniority = 0;
+  // Notify if moving into or out of a series the player is racing
+  if(oldSeriesId !== seriesSel.value){
+    const playerInOld = G.contracts&&G.contracts.some(function(c){return c.seriesId===oldSeriesId;});
+    const playerInNew = G.contracts&&G.contracts.some(function(c){return c.seriesId===seriesSel.value;});
+    if(playerInOld||playerInNew){
+      const direction = (getSeries(seriesSel.value)&&getSeries(seriesSel.value).tier||1) > (getSeries(oldSeriesId)&&getSeries(oldSeriesId).tier||1) ? 'promoted' : 'demoted';
+      _notifyRosterChange(G, driver, direction, seriesSel.value, null);
+      addLog(G, '📋 '+driver.name+' moved from '+(getSeries(oldSeriesId)&&getSeries(oldSeriesId).short||oldSeriesId)+' to '+(getSeries(seriesSel.value)&&getSeries(seriesSel.value).short||seriesSel.value));
+    }
+  }
+  saveGame();closeModal();render();
+})
+
     )
   ));
 }
