@@ -9018,6 +9018,7 @@ function showSummaryToast(text, color, seriesShort) {
   setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 30000);
 }
 const $ = id => document.getElementById(id);
+const frag = (...nodes) => { const f = document.createDocumentFragment(); nodes.flat().forEach(n => n && f.appendChild(n)); return f; };
 
 // ─── BOOT ────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
