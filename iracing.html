@@ -9232,9 +9232,9 @@ function openRepairModal(seriesId, result, afterClose) {
     ),
 
     h('div',{className:'modal-actions'},
-      mkBtn('Skip All Repairs','btn btn-ghost',()=>{
-        closeModal(); if(afterClose) afterClose();
-      }),
+     mkBtn('Skip All Repairs','btn btn-ghost',()=>{
+  closeModal(); if(afterClose) afterClose(); render();
+}),
       mkBtn('Pay & Continue','btn btn-success',()=>{
         const total = calcTotal();
         G.money -= total;
@@ -9252,8 +9252,7 @@ function openRepairModal(seriesId, result, afterClose) {
           if(item.id==='trans_rebuild'){ _cc.engine=Math.min(100,_cc.engine+50); }
         });
 
-        saveGame(); closeModal(); if(afterClose) afterClose();
-      }),
+saveGame(); closeModal(); if(afterClose) afterClose(); render();      }),
     )
   );
   openModal(content);
