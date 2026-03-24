@@ -4740,11 +4740,12 @@ SERIES.filter(function(s){return s.tier>=4;}).forEach(function(s){
 
   state.season++;
   state.week=1;
-  state.schedules={};
-  state.championshipPoints={};
-  state.seriesFields={};
-  state.sponsorOffers=[];
-  state.offTrackDone=[];
+state.schedules={};
+state.championshipPoints={};
+state.seriesFields={};
+state.sponsorOffers=[];
+state.offTrackDone=[];
+state.lastSocialPost={};
   state._elimNotified=null;
   state.teammates=state.teammates.filter(t=>state.contracts.find(c=>c.seriesId===t.seriesId));
 
@@ -6276,8 +6277,7 @@ function renderBusiness() {
   f.appendChild(h('div',{className:'page-title'},'Business'));
   f.appendChild(h('div',{className:'page-sub'},'Sponsorships, off-track events, crew packages, and merch.'));
 const bizQueue = (G.dramaQueue || []).filter(function(d){
-d.effect === 'money' || d.effect === 'sponsor_warning' || d._isFanMail || d._isSponsor
-
+return d.effect === 'money' || d.effect === 'sponsor_warning' || d._isFanMail || d._isSponsor;
 });
 if(bizQueue.length){
   const bq = h('div',{className:'card',style:{marginBottom:'18px'}});
