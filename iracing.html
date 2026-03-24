@@ -9093,7 +9093,17 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
   const importEl=$('import-setup');
   if(importEl) importEl.addEventListener('change',e=>{if(e.target.files[0])importSave(e.target.files[0]);});
-  $('modal-overlay').addEventListener('click',e=>{if(e.target===$('modal-overlay'))closeModal();});
+$('modal-overlay').addEventListener('click',e=>{
+  if(e.target===$('modal-overlay')){
+    // Don't allow clicking outside to close the repair modal
+    // Check if we're in a repair context by looking for the repair modal title
+    const box = $('modal-box');
+    if(box && box.querySelector && box.innerHTML.includes('Repair & Maintenance')){
+      return; // block outside-click dismissal for repair modal
+    }
+    closeModal();
+  }
+});
   if(loadGame()) showGame(); else showSetup();
   setInterval(()=>{if(G)saveGame();},60000);
 });
