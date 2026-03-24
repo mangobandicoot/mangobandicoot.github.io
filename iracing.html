@@ -3485,16 +3485,14 @@ if (!d) {
       }
     }
 addLog(state, '📋 New driver added to database: '+name);
-if (source === 'known') {
-  state.dramaQueue.push({
-    id: 'newdriver_'+uid(),
-    title: '📋 New Driver: '+name,
-    effect: 'none',
-    desc: name+' has been added to the driver database from your race results. Check their profile and set AI stats if needed.',
-    valence: 'neutral',
-    _isPaddock: true,
-  });
-}
+state.dramaQueue.push({
+  id: 'newdriver_'+uid(),
+  title: '📋 New Driver: '+name,
+  effect: 'none',
+  desc: name+' has been added to the driver database from your race results. Check their profile and set AI stats if needed.',
+  valence: 'neutral',
+  _isPaddock: true,
+});
 
   } else if (d.source==='generated') {
     d.source = 'known';
@@ -7887,16 +7885,10 @@ function tickPlayerInjury(state) {
   }
   // Still injured — decrement and show modal
   state.playerInjury.racesRemaining--;
-  if (state.playerInjury.racesRemaining <= 0) {
-    // Last race — will clear after this one
-    state.dramaQueue.push({
-      id:'player_inj_last_'+uid(),
-      title:'⛑️ Final Race on Injury',
-      effect:'none',
-      desc:`${state.driverName} is out for one more race. ${state.playerInjury.subName} starts today. You should be cleared after this.`,
-      valence:'bad',
-    });
+if (state.playerInjury.racesRemaining <= 0) {
+    // Last race — injury update summary handles the messaging
   }
+
   return true;
 }
    
