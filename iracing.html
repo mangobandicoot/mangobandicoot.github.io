@@ -5062,7 +5062,8 @@ function renderTabs() {
   TABS.forEach(t => {
     let bc=0;
     if(t.id==='contracts') bc=(G.pendingOffers||[]).length;
-if(t.id==='paddock')   bc=(G.dramaQueue||[]).length;
+if(t.id==='paddock')   bc=(G.dramaQueue||[]).filter(d=>d.effect!=='money'&&d.effect!=='sponsor_warning'&&!d._isFanMail&&!d._isSponsor).length;
+
 if(t.id==='business')  bc=(G.sponsorOffers||[]).length;
 
     const tab = h('button',{className:'tab'+(activeTab===t.id?' active':''),onClick:()=>setTab(t.id)},
