@@ -1113,44 +1113,6 @@ function doMediaDay(tier) {
     ),
   ));
 }
-// ─── PADDOCK RUMORS ──────────────────────────────────────────────────────────
-const PADDOCK_RUMORS = [
-  // Team/contract rumors
-  'Word in the paddock is one of the top teams is unhappy with their driver situation. Expect movement before the offseason.',
-  'A source close to a Cup team says they\'ve been quietly scouting lower-series talent. Names haven\'t surfaced yet.',
-  'Rumor is a well-funded team is about to announce a big sponsorship deal that could change their driver lineup.',
-  'Heard from a reliable source that at least one team owner is considering selling their operation after this season.',
-  'Talk in the garage area is that a prominent driver is unhappy with their current contract and may not re-sign.',
-  'A crew chief reportedly interviewed with a rival team last week. Nothing confirmed but the timing is interesting.',
-  'Word is a manufacturer is increasing their involvement in the series next season. More factory support means more competition for seats.',
-  // Driver performance rumors
-  'Someone in the paddock is saying a well-known driver has been struggling in testing but it hasn\'t shown up in race results yet.',
-  'Rumor is one of the championship contenders has had ongoing mechanical issues they\'ve been managing quietly all season.',
-  'A mechanic who used to work for a top team was overheard saying their car setup philosophy has fundamentally changed. Could be good or bad.',
-  'Word is a driver who\'s been running up front lately has been having issues at home. Could affect their focus.',
-  'Heard that a young driver who\'s been on everyone\'s radar recently turned down a significant offer. Holding out for something bigger.',
-  // Series/politics rumors  
-  'A series official was reportedly seen having a long conversation with a team owner after the last race. Nobody knows what was said.',
-  'Rumor is the series is considering a rule change that would significantly affect car setup. Teams are already lobbying.',
-  'Word is the stewards received a formal protest after last week\'s race that never made the official reports.',
-  'A sponsor who\'s been in the series for years is reportedly reconsidering their involvement after next season.',
-  'Heard the series is in talks with a new venue that would replace one of the traditional stops on the schedule.',
-  // Injury/personal rumors
-  'Word is a driver who\'s been listed as day-to-day with an injury is in worse shape than the team is letting on.',
-  'Rumor is a prominent driver recently went through something personal that their team has been covering for.',
-  'A source says a driver who had a big crash earlier this season still isn\'t fully right but is racing through it.',
-  // Fun/light rumors
-  'Overheard at the hauler: two crew members from rival teams apparently got into it at a bar last night. Details are fuzzy.',
-  'Word is a driver bet their crew chief they could qualify top five this weekend. The stakes were reportedly significant.',
-  'Rumor is one of the more colorful personalities in the paddock got thrown out of a team hospitality suite last night.',
-  'A source says a well-known driver showed up to the track in a rental car this week. Their hauler had a breakdown. Not exactly the look.',
-  'Heard that a sponsor rep got lost in the infield for two hours during last week\'s race. The team is not amused.',
-  // True or false framing
-  'Take this with a grain of salt, but word is a major team announcement is coming before the end of the season.',
-  'Not confirmed, but a paddock source is saying there\'s been a falling out between a driver and their team principal.',
-  'This one might be nothing, but two drivers who have been close for years reportedly aren\'t speaking right now.',
-  'Unverified, but someone is claiming a driver failed a routine check this week and the team is managing it quietly.',
-];
 // ─── SPONSOR ACTIVATION EVENTS ───────────────────────────────────────────────
 const SPONSOR_ACTIVATIONS = [
   {
@@ -1546,18 +1508,138 @@ function maybeFireRivalWin(state, seriesId, result) {
   });
 }  
 function maybeFirePaddockRumor(state) {
-  // ~20% chance per race
   if (Math.random() > 0.20) return;
-  var rumor = PADDOCK_RUMORS[Math.floor(Math.random()*PADDOCK_RUMORS.length)];
+
+  // Build connected rumors from actual sim state
+  const connectedRumors = [];
+  const playerFirst = state.driverName.split(' ')[0];
+
+  // Struggling known driver
+  const strugglingDrivers = (state.drivers||[]).filter(function(d){
+    return d.source==='known' && d.active && d.seasonPoints < 50 && d.starts > 3;
+  });
+  if (strugglingDrivers.length) {
+    const d = strugglingDrivers[rand(0, strugglingDrivers.length-1)];
+    const s = getSeries(d.currentSeriesId);
+    connectedRumors.push(
+      `Word in the ${(s&&s.short)||'series'} paddock is that ${d.name} hasn't been happy with how the season has gone and there might be conversations happening about what comes next; nobody's saying anything on the record but the vibe around that side of the garage has shifted.`,
+      `Heard from someone close to the ${(s&&s.short)||'series'} that ${d.name}'s situation is being watched pretty closely right now, results haven't been where anyone expected and the mood around the team reflects that.`,
+      `${d.name} has had a rough stretch and apparently it's not just a on-track thing; there's talk that the relationship with the team has gotten complicated, though nobody's putting names to it officially.`
+    );
+  }
+
+  // Driver on a hot streak
+  const hotDrivers = (state.drivers||[]).filter(function(d){
+    return d.source==='known' && d.active && d.seasonWins >= 2;
+  });
+  if (hotDrivers.length) {
+    const d = hotDrivers[rand(0, hotDrivers.length-1)];
+    const s = getSeries(d.currentSeriesId);
+    connectedRumors.push(
+      `${d.name} has been on a run lately and apparently some teams from higher up the ladder have been making calls; nothing confirmed but when you're winning races people notice and they talk.`,
+      `Heard that ${d.name}'s recent results have gotten some attention from outside the ${(s&&s.short)||'series'}; the kind of attention that usually means someone's putting together an offer.`,
+      `The buzz around ${d.name} right now is real; two wins does something to the conversation in the paddock and word is the phone has been busier than usual on that side.`
+    );
+  }
+
+  // Active rivalry between two known drivers
+  const knownRivals = (state.rivals||[]).filter(function(r){
+    return ['rival','frenemy'].includes(relationship(r));
+  });
+  if (knownRivals.length) {
+    const r = knownRivals[rand(0, knownRivals.length-1)];
+    connectedRumors.push(
+      `The situation between ${playerFirst} and ${r.name} has apparently been a topic of conversation beyond just the two of them; people in the paddock have been picking sides whether anyone asked them to or not.`,
+      `Heard from a crew member that the tension between ${playerFirst} and ${r.name} goes deeper than what's been public; there's apparently a specific incident that started it that hasn't made it into any of the coverage.`,
+      `${r.name} was overheard saying something about ${playerFirst} that didn't sound particularly friendly; the person who heard it wasn't supposed to and now it's making the rounds.`
+    );
+  }
+
+  // Injured driver
+  const injuredKnown = (state.drivers||[]).filter(function(d){
+    return d.source==='known' && d.injuredOrPenalized && d._injuryRacesOut > 0;
+  });
+  if (injuredKnown.length) {
+    const d = injuredKnown[rand(0, injuredKnown.length-1)];
+    connectedRumors.push(
+      `The timeline on ${d.name}'s return is apparently less clear than the team has been letting on; heard from someone close to the situation that it's being managed carefully and the optimistic updates might be a little optimistic.`,
+      `${d.name}'s injury is being described publicly as minor but the word inside the garage is that it's taking longer than expected and the team is starting to have conversations they'd rather not be having yet.`
+    );
+  }
+
+  // Championship pressure late in season
+  const activeSeries = (state.contracts||[]).map(function(c){return c.seriesId;});
+  activeSeries.forEach(function(sid){
+    const sched = state.schedules[sid]||[];
+    const racesLeft = sched.filter(function(r){return !r.result;}).length;
+    const myPts = state.championshipPoints[sid]||0;
+    const field = state.seriesFields[sid]||{};
+    const rows = [{pts:myPts,isPlayer:true}].concat(Object.entries(field).map(function([n,d]){return {pts:d.points,name:n};})).sort(function(a,b){return b.pts-a.pts;});
+    const myPos = rows.findIndex(function(r){return r.isPlayer;})+1;
+    const s = getSeries(sid);
+    if (racesLeft <= 4 && racesLeft > 0 && myPos <= 3) {
+      connectedRumors.push(
+        `The ${(s&&s.short)||'series'} championship is tighter than the standings make it look and apparently there are people in the paddock who think the next two races are going to decide everything; the pressure is real even if nobody's admitting it.`,
+        `Heard that the conversation in the ${(s&&s.short)||'series'} paddock has shifted entirely to the championship picture; teams that were focused on individual results are now doing the math and it's making everyone a little edgy.`
+      );
+    }
+  });
+
+  // Team instability — someone got dropped recently
+  const recentDrops = (state.log||[]).slice(-20).filter(function(l){return l.includes('dropped you');});
+  if (recentDrops.length) {
+    connectedRumors.push(
+      `After the recent team change there's been a lot of speculation about what actually happened behind the scenes; the official version and the paddock version don't quite match up and people are filling in the gaps.`,
+      `The fallout from the recent driver move is still being talked about; turns out these things are rarely as clean as the announcements make them sound and there are a few people who have opinions about how it went down.`
+    );
+  }
+
+  // Generic flavor rumors — always available, no connection to sim state
+  const genericRumors = [
+    `Word is one of the top teams in the series has been quietly unhappy with their driver situation for a while now and the offseason could bring some movement that catches people off guard.`,
+    `Heard from a reliable source that at least one well-funded team is about to announce a sponsorship deal that's bigger than anything the series has seen in a few years; it'll change their plans for next season significantly.`,
+    `Talk in the garage area is that a manufacturer is increasing their involvement in the series next season which means more factory support and more competition for the seats that come with it.`,
+    `A crew chief reportedly interviewed with a rival team last week; nobody's confirming it but the timing lines up with some other things that have been happening and it's not being dismissed.`,
+    `Rumor is the series is looking at a rule change that would shake up the car setup side of things pretty significantly; teams are already lobbying and the politics around it have gotten interesting.`,
+    `Heard that a driver who's been on everyone's radar recently turned down a significant offer from a bigger team; whether that's because something better is coming or because the situation at home is more complicated than it looks, nobody's sure.`,
+    `Word is a sponsor who's been in the series for years is reconsidering their long-term commitment after next season; the numbers apparently aren't working the way they used to and the internal conversation has changed.`,
+    `There's talk that a prominent driver is unhappy with their current contract situation and the relationship with the team has gotten complicated enough that both sides are being careful about what they say publicly.`,
+    `Heard from someone in the paddock that a team owner is seriously considering selling the operation after this season; not confirmed but the person saying it usually knows what they're talking about.`,
+    `A source says at least one driver who's been running up front lately has been dealing with something off the track that the team has been covering for; it hasn't affected results yet but the people around them have noticed.`,
+    `The stewards apparently received a formal complaint after last week's race that never made it into the official reports; whatever it was, it was serious enough that there were some very tense conversations behind closed doors.`,
+    `Word is a young driver who everyone assumed was on their way up has been having second thoughts about the path they're on; sometimes the reality of what it takes doesn't match what you imagined when you were coming up.`,
+    `Heard that two drivers who have been close for a long time aren't really talking right now; nobody knows exactly what happened but the energy between them at the last event was noticeably different.`,
+    `There's apparently been some friction inside one of the bigger teams about strategy calls over the last few races; the kind of friction that starts as a disagreement and quietly becomes something more if results don't improve.`,
+    `Rumor is a driver who recently moved up to a higher series is struggling more than the results show; apparently the step up has been harder than expected and the team is being patient but patience has limits.`,
+    `Word from the paddock is that the next few races are going to clarify a lot of things that have been uncertain this season; some contracts, some relationships, some situations that have been in a holding pattern.`,
+    `Heard that a well-known team principal had a meeting with series officials that ran a lot longer than scheduled; what came out of it hasn't been shared but the people in the room apparently left looking like they had a lot to think about.`,
+    `There's talk that a driver everyone wrote off after a rough patch last season has been working with a new coach and the results in testing have been turning heads; whether it translates to race weekends is another question.`,
+    `A source close to one of the midfield teams says the financial picture for next season is more uncertain than they're letting on publicly; sponsorship is harder to find than it used to be and the math is getting difficult.`,
+    `Word is someone in the series is about to make an announcement that's going to surprise people; the details aren't clear but the source was specific enough that it's hard to dismiss entirely.`,
+  ];
+
+  
+  // Pick from connected pool if available (weighted 60/40 toward connected when available)
+  let rumor;
+  let isConnected = false;
+  if (connectedRumors.length && Math.random() < 0.60) {
+    rumor = connectedRumors[rand(0, connectedRumors.length-1)];
+    isConnected = true;
+  } else {
+    rumor = genericRumors[rand(0, genericRumors.length-1)];
+  }
+
   state.dramaQueue.push({
     id: 'rumor_'+uid(),
     title: '🗣️ Paddock Rumor',
     effect: 'none',
-    desc: rumor + ' Could be nothing. Could be everything.',
+    desc: rumor,
     valence: 'neutral',
     _isRumor: true,
+    _isConnected: isConnected,
   });
-}  
+}
+
 // ─── SOCIAL MEDIA POSTS ───────────────────────────────────────────────────────
 const SOCIAL_POSTS = {
   positive: [
