@@ -5446,6 +5446,37 @@ function buildSeasonSummary(state) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 let G = null;
+// ─── COLLAPSE STATE ───────────────────────────────────────────────────────────
+const _collapsed = {};
+function isCollapsed(key, defaultVal) {
+  if (_collapsed[key] === undefined) _collapsed[key] = defaultVal || false;
+  return _collapsed[key];
+}
+function toggleCollapse(key, defaultVal) {
+  _collapsed[key] = !isCollapsed(key, defaultVal);
+}
+function collapseToggleBtn(key, defaultVal, onToggle) {
+  const collapsed = isCollapsed(key, defaultVal);
+  const btn = h('button', {
+    className: 'btn btn-xs btn-ghost',
+    style: {
+      fontSize: '16px',
+      padding: '0 6px',
+      lineHeight: 1,
+      color: '#64748B',
+      transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+      transition: 'transform 0.2s',
+    },
+    onClick: function(e) {
+      e.stopPropagation();
+      toggleCollapse(key, defaultVal);
+      if (onToggle) onToggle();
+      else render();
+    },
+  }, '▾');
+  return btn;
+}
+
 let activeTab = 'dashboard';
 
 // ─── DOM HELPERS ─────────────────────────────────────────────────────────────
@@ -6428,12 +6459,26 @@ function renderSchedule() {
     const sched=G.schedules[contract.seriesId]||[];
     const pts=G.championshipPoints[contract.seriesId]||0;
     const section=h('div',{style:{marginBottom:'28px'}});
-    section.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}},
-      h('div',{style:{width:'11px',height:'11px',borderRadius:'2px',background:s.color}}),
-      h('span',{style:{fontSize:'18px',fontWeight:800,color:'#F9FAFB'}},s.name),
-      h('span',{style:{color:'#94A3B8',fontSize:'14px'}},`— ${contract.team}`),
-      h('span',{style:{marginLeft:'auto',fontSize:'15px',color:s.color,fontWeight:900}},`${pts} pts`),
-    ));
+const schedKey = 'sched_'+contract.seriesId;
+const allDone = sched.length > 0 && sched.every(r=>r.result);
+const schedDefaultCollapsed = allDone;
+const schedCollapsed = isCollapsed(schedKey, schedDefaultCollapsed);
+
+section.appendChild(h('div',{
+  style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px',cursor:'pointer'},
+onClick: function(){ toggleCollapse(schedKey, schedDefaultCollapsed); render(); }
+},
+  h('div',{style:{width:'11px',height:'11px',borderRadius:'2px',background:s.color}}),
+  h('span',{style:{fontSize:'18px',fontWeight:800,color:'#F9FAFB'}},s.name),
+  h('span',{style:{color:'#94A3B8',fontSize:'14px'}},`— ${contract.team}`),
+  h('span',{style:{marginLeft:'auto',fontSize:'15px',color:s.color,fontWeight:900}},`${pts} pts`),
+  h('span',{style:{
+    fontSize:'16px',color:'#64748B',
+    transform: schedCollapsed?'rotate(-90deg)':'rotate(0deg)',
+    transition:'transform 0.2s',
+    marginLeft:'8px',
+  }},'▾'),
+));
 
         function renderRows() {
       const old=section.querySelector('.sched-rows');
@@ -6597,7 +6642,7 @@ mkBtn('✕','btn btn-xs btn-danger',()=>{
       });
       section.appendChild(rc);
     }
-    renderRows();
+        if (!isCollapsed(schedKey, schedDefaultCollapsed)) renderRows();
     f.appendChild(section);
   });
   f.appendChild(h('div',{style:{fontSize:'14px',color:'#64748B',fontStyle:'italic'}},'Completed races: click for details. Upcoming: drag ⠿ to reorder.'));
