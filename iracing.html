@@ -3961,8 +3961,9 @@ maybeFireFanMail(state);
       valence: result.position<=5?'good':'neutral',
     });
   }
-  processAIInjuries(state, seriesId, result.finishOrder||[]);
-  tickAIInjuries(state, seriesId);
+  const _alreadyInjured = new Set((state.drivers||[]).filter(d=>d.injuredOrPenalized&&d._injuryRacesOut>0).map(d=>d.name));
+processAIInjuries(state, seriesId, result.finishOrder||[]);
+tickAIInjuries(state, seriesId, _alreadyInjured);
   if(state.week%6===0){
     const fresh=generateOffers(state.reputation,state.fans);
     fresh.forEach(o=>{if(!state.pendingOffers.find(p=>p.seriesId===o.seriesId)) state.pendingOffers.push(o);});
@@ -7716,13 +7717,12 @@ function doPRSpend(item) {
   saveGame(); render();
 }
 // ─── INJURY SYSTEM ───────────────────────────────────────────────────────────
-function tickAIInjuries(state, seriesId) {
+function tickAIInjuries(state, seriesId, alreadyInjured) {
+  alreadyInjured = alreadyInjured || new Set((state.drivers||[]).map(d=>d.name));
   (state.drivers||[]).forEach(d => {
     if (!d.injuredOrPenalized || !d._injuryRacesOut) return;
-    // Only tick drivers in the same series as the race just run
     if (d.currentSeriesId !== seriesId) return;
-    d._injuryRacesOut--;
-    if (d._injuryRacesOut <= 0) {
+    if (!alreadyInjured.has(d.name)) return; 
       // Driver recovers
       d.injuredOrPenalized = false;
       const subName = d._subName;
@@ -9108,114 +9108,146 @@ function openRepairModal(seriesId, result, afterClose) {
   const s    = getSeries(seriesId);
   const cond = result.condition ? CONDITIONS.find(c=>c.id===result.condition) : null;
   const tier = s ? s.tier : 1;
+  const cc   = getCarCondition(G, seriesId);
 
-  // Determine mandatory repairs from DNF
+  // Components
+  const COMPONENTS = [
+    { key:'engine',     label:'Engine',     color:'#EF4444', tier1free:false },
+    { key:'suspension', label:'Suspension', color:'#F97316', tier1free:false },
+    { key:'chassis',    label:'Chassis',    color:'#F59E0B', tier1free:false },
+    { key:'tires',      label:'Tires',      color:'#10B981', tier1free:true  },
+    { key:'brakes',     label:'Brakes',     color:'#3B82F6', tier1free:false },
+  ];
+
+  // Base costs per component
+  const BASE_COSTS = {
+    engine:     800,
+    suspension: 500,
+    chassis:    400,
+    tires:      200,
+    brakes:     300,
+  };
+
+  // Mandatory repairs from DNF — force certain components to 100%
   const mandatoryIds = result.dnf ? getDNFRepairs(result.dnfReason) : [];
-  // Suggest wear items
-  const suggestedIds  = result.dnf ? [] : suggestWearRepairs(result.condition||'clear', result.position, result.fieldSize);
-
-  // Build checked state: mandatory = always checked & locked, suggested = pre-checked, rest = unchecked
-  const checked = {};
-  REPAIR_ITEMS.forEach(item => {
-    if (mandatoryIds.includes(item.id))  checked[item.id] = true;
-    else if (suggestedIds.includes(item.id)) checked[item.id] = true;
-    else checked[item.id] = false;
+  const mandatoryComponents = new Set();
+  mandatoryIds.forEach(id => {
+    if(/engine/.test(id))     mandatoryComponents.add('engine');
+    if(/trans/.test(id))      mandatoryComponents.add('engine');
+    if(/fire/.test(id))       { mandatoryComponents.add('engine'); mandatoryComponents.add('chassis'); }
+    if(/rollover/.test(id))   mandatoryComponents.add('chassis');
+    if(/crash|hard/.test(id)) { mandatoryComponents.add('chassis'); mandatoryComponents.add('suspension'); }
+    if(/suspension/.test(id)) mandatoryComponents.add('suspension');
+    if(/tire|blowout/.test(id)) mandatoryComponents.add('tires');
   });
 
-  const checkboxes = {};
-  let totalEl = null;
+  // Target values — start at current, mandatory components start at 100
+  const targets = {};
+  COMPONENTS.forEach(c => {
+    targets[c.key] = mandatoryComponents.has(c.key) ? 100 : cc[c.key];
+  });
+
+  // Cost calculation — scales with how much repair is needed AND tier
+  function calcComponentCost(key, targetVal) {
+    const current = cc[key];
+    const delta = targetVal - current;
+    if (delta <= 0) return 0;
+    const mult = REPAIR_TIER_MULT[tier] || 1.0;
+    // More degraded = more expensive per point
+    const degradationMult = current < 25 ? 1.8 : current < 50 ? 1.3 : 1.0;
+    return Math.round(BASE_COSTS[key] * mult * degradationMult * (delta / 100));
+  }
 
   function calcTotal() {
-    return REPAIR_ITEMS.reduce((sum, item) => {
-      return sum + (checked[item.id] ? calcRepairCost(item.id, seriesId) : 0);
-    }, 0);
+    return COMPONENTS.reduce((sum, c) => sum + calcComponentCost(c.key, targets[c.key]), 0);
   }
+
+  // Build sliders
+  const sliders = {};
+  const costEls = {};
+  const totalEl = h('div', {style:{fontSize:'28px',fontWeight:900,color:'#F59E0B'}}, fmtMoney(calcTotal()));
 
   function updateTotal() {
-    if (totalEl) totalEl.textContent = fmtMoney(calcTotal());
+    totalEl.textContent = fmtMoney(calcTotal());
   }
 
-  const wearItems   = REPAIR_ITEMS.filter(i=>i.category==='wear');
-  const damageItems = REPAIR_ITEMS.filter(i=>i.category==='damage');
-  const dnfItems    = REPAIR_ITEMS.filter(i=>i.category==='dnf'&&mandatoryIds.includes(i.id));
+  const componentRows = COMPONENTS.map(c => {
+    const current = Math.round(cc[c.key] || 0);
+    const isMandatory = mandatoryComponents.has(c.key);
+    const isTier12Free = c.tier1free && tier <= 2;
+    const barColor = current > 60 ? c.color : current > 30 ? '#F59E0B' : '#EF4444';
 
-  function buildSection(title, items, color) {
-    if (!items.length) return null;
-    return h('div',{style:{marginBottom:'14px'}},
-      h('div',{style:{fontSize:'12px',color,letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'8px',fontWeight:800}},title),
-      ...items.map(item => {
-        const mandatory = mandatoryIds.includes(item.id);
-        const cost = calcRepairCost(item.id, seriesId);
-        const cb = h('input',{type:'checkbox',checked:checked[item.id],disabled:mandatory,style:{width:'auto',cursor:mandatory?'not-allowed':'pointer',accentColor:'#D97706'}});
-        checkboxes[item.id] = cb;
-        cb.addEventListener('change', () => { checked[item.id]=cb.checked; updateTotal(); });
-        return h('label',{style:{display:'flex',gap:'10px',alignItems:'flex-start',padding:'7px 0',borderBottom:'1px solid #1E2433',cursor:mandatory?'default':'pointer'}},
-          cb,
-          h('div',{style:{flex:1}},
-            h('div',{style:{fontSize:'14px',fontWeight:mandatory?800:500,color:mandatory?'#EF4444':'#E5E7EB'}},
-              item.label, mandatory?h('span',{style:{fontSize:'12px',color:'#EF4444',marginLeft:'6px'}},'MANDATORY'):null
-            ),
-            h('div',{style:{fontSize:'14px',color:'#CBD5E1',marginTop:'2px'}},item.desc),
-            item.restores && item.restores.length
-              ? h('div',{style:{display:'flex',gap:'5px',flexWrap:'wrap',marginTop:'5px'}},
-                  ...item.restores.map(r =>
-                    h('span',{style:{
-                      fontSize:'11px',fontWeight:700,
-                      color:r.color,
-                      background:r.color+'18',
-                      border:`1px solid ${r.color}44`,
-                      borderRadius:'3px',
-                      padding:'1px 6px',
-                      letterSpacing:'0.04em',
-                    }}, `${r.bar} +${r.amt}`)
-                  )
-                )
-              : null,
-          ),
-          h('div',{style:{fontSize:'14px',fontWeight:700,color:mandatory?'#EF4444':'#F59E0B',flexShrink:0}},fmtMoney(cost)),
-        );
-      })
+    const costEl = h('div', {style:{fontSize:'13px',fontWeight:700,color:'#F59E0B',minWidth:'60px',textAlign:'right'}},
+      isTier12Free ? 'Included' : fmtMoney(calcComponentCost(c.key, targets[c.key]))
     );
-  }
+    costEls[c.key] = costEl;
 
-  totalEl = h('div',{style:{fontSize:'28px',fontWeight:900,color:'#F59E0B'}},fmtMoney(calcTotal()));
+    const slider = h('input', {
+      type:'range', min:current, max:100, value:targets[c.key],
+      disabled: isMandatory || isTier12Free,
+      style:{flex:1, accentColor:c.color, cursor: isMandatory||isTier12Free ? 'not-allowed':'pointer'},
+    });
+    sliders[c.key] = slider;
+
+    slider.addEventListener('input', () => {
+      targets[c.key] = parseInt(slider.value);
+      costEl.textContent = fmtMoney(calcComponentCost(c.key, targets[c.key]));
+      // Update the fill preview
+      const fill = slider.parentElement.parentElement.querySelector('.comp-fill');
+      if (fill) {
+        const pct = targets[c.key];
+        const fc = pct > 60 ? c.color : pct > 30 ? '#F59E0B' : '#EF4444';
+        fill.style.width = pct + '%';
+        fill.style.background = fc;
+      }
+      updateTotal();
+    });
+
+    return h('div', {style:{marginBottom:'14px'}},
+      // Label row
+      h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}},
+        h('div', {style:{display:'flex',alignItems:'center',gap:'8px'}},
+          h('span', {style:{fontSize:'14px',fontWeight:700,color:'#F9FAFB'}}, c.label),
+          isMandatory ? h('span',{style:{fontSize:'11px',color:'#EF4444',background:'#7F1D1D22',border:'1px solid #EF444444',borderRadius:'3px',padding:'1px 6px',fontWeight:700}},'MANDATORY') : null,
+          isTier12Free ? h('span',{style:{fontSize:'11px',color:'#10B981',background:'#06513422',border:'1px solid #10B98144',borderRadius:'3px',padding:'1px 6px',fontWeight:700}},'INCLUDED') : null,
+        ),
+        h('div', {style:{display:'flex',alignItems:'center',gap:'12px'}},
+          h('span', {style:{fontSize:'13px',color:'#94A3B8'}}, `${current}% → `),
+          h('span', {style:{fontSize:'13px',fontWeight:800,color:c.color}, id:`target-${c.key}`}, `${targets[c.key]}%`),
+          costEl,
+        ),
+      ),
+      // Current condition bar
+      h('div', {style:{height:'6px',background:'#1E2433',borderRadius:'3px',overflow:'hidden',marginBottom:'6px'}},
+        h('div', {className:'comp-fill', style:{
+          height:'100%',
+          width: targets[c.key] + '%',
+          background: targets[c.key] > 60 ? c.color : targets[c.key] > 30 ? '#F59E0B' : '#EF4444',
+          borderRadius:'3px',
+          transition:'width 0.2s',
+        }}),
+      ),
+      // Slider
+      isTier12Free || isMandatory ? null : slider,
+      isMandatory ? h('div',{style:{fontSize:'12px',color:'#EF4444',marginTop:'2px'}},'Required repair — cannot be reduced') : null,
+      isTier12Free ? h('div',{style:{fontSize:'12px',color:'#10B981',marginTop:'2px'}},'Fresh tires included in your entry fee at this level') : null,
+    );
+  });
+
+  // Update target display when slider moves
+  COMPONENTS.forEach(c => {
+    if (sliders[c.key]) {
+      sliders[c.key].addEventListener('input', () => {
+        const el = document.getElementById(`target-${c.key}`);
+        if (el) el.textContent = targets[c.key] + '%';
+      });
+    }
+  });
 
   const content = h('div',{},
     h('div',{className:'modal-eyebrow'},'Post-Race'),
     h('div',{className:'modal-title'},'Repair & Maintenance'),
-    h('div',{className:'modal-sub'},`${(s&&s.name)||''} · ${result.dnf?'DNF — Mandatory repairs required':'Check what needs attention'}`),
-
-    // Car condition bars
-    (() => {
-  const cc = getCarCondition(G, seriesId);
-
-      const components = [
-        {key:'engine',    label:'Engine',     color:'#EF4444'},
-        {key:'suspension',label:'Suspension', color:'#F97316'},
-        {key:'chassis',   label:'Chassis',    color:'#F59E0B'},
-        {key:'tires',     label:'Tires',      color:'#10B981'},
-        {key:'brakes',    label:'Brakes',     color:'#3B82F6'},
-      ];
-      return h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginBottom:'14px'}},
-        h('div',{style:{fontSize:'12px',color:'#94A3B8',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'10px',fontWeight:700}},'Car Condition'),
-        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px 16px'}},
-          ...components.map(c=>{
-            const val=Math.round(cc[c.key]||0);
-            const color=val>60?c.color:val>30?'#F59E0B':'#EF4444';
-            return h('div',null,
-              h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'14px',marginBottom:'3px'}},
-                h('span',{style:{color:'#CBD5E1'}},c.label),
-                h('span',{style:{color,fontWeight:700}},`${val}%`),
-              ),
-              h('div',{style:{height:'5px',background:'#1E2433',borderRadius:'3px',overflow:'hidden'}},
-                h('div',{style:{height:'100%',width:`${val}%`,background:color,borderRadius:'3px',transition:'width 0.3s'}}),
-              ),
-            );
-          })
-        ),
-        h('div',{style:{fontSize:'12px',color:'#94A3B8',marginTop:'8px'}},'Components below 25% risk mechanical DNF on next race. Repairs restore condition.'),
-      );
-    })(),
+    h('div',{className:'modal-sub'}, `${(s&&s.name)||''} · ${result.dnf?'DNF — mandatory repairs required':'Adjust sliders to set repair targets'}`),
 
     cond ? h('div',{style:{display:'flex',gap:'8px',alignItems:'center',marginBottom:'14px'}},
       h('span',{style:{fontSize:'14px',color:'#CBD5E1'}},'Race conditions:'),
@@ -9223,53 +9255,54 @@ function openRepairModal(seriesId, result, afterClose) {
       cond.tireWear>1.1?h('span',{style:{fontSize:'14px',color:'#EF4444',marginLeft:'4px'}},`Tire wear +${Math.round((cond.tireWear-1)*100)}%`):null,
     ) : null,
 
-    dnfItems.length ? buildSection('Mandatory DNF Repairs', dnfItems, '#EF4444') : null,
-    buildSection('Body Damage', damageItems, '#F59E0B'),
-    buildSection('Wear & Maintenance', wearItems, '#CBD5E1'),
+    h('div',{style:{marginBottom:'16px'}}, ...componentRows),
 
-    h('div',{style:{background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'12px',marginTop:'4px',display:'flex',justifyContent:'space-between',alignItems:'center'}},
-      h('div',{},
+    h('div',{style:{
+      background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',
+      padding:'12px',display:'flex',justifyContent:'space-between',alignItems:'center',
+      marginBottom:'16px',
+    }},
+      h('div',null,
         h('div',{style:{fontSize:'12px',color:'#94A3B8',marginBottom:'2px'}},'TOTAL REPAIR COST'),
         totalEl,
-        h('div',{style:{fontSize:'14px',color:'#CBD5E1',marginTop:'2px'}},`Current balance: ${fmtMoney(G.money)}`),
+        h('div',{style:{fontSize:'14px',color:'#CBD5E1',marginTop:'2px'}},`Balance: ${fmtMoney(G.money)}`),
       ),
-      h('div',{style:{fontSize:'14px',color:'#94A3B8',maxWidth:'180px',textAlign:'right'}},'You can go into debt. The car needs to race.'),
+      h('div',{style:{fontSize:'13px',color:'#64748B',maxWidth:'180px',textAlign:'right'}},
+        'Drag sliders to choose how much to repair each component.',
+      ),
     ),
 
     h('div',{className:'modal-actions'},
-    mkBtn('Skip All Repairs','btn btn-ghost',()=>{
-  delete $('modal-overlay').dataset.repairOpen;
-  delete $('modal-overlay').dataset.repairOpen;
-if(afterClose) afterClose();
-closeModal();
-render();
-}),
-      mkBtn('Pay & Continue','btn btn-success',()=>{
+      mkBtn('Skip All Repairs','btn btn-ghost',()=>{
+        delete $('modal-overlay').dataset.repairOpen;
+        if(afterClose) afterClose();
+        closeModal();
+        render();
+      }),
+      mkBtn('Pay & Repair','btn btn-success',()=>{
         const total = calcTotal();
         G.money -= total;
-        const items = REPAIR_ITEMS.filter(i=>checked[i.id]);
-        if (items.length) addLog(G, `🔧 Repairs @ ${(s&&s.short)||''}: ${items.map(i=>i.label).join(', ')} — ${fmtMoney(total)}`);
-        // Restore car condition for repaired items
-              var _cc = getCarCondition(G, seriesId);
-        items.forEach(item=>{
-          if(item.id==='tires')        _cc.tires=Math.min(100,_cc.tires+60);
-          if(item.id==='brakes')       _cc.brakes=Math.min(100,_cc.brakes+60);
-          if(item.id==='engine_tune'||item.id==='engine_rebuild') _cc.engine=Math.min(100,_cc.engine+70);
-          if(item.id==='suspension'||item.id==='suspension_d')    _cc.suspension=Math.min(100,_cc.suspension+65);
-          if(item.id==='bodywork'||item.id==='front_clip'||item.id==='rear_clip'||item.id==='hard_crash'||item.id==='rollover') _cc.chassis=Math.min(100,_cc.chassis+60);
-          if(item.id==='fire_damage')  { _cc.engine=Math.min(100,_cc.engine+80); _cc.chassis=Math.min(100,_cc.chassis+50); }
-          if(item.id==='trans_rebuild'){ _cc.engine=Math.min(100,_cc.engine+50); }
+
+        // Apply repairs to car condition
+        COMPONENTS.forEach(c => {
+          const delta = targets[c.key] - cc[c.key];
+          if (delta > 0) cc[c.key] = Math.min(100, cc[c.key] + delta);
         });
 
-if(afterClose) afterClose();
-closeModal();
-render();     
+        const repaired = COMPONENTS.filter(c => targets[c.key] > cc[c.key] || mandatoryComponents.has(c.key));
+        if (total > 0) addLog(G, `🔧 Repairs @ ${(s&&s.short)||''}: ${fmtMoney(total)}`);
+
+        delete $('modal-overlay').dataset.repairOpen;
+        if(afterClose) afterClose();
+        closeModal();
+        render();
       }),
-    )
+    ),
   );
+
+  $('modal-overlay').dataset.repairOpen = 'true';
   openModal(content);
 }
-
 
 // ─── BACKGROUND SERIES NEWS ──────────────────────────────────────────────────
 // After each race, small chance of a news item from another tier.
