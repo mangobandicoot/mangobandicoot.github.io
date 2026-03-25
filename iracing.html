@@ -5064,8 +5064,7 @@ function renderTabs() {
     if(t.id==='contracts') bc=(G.pendingOffers||[]).length;
 if(t.id==='paddock')   bc=(G.dramaQueue||[]).filter(d=>d.effect!=='money'&&d.effect!=='sponsor_warning'&&!d._isFanMail&&!d._isSponsor).length;
 
-if(t.id==='business')  bc=(G.sponsorOffers||[]).length;
-
+if(t.id==='business')  bc=(G.sponsorOffers||[]).length + (G.dramaQueue||[]).filter(function(d){return d.effect==='money'||d.effect==='sponsor_warning'||d._isFanMail||d._isSponsor;}).length;
     const tab = h('button',{className:'tab'+(activeTab===t.id?' active':''),onClick:()=>setTab(t.id)},
       t.label,
       bc>0?h('span',{className:'tab-badge'},bc):null
