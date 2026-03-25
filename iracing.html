@@ -6488,10 +6488,14 @@
                 });
             });
 
-            state.season++;
+                        state.season++;
             state.week = 1;
             state.schedules = {};
             state.championshipPoints = {};
+            // Regenerate schedules for all continuing contracts
+            state.contracts.forEach(function(c) {
+                state.schedules[c.seriesId] = generateSchedule(c.seriesId, null);
+            });
             state.seriesFields = {};
             state.sponsorOffers = [];
             state.offTrackDone = [];
@@ -9578,7 +9582,15 @@
             ));
         }
 
-        function doSignContract(offer) {
+                function doSignContract(offer) {
+            // Guard against double-signing — if already have a non-indie contract for this series, bail
+            if (G.contracts.find(c => c.seriesId === offer.seriesId && !c.indie)) {
+                // Remove the offer silently and re-render
+                G.pendingOffers = G.pendingOffers.filter(o => o.id !== offer.id);
+                G.offseasonOffers = (G.offseasonOffers || []).filter(o => o.id !== offer.id);
+                saveGame(); render();
+                return;
+            }
             // If running indie in this series, replace it with the team contract
             G.contracts = G.contracts.filter(c => !(c.seriesId === offer.seriesId && c.indie));
             G.contracts.push(offer);
