@@ -6967,8 +6967,17 @@ const bizQueue = (G.dramaQueue || []).filter(function(d){
 return d.effect === 'money' || d.effect === 'sponsor_warning' || d._isFanMail || d._isSponsor;
 });
 if(bizQueue.length){
+  const bizKey = 'biz_notifications';
+  const bizCollapsed = isCollapsed(bizKey, false);
   const bq = h('div',{className:'card',style:{marginBottom:'18px'}});
-  bq.appendChild(cardTitle('Notifications'));
+  bq.appendChild(h('div',{
+    style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px',cursor:'pointer'},
+    onClick:function(){ toggleCollapse(bizKey, false); render(); }
+  },
+    cardTitle('Notifications ('+bizQueue.length+')'),
+    h('span',{style:{fontSize:'16px',color:'#64748B',transform:bizCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s'}},'▾'),
+  ));
+  if(!bizCollapsed){
   bizQueue.forEach(function(d){
     const valColor = d.valence==='bad'?'#EF4444':d.valence==='good'?'#10B981':'#94A3B8';
     const item = h('div',{style:{padding:'10px 0',borderBottom:'1px solid #0D1117'}});
@@ -7026,8 +7035,10 @@ if (d._isActivation && d._activationOptions) {
     }
     bq.appendChild(item);
   });
+  } // close bizCollapsed check
   f.appendChild(bq);
 }
+
 // ── Media Day ───────────────────────────────────────────────────────────────
   const activeTier = G.contracts.length
     ? Math.max(...G.contracts.map(c=>(getSeries(c.seriesId)&&getSeries(c.seriesId).tier)||1))
@@ -7120,9 +7131,18 @@ if (d._isActivation && d._activationOptions) {
   ));
 
   // Sponsor offers
-  if((G.sponsorOffers||[]).length){
+if((G.sponsorOffers||[]).length){
+    const offersKey = 'biz_offers';
+    const offersCollapsed = isCollapsed(offersKey, false);
     f.appendChild(h('div',{style:{marginBottom:'16px'}},
-      h('div',{className:'card-title',style:{marginBottom:'10px'}},'SPONSOR OFFERS'),
+      h('div',{
+        style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'10px',cursor:'pointer'},
+        onClick:function(){ toggleCollapse(offersKey, false); render(); }
+      },
+        h('div',{className:'card-title',style:{margin:0}},'SPONSOR OFFERS ('+( G.sponsorOffers||[]).length+')'),
+        h('span',{style:{fontSize:'16px',color:'#64748B',transform:offersCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s'}},'▾'),
+      ),
+      ...(!offersCollapsed ? (G.sponsorOffers||[]).map(sp=>h('div',{className:'row-item'},
       ...(G.sponsorOffers||[]).map(sp=>h('div',{className:'row-item'},
         h('div',{style:{flex:1}},
           h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB',display:'flex',gap:'8px',alignItems:'center'}},sp.brand,sp.international?badge('INTERNATIONAL','#F59E0B'):null),
@@ -7137,14 +7157,23 @@ h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
           mkBtn('Decline','btn btn-sm btn-ghost',()=>{G.sponsorOffers=G.sponsorOffers.filter(s=>s.id!==sp.id);saveGame();render();}),
           mkBtn('Sign','btn btn-sm btn-success',()=>doSignSponsor(sp)),
         )
-      ))
+      )) : [])
     ));
   }
 
   // Active sponsors
-  f.appendChild(h('div',{style:{marginBottom:'16px'}},
-    h('div',{className:'card-title',style:{marginBottom:'10px'}},'ACTIVE SPONSORS'),
-    !(G.sponsors||[]).length?h('div',{className:'card',style:{color:'#94A3B8',textAlign:'center',padding:'16px',fontSize:'14px'}},'No active sponsors.'):
+const sponsorKey = 'biz_sponsors';
+const sponsorCollapsed = isCollapsed(sponsorKey, false);
+f.appendChild(h('div',{style:{marginBottom:'16px'}},
+    h('div',{
+      style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'10px',cursor:'pointer'},
+      onClick:function(){ toggleCollapse(sponsorKey, false); render(); }
+    },
+      h('div',{className:'card-title',style:{margin:0}},'ACTIVE SPONSORS'),
+      h('span',{style:{fontSize:'16px',color:'#64748B',transform:sponsorCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s'}},'▾'),
+    ),
+
+!sponsorCollapsed && (!(G.sponsors||[]).length?h('div',{className:'card',style:{color:'#94A3B8',textAlign:'center',padding:'16px',fontSize:'14px'}},'No active sponsors.'):
     frag(...(G.sponsors||[]).map(sp=>{
       const hc=sp.happiness>=60?'#10B981':sp.happiness>=35?'#F59E0B':'#EF4444';
       return h('div',{className:'row-item'},
@@ -7164,9 +7193,8 @@ h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
         ),
         h('div',{className:'happy-wrap'},h('div',{className:'happy-bar'},h('div',{className:'happy-fill',style:{width:`${sp.happiness}%`,background:hc}}))),
       );
-    }))
   ));
-
+  )),
   // Crew packages
   if(G.contracts.length){
     f.appendChild(h('div',{className:'card',style:{marginBottom:'14px'}},
@@ -7197,9 +7225,18 @@ h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
   }
 
   // Off-track events
-  f.appendChild(h('div',{className:'card'},
-    cardTitle('Off-Track Opportunities'),
-    h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'12px'}},'Once per season each. Earns rep, fans, sponsor happiness.'),
+const offTrackKey = 'biz_offtrack';
+const offTrackCollapsed = isCollapsed(offTrackKey, false);
+f.appendChild(h('div',{className:'card'},
+    h('div',{
+      style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px',cursor:'pointer'},
+      onClick:function(){ toggleCollapse(offTrackKey, false); render(); }
+    },
+      cardTitle('Off-Track Opportunities'),
+      h('span',{style:{fontSize:'16px',color:'#64748B',transform:offTrackCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s'}},'▾'),
+    ),
+    !offTrackCollapsed && h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'12px'}},'Once per season each. Earns rep, fans, sponsor happiness.'),
+    ...(!offTrackCollapsed ? OFF_TRACK.map(evt=>{
     ...OFF_TRACK.map(evt=>{
       const done=(G.offTrackDone||[]).includes(evt.id);
       const canAfford=G.money>=evt.cost;
@@ -7211,11 +7248,10 @@ h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
         ),
         done?badge('Done','#64748B'):mkBtn(canAfford?'Do It':`Need ${fmtMoney(evt.cost-G.money)}`,'btn btn-sm btn-secondary',()=>doOffTrackEvent(evt),!canAfford),
       );
-    })
+    }) : [])
   ));
   return f;
 }
-
 
 // ─── DRIVER BIO GENERATION ───────────────────────────────────────────────────
 function generateDriverBio(d) {
