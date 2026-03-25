@@ -442,7 +442,7 @@ const SERIES = [
   { id:'arca_menards',     name:'ARCA Menards Series',           short:'ARCA',         tier:4, races:20, pay:12000,  winBonus:35000,   reqRep:130, reqFans:3000,   color:'#F59E0B', maxTerm:2, maxTm:2, fee:4000,  desc:'National TV. NASCAR scouts in the grandstands.' },
   { id:'nascar_trucks',    name:'NASCAR Craftsman Truck Series', short:'Trucks',       tier:5, races:23, pay:25000,  winBonus:90000,   reqRep:180, reqFans:12000,  color:'#EF4444', maxTerm:2, maxTm:3, fee:15000, desc:"NASCAR proper. Don't blow it on a lapped car." },
   { id:'nascar_xfinity',   name:'NASCAR Xfinity Series',         short:'Xfinity',      tier:6, races:33, pay:75000,  winBonus:250000,  reqRep:240, reqFans:55000,  color:'#06B6D4', maxTerm:3, maxTm:3, fee:35000, desc:'One rung from the Cup. Every lap is an audition.' },
-  { id:'super_late_model', name:'Super Late Model Tour',          short:'Super Late',   tier:3, races:14, pay:2800,   winBonus:10000,   reqRep:65,  reqFans:500,    color:'#F97316', maxTerm:1, maxTm:2, fee:800,   desc:'Full-fendered asphalt rockets. The step between street stock and the big money.' },
+  { id:'super_late_model', name:'Super Late Model Tour',          short:'Super Late',   tier:2, races:14, pay:800,    winBonus:4000,    reqRep:50,  reqFans:350,    color:'#F97316', maxTerm:1, maxTm:2, fee:400,   desc:'Full-fendered asphalt rockets. Faster than street stock, a stepping stone to the big money.' },
   { id:'nascar_cup',       name:'NASCAR Cup Series',             short:'Cup Series',   tier:7, races:36, pay:200000, winBonus:1000000, reqRep:320, reqFans:200000, color:'#EC4899', maxTerm:3, maxTm:3, fee:80000, desc:"The pinnacle. Don't fuck it up." },
 ];
 function getSeries(id) { return SERIES.find(s => s.id === id); }
