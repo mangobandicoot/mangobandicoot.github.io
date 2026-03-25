@@ -2978,12 +2978,18 @@ function touchRival(rivals, name, type, clean=true) {
 
 function relationship(r) {
   const i=r.incidents||0, c=r.closeRaces||0, cb=r.cleanBattles||0;
-  if (i>=5 && c>=6) return 'frenemy';
-  if (i>=5)          return 'rival';
-  if (c>=6)          return cb>=c*0.7 ? 'racing_rival' : 'friend';
-  if (c>=4 && i<=1)  return 'racing_rival';
+  // Scale thresholds by player's current highest series tier
+  const tier = G ? Math.max(...((G.contracts||[]).map(c=>((getSeries(c.seriesId)&&getSeries(c.seriesId).tier)||1))).concat([1])) : 1;
+  const rivalThresh   = tier>=6?5:tier>=4?4:tier>=3?3:2;
+  const closeThresh   = tier>=6?6:tier>=4?5:tier>=3?4:3;
+  const rcThresh      = tier>=6?4:tier>=4?3:2;
+  if (i>=rivalThresh && c>=closeThresh) return 'frenemy';
+  if (i>=rivalThresh)                   return 'rival';
+  if (c>=closeThresh)                   return cb>=c*0.7 ? 'racing_rival' : 'friend';
+  if (c>=rcThresh && i<=1)              return 'racing_rival';
   return 'acquaintance';
 }
+
 const REL_COLOR = {rival:'#EF4444',friend:'#10B981',frenemy:'#F59E0B',racing_rival:'#F97316',acquaintance:'#94A3B8'};
 const REL_LABEL = {rival:'RIVAL',friend:'FRIEND',frenemy:'HEATED',racing_rival:'RACING RIVAL',acquaintance:''};
 const REL_DESC  = {
