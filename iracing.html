@@ -8736,7 +8736,169 @@ function renderRoster() {
                     ),
                 ));
             });
+                // ─── Career Highlights ───────────────────────────────────────────────────────
+const highlights = [];
 
+// First win ever
+const firstWin = (G.raceHistory||[]).find(function(r){ return r.pos===1 && !r.dnf && !r.dq; });
+if (firstWin) {
+  const fs = getSeries(firstWin.seriesId);
+  highlights.push({
+    icon: '🏆',
+    color: '#F59E0B',
+    title: 'First Career Win',
+    desc: `${(fs&&fs.short)||firstWin.seriesId} at ${firstWin.track} — Season ${firstWin.season}, Week ${firstWin.week}.`,
+  });
+}
+
+// Championships
+(G.seasonHistory||[]).forEach(function(sh) {
+  (sh.championships||[]).forEach(function(c) {
+    if (c.pos === 1) {
+      const cs = getSeries(c.seriesId);
+      highlights.push({
+        icon: '🏅',
+        color: '#F59E0B',
+        title: `${(cs&&cs.short)||c.seriesId} Champion`,
+        desc: `Season ${sh.season} championship. ${c.points} points, ${c.wins} wins.`,
+      });
+    }
+  });
+});
+
+// Best win streak
+let bestStreak = 0, currentStreak = 0, bestStreakEnd = null;
+(G.raceHistory||[]).forEach(function(r) {
+  if (r.pos===1 && !r.dnf && !r.dq) {
+    currentStreak++;
+    if (currentStreak > bestStreak) {
+      bestStreak = currentStreak;
+      bestStreakEnd = r;
+    }
+  } else {
+    currentStreak = 0;
+  }
+});
+if (bestStreak >= 3 && bestStreakEnd) {
+  const ss = getSeries(bestStreakEnd.seriesId);
+  highlights.push({
+    icon: '🔥',
+    color: '#EF4444',
+    title: `${bestStreak}-Race Win Streak`,
+    desc: `Best streak ended at ${bestStreakEnd.track} in the ${(ss&&ss.short)||bestStreakEnd.seriesId}, Season ${bestStreakEnd.season}.`,
+  });
+}
+
+// Most wins in a single season
+const winsBySeason = {};
+(G.raceHistory||[]).forEach(function(r) {
+  if (r.pos===1 && !r.dnf && !r.dq) {
+    const key = r.season+'_'+r.seriesId;
+    winsBySeason[key] = (winsBySeason[key]||0) + 1;
+  }
+});
+const bestSeasonEntry = Object.entries(winsBySeason).sort(function(a,b){return b[1]-a[1];})[0];
+if (bestSeasonEntry && bestSeasonEntry[1] >= 3) {
+  const parts = bestSeasonEntry[0].split('_');
+  const bss = getSeries(parts[1]);
+  highlights.push({
+    icon: '📈',
+    color: '#10B981',
+    title: `${bestSeasonEntry[1]} Wins in a Season`,
+    desc: `Best single season performance in the ${(bss&&bss.short)||parts[1]}, Season ${parts[0]}.`,
+  });
+}
+
+// Home race wins
+const homeWins = (G.raceHistory||[]).filter(function(r){
+  return r.pos===1 && !r.dnf && !r.dq && G.homeState && r.state === G.homeState;
+});
+if (homeWins.length >= 1) {
+  highlights.push({
+    icon: '🏠',
+    color: '#F59E0B',
+    title: `${homeWins.length} Home Race Win${homeWins.length>1?'s':''}`,
+    desc: homeWins.length===1
+      ? `First home win at ${homeWins[0].track}, Season ${homeWins[0].season}.`
+      : `${homeWins.length} wins in front of the home crowd. The best kind.`,
+  });
+}
+
+// Track records held
+const records = G.trackRecords || {};
+const recordsHeld = Object.entries(records).filter(function(entry){
+  return entry[1].overall && entry[1].overall.driver === G.driverName;
+});
+if (recordsHeld.length >= 1) {
+  highlights.push({
+    icon: '⚡',
+    color: '#8B5CF6',
+    title: `${recordsHeld.length} Track Record${recordsHeld.length>1?'s':''}`,
+    desc: `Holds the all-time lap record at ${recordsHeld.length===1 ? recordsHeld[0][0] : recordsHeld.length+' tracks'}.`,
+  });
+}
+
+// Rivals made
+const notableRivalCount = (G.rivals||[]).filter(function(r){
+  return ['rival','frenemy','racing_rival','friend'].includes(relationship(r));
+}).length;
+if (notableRivalCount >= 2) {
+  highlights.push({
+    icon: '🤝',
+    color: '#EC4899',
+    title: `${notableRivalCount} Notable Rivalries`,
+    desc: `Built real relationships on track — good and bad. That's what short track racing is about.`,
+  });
+}
+
+// Pole positions
+if ((G.poles||0) >= 5) {
+  highlights.push({
+    icon: '🟣',
+    color: '#8B5CF6',
+    title: `${G.poles} Career Poles`,
+    desc: `Consistently one of the fastest qualifiers in the field.`,
+  });
+}
+
+// Most laps led in a season
+const lapsLedBySeason = {};
+(G.raceHistory||[]).forEach(function(r){
+  if (r.mostLapsLed) {
+    lapsLedBySeason[r.season] = (lapsLedBySeason[r.season]||0) + 1;
+  }
+});
+const bestLapsLedSeason = Object.entries(lapsLedBySeason).sort(function(a,b){return b[1]-a[1];})[0];
+if (bestLapsLedSeason && bestLapsLedSeason[1] >= 3) {
+  highlights.push({
+    icon: '🎯',
+    color: '#06B6D4',
+    title: `Led Most Laps ${bestLapsLedSeason[1]} Times`,
+    desc: `Season ${bestLapsLedSeason[0]} — dominated the front of the field more than anyone.`,
+  });
+}
+
+if (highlights.length) {
+  const hCard = h('div',{className:'card',style:{marginBottom:'14px'}});
+  hCard.appendChild(cardTitle('Career Highlights'));
+  highlights.forEach(function(hl) {
+    hCard.appendChild(h('div',{style:{
+      display:'flex',alignItems:'flex-start',gap:'12px',
+      padding:'10px 0',borderBottom:'1px solid #0D1117',
+    }},
+      h('div',{style:{
+        fontSize:'22px',flexShrink:0,width:'36px',height:'36px',
+        display:'flex',alignItems:'center',justifyContent:'center',
+        background:hl.color+'18',borderRadius:'8px',border:'1px solid '+hl.color+'33',
+      }},hl.icon),
+      h('div',null,
+        h('div',{style:{fontSize:'14px',fontWeight:800,color:hl.color,marginBottom:'3px'}},hl.title),
+        h('div',{style:{fontSize:'13px',color:'#94A3B8',lineHeight:'1.5'}},hl.desc),
+      ),
+    ));
+  });
+  f.appendChild(hCard);
+}
             return f;
         }
 
@@ -9667,9 +9829,11 @@ function renderRoster() {
             while ((state.drivers || []).find(d => d.name === subName)) subName = generateAIName();
 
             // Add sub to driver database
-            const subDriver = createDriver(subName, rand(35, 65), seriesId, 'generated');
-            subDriver.substituteFor = state.driverName;
-            state.drivers.push(subDriver);
+            const subDriver = createDriver(subName, rand(35,65), seriesId, 'generated');
+  subDriver.substituteFor = state.driverName;
+  const playerContract = (state.contracts||[]).find(function(c){return c.seriesId===seriesId;});
+  if (playerContract) subDriver.currentTeam = playerContract.team;
+  state.drivers.push(subDriver);
 
             state.playerInjury = { racesOut, subName, seriesId, racesRemaining: racesOut };
             // Seed sub into series standings so they appear in the standings table
@@ -9708,9 +9872,10 @@ function renderRoster() {
                 // Generate sub
                 let subName = generateAIName();
                 while ((state.drivers || []).find(d => d.name === subName)) subName = generateAIName();
-                const sub = createDriver(subName, rand(30, 60), seriesId, 'generated');
-                sub.substituteFor = driver.name;
-                state.drivers.push(sub);
+                const sub = createDriver(subName, rand(30,60), seriesId, 'generated');
+    sub.substituteFor = driver.name;
+    sub.currentTeam = driver.currentTeam || null;
+    state.drivers.push(sub);
                 driver._subName = subName;
 
                 const isRival = (state.rivals || []).some(r => r.name === driver.name && ['rival', 'frenemy'].includes(relationship(r)));
