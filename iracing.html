@@ -7195,29 +7195,6 @@ f.appendChild(h('div',{style:{marginBottom:'16px'}},
       }))
     ] : [])
   ));
-
-!sponsorCollapsed && (!(G.sponsors||[]).length?h('div',{className:'card',style:{color:'#94A3B8',textAlign:'center',padding:'16px',fontSize:'14px'}},'No active sponsors.'):
-    frag(...(G.sponsors||[]).map(sp=>{
-      const hc=sp.happiness>=60?'#10B981':sp.happiness>=35?'#F59E0B':'#EF4444';
-      return h('div',{className:'row-item'},
-        h('div',{style:{flex:1}},
-          h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB'}},sp.brand,sp.international?badge('INTL','#F59E0B'):null),
-h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
-  (SPONSOR_TYPES[sp.type]||{}).label+' · '+
-  ((getSeries(sp.seriesId)&&getSeries(sp.seriesId).short)||sp.seriesId||'All Series')+' · '+
-  fmtMoney(sp.valuePerSeason)+'/season · '+
-  sp.seasonsLeft+' season(s) left'
-),
-
-        ),
-        h('div',{style:{textAlign:'right',flexShrink:0}},
-          h('div',{style:{fontSize:'12px',color:'#94A3B8'}},'HAPPINESS'),
-          h('div',{style:{fontSize:'20px',fontWeight:900,color:hc}},`${sp.happiness}%`),
-        ),
-        h('div',{className:'happy-wrap'},h('div',{className:'happy-bar'},h('div',{className:'happy-fill',style:{width:`${sp.happiness}%`,background:hc}}))),
-      );
-  ));
-  )),
   // Crew packages
   if(G.contracts.length){
     f.appendChild(h('div',{className:'card',style:{marginBottom:'14px'}},
@@ -7260,7 +7237,6 @@ f.appendChild(h('div',{className:'card'},
     ),
     !offTrackCollapsed && h('div',{style:{fontSize:'14px',color:'#94A3B8',marginBottom:'12px'}},'Once per season each. Earns rep, fans, sponsor happiness.'),
     ...(!offTrackCollapsed ? OFF_TRACK.map(evt=>{
-    ...OFF_TRACK.map(evt=>{
       const done=(G.offTrackDone||[]).includes(evt.id);
       const canAfford=G.money>=evt.cost;
       return h('div',{className:'row-item',style:{opacity:done?'0.45':'1'}},
