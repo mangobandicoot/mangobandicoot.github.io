@@ -7718,17 +7718,18 @@ function doPRSpend(item) {
 }
 // ─── INJURY SYSTEM ───────────────────────────────────────────────────────────
 function tickAIInjuries(state, seriesId, alreadyInjured) {
-  alreadyInjured = alreadyInjured || new Set((state.drivers||[]).map(d=>d.name));
+  alreadyInjured = alreadyInjured || new Set();
   (state.drivers||[]).forEach(d => {
     if (!d.injuredOrPenalized || !d._injuryRacesOut) return;
     if (d.currentSeriesId !== seriesId) return;
-    if (!alreadyInjured.has(d.name)) return; 
+    if (!alreadyInjured.has(d.name)) return; // just injured this race, skip tick
+    d._injuryRacesOut--;
+    if (d._injuryRacesOut <= 0) {
       // Driver recovers
       d.injuredOrPenalized = false;
       const subName = d._subName;
       d._subName = null;
       d._injuryRacesOut = null;
-      // Mark sub inactive
       if (subName) {
         const sub = (state.drivers||[]).find(dr=>dr.name===subName);
         if (sub) sub.active = false;
@@ -7750,10 +7751,9 @@ function tickAIInjuries(state, seriesId, alreadyInjured) {
         _requiresAction: true,
         _actionLabel: 'Roster updated in iRacing',
       });
-
       addLog(state,`✅ ${d.name} recovered from injury. ${subName||'Sub'} relieved.`);
     } else {
-      // Still injured — pre-race reminder if notable
+      // Still injured
       const isRival = (state.rivals||[]).some(r=>r.name===d.name&&['rival','frenemy'].includes(relationship(r)));
       const isTm    = (state.teammates||[]).some(t=>t.name===d.name);
       if (isRival || isTm) {
