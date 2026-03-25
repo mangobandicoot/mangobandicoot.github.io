@@ -3394,6 +3394,20 @@ function buildPreRaceNote(seriesId, raceIdx) {
     else if (G.reputation >= 30)
       notes.push(`Local Hero walking into their home territory. The crowd has expectations.`);
   }
+// Track record mention
+if (G.trackRecords && G.trackRecords[race.track]) {
+  const rec = G.trackRecords[race.track];
+  if (rec.overall) {
+    const isYours = rec.overall.driver === G.driverName;
+    if (isYours) {
+      notes.push(`You hold the track record at ${race.track} with a ${rec.overall.time}. Something to protect.`);
+    } else {
+      notes.push(`Track record at ${race.track} is a ${rec.overall.time} set by ${rec.overall.driver}. Something to chase.`);
+    }
+  } else if (rec.personal) {
+    notes.push(`Your personal best here is ${rec.personal.time}. See if you can better it.`);
+  }
+}
 
   if (!notes.length) return null;
   return notes[rand(0, notes.length-1)];
@@ -4049,29 +4063,68 @@ if (!result.dnf && !result.dq && result.position === 1) {
 
   // Track favorite/weak spot check
   checkTrackFavoritePerformance(state, race.track, result);
-  // Track record check
-if (!result.dnf && !result.dq && result.finishOrder) {
-  const playerEntry = (result.finishOrder||[]).find(e=>e.isPlayer);
-  if (playerEntry && playerEntry.lapTime) {
-    const lapSec = lapTimeToSeconds(playerEntry.lapTime);
-    if (lapSec) {
-      if (!state.trackRecords) state.trackRecords = {};
-      const existing = state.trackRecords[race.track];
-      if (!existing || lapSec < existing.time) {
-        state.trackRecords[race.track] = { time: playerEntry.lapTime, season: state.season, week: state.week };
-        if (existing) {
-          state.dramaQueue.push({
-            id:'tr_'+uid(),
-            title:`⚡ Track Record — ${race.track}`,
-            effect:'none',
-            desc:`${state.driverName} set a new personal best at ${race.track}: ${playerEntry.lapTime}. Previous best was ${existing.time}.`,
-            valence:'good',
-          });
+// Track record check — all drivers
+if (!result.dq && result.finishOrder) {
+  if (!state.trackRecords) state.trackRecords = {};
+  if (!state.trackRecords[race.track]) state.trackRecords[race.track] = { overall: null, personal: null };
+  const rec = state.trackRecords[race.track];
+
+  // Check all drivers in this race for overall record
+  (result.finishOrder||[]).forEach(function(entry) {
+    if (!entry.lapTime) return;
+    const sec = lapTimeToSeconds(entry.lapTime);
+    if (!sec) return;
+    if (!rec.overall || sec < rec.overall.time) {
+      rec.overall = {
+        time: entry.lapTime,
+        timeSec: sec,
+        driver: entry.isPlayer ? state.driverName : entry.name,
+        season: state.season,
+        week: state.week,
+      };
+    }
+  });
+
+  // Check player personal best
+  const playerEntry = (result.finishOrder||[]).find(function(e){return e.isPlayer;});
+  if (playerEntry && playerEntry.lapTime && !result.dnf) {
+    const pSec = lapTimeToSeconds(playerEntry.lapTime);
+    if (pSec) {
+      const oldPersonal = rec.personal;
+      if (!rec.personal || pSec < rec.personal.timeSec) {
+        rec.personal = {
+          time: playerEntry.lapTime,
+          timeSec: pSec,
+          season: state.season,
+          week: state.week,
+        };
+        // Only notify if not first visit
+        if (oldPersonal) {
+          const isOverall = rec.overall && rec.overall.driver === state.driverName && rec.overall.time === playerEntry.lapTime;
+          if (isOverall) {
+            state.dramaQueue.push({
+              id: 'tr_overall_'+uid(),
+              title: `⚡ Track Record — ${race.track}`,
+              effect: 'rep_fans', value: 3, fans: 200,
+              desc: `${state.driverName} set the all-time fastest lap at ${race.track} with a ${playerEntry.lapTime}; that's the quickest anyone has gone there in the database. Previous record was ${oldPersonal.time}.`,
+              valence: 'good',
+              _isSponsor: false,
+            });
+          } else {
+            state.dramaQueue.push({
+              id: 'tr_personal_'+uid(),
+              title: `📈 Personal Best — ${race.track}`,
+              effect: 'none',
+              desc: `New personal best at ${race.track}: ${playerEntry.lapTime}. Previous best was ${oldPersonal.time}. Getting quicker.`,
+              valence: 'good',
+            });
+          }
         }
       }
     }
   }
 }
+
 
   // Championship pressure — late in season
   const seriesRaces = s.races;
@@ -6830,9 +6883,38 @@ function renderHistory() {
       miniStatBox('Earnings',fmtMoney(G.totalPrizeMoney),'#10B981'),
       miniStatBox('Fans',fmtFans(G.fans),'#EC4899'),
       miniStatBox('Rep',G.reputation,'#F59E0B'),
-      miniStatBox('Championships',(G.seasonHistory||[]).reduce((a,s)=>a+(s.championships||[]).filter(c=>c.pos===1).length,0),'#F59E0B'),
+            miniStatBox('Championships',(G.seasonHistory||[]).reduce((a,s)=>a+(s.championships||[]).filter(c=>c.pos===1).length,0),'#F59E0B'),
     ),
   ));
+
+// Track records display
+const records = G.trackRecords || {};
+const recordEntries = Object.entries(records).filter(function([track, rec]){ return rec.overall || rec.personal; });
+if (recordEntries.length) {
+  const rc = h('div',{className:'card',style:{marginBottom:'14px'}});
+  rc.appendChild(cardTitle('Track Records'));
+  const grid = h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:'8px'}});
+  recordEntries.forEach(function([track, rec]) {
+    const isYours = rec.overall && rec.overall.driver === G.driverName;
+    grid.appendChild(h('div',{style:{
+      background:'#060A10',border:`1px solid ${isYours?'#F59E0B44':'#1E2433'}`,
+      borderRadius:'8px',padding:'10px 12px',
+    }},
+      h('div',{style:{fontSize:'13px',fontWeight:800,color:'#F9FAFB',marginBottom:'4px'}},track),
+      rec.overall ? h('div',{style:{fontSize:'13px',color:isYours?'#F59E0B':'#94A3B8'}},
+        `⚡ ${rec.overall.time} — ${rec.overall.driver}${isYours?' (you)':''}`
+      ) : null,
+      rec.personal && (!rec.overall || rec.overall.driver !== G.driverName) ? h('div',{style:{fontSize:'12px',color:'#64748B',marginTop:'3px'}},
+        `Your best: ${rec.personal.time}`
+      ) : null,
+    ));
+  });
+  rc.appendChild(grid);
+  f.appendChild(rc);
+}
+
+  ));
+  
 
   // ── Series ladder climbed ────────────────────────────────────────────────────
   const seriesRaced = [...new Set((G.raceHistory||[]).map(r=>r.seriesId))];
