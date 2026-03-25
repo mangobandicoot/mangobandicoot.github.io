@@ -7450,16 +7450,47 @@ function renderRoster() {
                                 )
                                 : skipped
                                     ? h('span', { style: { fontSize: '13px', color: '#374151', fontStyle: 'italic' } }, 'Skipped — joined mid-season')
-                                    : h('div', { style: { display: 'flex', gap: '4px', alignItems: 'center' } },
-                                        !race.qualifying ? mkBtn('Qualify', 'btn btn-sm btn-secondary', () => openQualModal(contract.seriesId, i)) : null,
-                                        mkBtn('Enter Result →', 'btn btn-sm btn-success', () => openRaceModal(contract.seriesId, i)),
-                                        mkBtn('✕', 'btn btn-xs btn-danger', () => {
-                                            sched.splice(i, 1);
-                                            sched.forEach(function (r, idx) { r.round = idx + 1; });
-                                            saveGame();
-                                            renderRows();
-                                        }),
-                                    ),
+                                  : (() => {
+  const thisState = race.state;
+  const racedThisWeek = (G.raceHistory||[]).filter(function(r){
+    return r.season === G.season && r.week === G.week;
+  });
+  const statesThisWeek = [...new Set(racedThisWeek.map(function(r){
+    const sch2 = G.schedules[r.seriesId]||[];
+    const entry = sch2.find(function(s){return s.result && r.track === s.track;});
+    return entry ? entry.state : null;
+  }).filter(Boolean))];
+  const isBlocked = thisState && statesThisWeek.length > 0 && !statesThisWeek.includes(thisState);
+  const blockedByState = isBlocked ? ((typeof US_STATE_NAMES!=='undefined'?US_STATE_NAMES[statesThisWeek[0]]:null)||statesThisWeek[0]) : null;
+
+  return h('div',{style:{display:'flex',flexDirection:'column',gap:'4px',alignItems:'flex-end'}},
+    h('div',{style:{display:'flex',gap:'4px',alignItems:'center'}},
+      !race.qualifying ? mkBtn('Qualify','btn btn-sm btn-secondary',()=>openQualModal(contract.seriesId,i)) : null,
+      mkBtn('Enter Result →','btn btn-sm btn-success',()=>openRaceModal(contract.seriesId,i), isBlocked),
+      mkBtn('🌧️','btn btn-xs btn-secondary',()=>{
+        sched[i].result = {
+          position:0, fieldSize:0, dnf:false, dq:false,
+          points:0, prize:0, pole:false, lapsLed:false, mostLapsLed:false,
+          finishOrder:[], incidentDrivers:[], closeFinishes:[],
+          skipped:true, rainedOut:true,
+          summary:'Race rained out. No points awarded.',
+        };
+        G.week++;
+        addLog(G, `🌧️ ${sched[i].track} — rained out. No points, no penalty.`);
+        saveGame(); render();
+      }),
+      mkBtn('✕','btn btn-xs btn-danger',()=>{
+        sched.splice(i,1);
+        sched.forEach(function(r,idx){r.round=idx+1;});
+        saveGame();
+        renderRows();
+      }),
+    ),
+    isBlocked ? h('div',{style:{fontSize:'12px',color:'#64748B',fontStyle:'italic',marginTop:'2px'}},
+      `Racing in ${blockedByState} this week`
+    ) : null,
+  );
+})(),
                         );
 
                         if (draggable) {
