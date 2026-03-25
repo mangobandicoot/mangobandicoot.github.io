@@ -4052,20 +4052,47 @@ if (cc.chassis < 20)    criticals.push('Chassis');
 
   // Milestone checking
   checkMilestones(state);
-  // Win streak check
+// Win celebration and streak check
 if (!result.dnf && !result.dq && result.position === 1) {
   const lastFive = (state.raceHistory||[]).slice(-5);
   const streak = lastFive.filter(r=>r.pos===1&&!r.dnf&&!r.dq).length;
+
+  const celebLines = [
+    `${state.driverName} to victory lane at ${race.track}. The crew lost it. The sponsor rep was there and they lost it too. Good night all around.`,
+    `Win at ${race.track}. ${state.driverName} climbed out of the car and the crew was already halfway to victory lane. Those moments don't get old.`,
+    `${state.driverName} takes it at ${race.track}. Post-race the team looked like they'd been waiting all season for this and honestly they had.`,
+    `Checkered flag for ${state.driverName} at ${race.track}. The radio went crazy on the last lap and it didn't stop for a while after.`,
+    `${state.driverName} wins at ${race.track}. Short burnout, long celebration. The sponsor got their photo. Everyone went home happy.`,
+    `Victory lane at ${race.track}. ${state.driverName} kept it together when it mattered and the whole team felt it. Good one.`,
+    `${state.driverName} gets the win at ${race.track} and the crew chief is already talking about the setup like they knew all along. Classic.`,
+    `Win number whatever for ${state.driverName} at ${race.track}. Doesn't matter what number it is; they all feel like the first one in the moment.`,
+  ];
+
+  state.dramaQueue.push({
+    id: 'win_cel_'+uid(),
+    title: `🏆 Win — ${race.track}`,
+    effect: 'none',
+    desc: celebLines[rand(0,celebLines.length-1)],
+    valence: 'good',
+  });
+
   if (streak >= 3) {
+    const streakLines = [
+      `${streak} wins in a row now. The paddock has stopped pretending not to notice.`,
+      `That's ${streak} straight. At some point it stops being a hot streak and starts being a statement.`,
+      `${streak} consecutive wins for ${state.driverName}. The rivals are not having a good week.`,
+      `Win number ${streak} in a row. The crew chief has the same setup sheet from three weeks ago and nobody is touching it.`,
+    ];
     state.dramaQueue.push({
       id:'streak_'+uid(),
       title:`🔥 ${streak} Wins in a Row`,
       effect:'none',
-      desc:`${state.driverName} has won ${streak} consecutive races. The paddock is taking notice. Sponsors are happy. Rivals are not.`,
+      desc: streakLines[rand(0,streakLines.length-1)],
       valence:'good',
     });
   }
 }
+
 
   // Track favorite/weak spot check
   checkTrackFavoritePerformance(state, race.track, result);
