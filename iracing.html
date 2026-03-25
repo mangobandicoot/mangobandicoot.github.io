@@ -984,7 +984,76 @@
             ...Array(1).fill('KS'), ...Array(1).fill('NE'), ...Array(1).fill('IA'),
             ...Array(1).fill('International'),
         ];
+// ─── HOME REGION MAP ─────────────────────────────────────────────────────────
+const HOME_REGIONS = {
+  'New England':   ['ME','NH','VT','MA','CT','RI','NY'],
+  'Mid-Atlantic':  ['NJ','PA','DE','MD','VA','WV'],
+  'Southeast':     ['NC','SC','GA','FL','TN','AL','MS'],
+  'Midwest':       ['OH','IN','KY','MI','WI','IL','MO','IA'],
+  'South Central': ['TX','OK','AR','LA'],
+  'Plains':        ['KS','NE','SD','ND','MN','MT','WY','CO','ID'],
+  'West':          ['CA','OR','WA','NV','AZ','UT','NM'],
+};
 
+function getHomeRegion(state) {
+  if (!state) return null;
+  for (var region in HOME_REGIONS) {
+    if (HOME_REGIONS[region].indexOf(state) >= 0) return region;
+  }
+  return null;
+}
+
+function isSameRegion(stateA, stateB) {
+  if (!stateA || !stateB) return false;
+  if (stateA === stateB) return true;
+  var regionA = getHomeRegion(stateA);
+  var regionB = getHomeRegion(stateB);
+  return regionA && regionB && regionA === regionB;
+}
+
+const TEAM_HOME_STATES = {
+  // Mini Stock
+  "Pawlowski's Auto Body": 'WI', "Earl's Speed Shop": 'NC', 'Backwoods Motorsports': 'TN',
+  'County Line Racing': 'VA', 'Hilltop Racing': 'NC', 'Gravel Road Racing': 'TN',
+  'Pinebrook Motorsports': 'ME', 'Twin Pines Garage': 'ME',
+  // Street Stock
+  'Barnyard Racing': 'VA', "Cousin's Garage": 'NC', 'Rural Route Racing': 'TN',
+  'Three Dog Racing': 'SC', 'Riverside Motorsports': 'VA', 'Southpaw Racing': 'GA',
+  'Timber Run Racing': 'NC', 'Lakeview Speed': 'WI', 'Ironhide Motorsports': 'OH',
+  // Super Late Model
+  'Carolina Asphalt Racing': 'NC', 'Ridgeline Motorsports': 'VA', 'Summit Racing Stable': 'OH',
+  'Tri-Oval Racing': 'NC', 'Flatout Racing': 'TN', 'Precision Motorsports': 'GA',
+  'Apex Asphalt Racing': 'SC', 'Benchmark Speed': 'VA', 'Threshold Motorsports': 'NC',
+  // Late Model Stock
+  'Southern Speed Racing': 'NC', 'Appalachian Motorsports': 'VA', 'Piedmont Racing Co.': 'NC',
+  'Blue Ridge Speed': 'VA', 'Tri-State Racing': 'TN', 'Carolina Thunder Racing': 'NC',
+  'Shenandoah Motorsports': 'VA', 'Smoky Mountain Speed': 'TN', 'Tidewater Racing': 'VA',
+  'Gulf Coast Motorsports': 'FL',
+  // ARCA
+  'Pinnacle Motorsports': 'NC', 'Elevation Racing': 'CO', 'Heritage Speed Group': 'IN',
+  'National Oval Racing': 'OH', 'Summit Motorsports': 'OH', 'Accelerate Racing': 'NC',
+  'Landmark Motorsports': 'VA', 'Frontier Speed Group': 'TX', 'Continental Racing': 'PA',
+  'Keystone Motorsports': 'PA', 'American Oval Racing': 'IN', 'Crossover Motorsports': 'NC',
+  // Trucks
+  'Frontier Truck Racing': 'TX', 'Wildfire Motorsports': 'NC', 'Crossroads Racing': 'TN',
+  'Thunder Racing': 'NC', 'Apex Truck Team': 'NC', 'Ironhorse Motorsports': 'TX',
+  'Stampede Racing': 'TX', 'Longhaul Motorsports': 'NC', 'Roughrider Racing': 'OK',
+  'Big Rig Motorsports': 'IN', 'Outpost Racing': 'TN', 'Trailblazer Speed': 'NC',
+  'Stonewall Truck Racing': 'VA', 'Overland Motorsports': 'CO',
+  // Xfinity
+  'Silver Arrow Racing': 'NC', 'Criterion Motorsports': 'NC', 'Momentum Racing Partners': 'NC',
+  'Apex National': 'NC', 'Phoenix Racing': 'NC', 'Cardinal Motorsports': 'VA',
+  'Velocity Racing Group': 'NC', 'Ironside Motorsports': 'NC', 'Highline National': 'NC',
+  'Threshold Racing': 'NC', 'Benchmark Motorsports': 'NC', 'Streamline Racing': 'NC',
+  'Precision National': 'NC', 'Catalyst Motorsports': 'NC', 'Vortex Racing': 'NC',
+  // Cup
+  'Titan Motorsports': 'NC', 'Crown Racing': 'NC', 'Dynasty Motor Racing': 'NC',
+  'Apex Cup Team': 'NC', 'Legacy Motor Club': 'NC', 'Republic Racing': 'NC',
+  'Ironclad Cup Racing': 'NC', 'Sovereign Motorsports': 'NC', 'National Speed Group': 'NC',
+  'Empire Racing': 'NC', 'Pinnacle Cup Team': 'NC', 'Vanguard Motor Racing': 'NC',
+  'Landmark Racing': 'NC', 'Continental Motorsports': 'NC', 'Heritage Cup Racing': 'NC',
+  'Criterion Cup Team': 'NC',
+};
         function randomHomeState() {
             return HOME_STATE_POOL[rand(0, HOME_STATE_POOL.length - 1)];
         }
@@ -4850,54 +4919,53 @@ function renderRoster() {
             // ── Home race effects ────────────────────────────────────────────────────────
             // When the race state matches the player's home state, the crowd is theirs.
             // Win = big bonus. DNF = penalty. Poor finish = smaller hit. Just showing up = fans.
-            if (!result.isFig8Bonus && !result.dq && race.state && state.homeState) {
-                const isHomeRace = race.state === state.homeState;
-                if (isHomeRace) {
-                    const homeName = (typeof US_STATE_NAMES !== 'undefined' ? US_STATE_NAMES[state.homeState] : null) || state.homeState;
-                    if (result.dnf) {
-                        // DNF in front of home crowd
-                        const homeFanHit = -rand(100, 300);
-                        const homeRepHit = -rand(2, 4);
-                        state.fans = Math.max(0, state.fans + homeFanHit);
-                        state.reputation = Math.max(0, state.reputation + homeRepHit);
-                        state.dramaQueue.push({
-                            id: 'home_dnf_' + uid(), title: 'Rough Night at Home', effect: 'none',
-                            desc: `DNF in ${homeName}. The home crowd was pulling for you. That one stings more than usual.`, valence: 'bad'
-                        });
-                        addLog(state, `🏠 Home race (${homeName}): DNF — Rep ${homeRepHit} | Fans ${fmtFans(homeFanHit)}`);
-                    } else if (result.position === 1) {
-                        // Win at home
-                        const homeFanBoost = rand(400, 900);
-                        const homeRepBoost = rand(5, 10);
-                        state.fans = Math.max(0, state.fans + homeFanBoost);
-                        state.reputation = Math.max(0, state.reputation + homeRepBoost);
-                        state.dramaQueue.push({
-                            id: 'home_win_' + uid(), title: 'Hometown Hero', effect: 'none',
-                            desc: `Win in ${homeName}. The crowd lost their minds. This is what it's all about.`, valence: 'good'
-                        });
-                        addLog(state, `🏠🏆 Home race win (${homeName}): Rep +${homeRepBoost} | Fans +${fmtFans(homeFanBoost)}`);
-                    } else if (result.position <= 5) {
-                        // Top 5 at home — modest boost
-                        const homeFanBoost = rand(100, 300);
-                        state.fans = Math.max(0, state.fans + homeFanBoost);
-                        addLog(state, `🏠 Home race top 5 (${homeName}): Fans +${fmtFans(homeFanBoost)}`);
-                    } else if (result.position > Math.ceil(result.fieldSize * 0.6)) {
-                        // Struggled at home
-                        const homeFanHit = -rand(50, 150);
-                        state.fans = Math.max(0, state.fans + homeFanHit);
-                        state.dramaQueue.push({
-                            id: 'home_bad_' + uid(), title: 'Off Day at Home', effect: 'none',
-                            desc: `P${result.position} in ${homeName}. Not what the home crowd came to see. The drive back will be quiet.`, valence: 'bad'
-                        });
-                        addLog(state, `🏠 Home race (${homeName}): poor finish — Fans ${fmtFans(homeFanHit)}`);
-                    } else {
-                        // Mid-pack at home — small bump for just showing up
-                        const homeFanBump = rand(50, 150);
-                        state.fans = Math.max(0, state.fans + homeFanBump);
-                        addLog(state, `🏠 Home race (${homeName}): Fans +${fmtFans(homeFanBump)}`);
-                    }
-                }
-            }
+            if (!result.isFig8Bonus && !result.dq && race.state) {
+    // Personal home region takes priority, team home region is fallback
+    const contract = state.contracts.find(function(c){return c.seriesId===seriesId;});
+    const teamHomeState = contract ? (TEAM_HOME_STATES[contract.team]||null) : null;
+    const isPersonalHome = state.homeState && isSameRegion(race.state, state.homeState);
+    const isTeamHome = !isPersonalHome && teamHomeState && isSameRegion(race.state, teamHomeState);
+    const isHomeRace = isPersonalHome || isTeamHome;
+    const homeLabel = isPersonalHome
+      ? ((typeof US_STATE_NAMES !== 'undefined' ? US_STATE_NAMES[state.homeState] : null) || state.homeState)
+      : isTeamHome
+      ? ((typeof US_STATE_NAMES !== 'undefined' ? US_STATE_NAMES[teamHomeState] : null) || teamHomeState) + ' (team home)'
+      : null;
+
+    if (isHomeRace && homeLabel) {
+      if (result.dnf) {
+        const homeFanHit = -rand(100, 300);
+        const homeRepHit = -rand(2, 4);
+        state.fans       = Math.max(0, state.fans + homeFanHit);
+        state.reputation = Math.max(0, state.reputation + homeRepHit);
+        state.dramaQueue.push({id:'home_dnf_'+uid(), title:'Rough Night at Home',effect:'none',
+          desc:`DNF in ${homeLabel}. The home crowd was pulling for you. That one stings more than usual.`,valence:'bad'});
+        addLog(state, `🏠 Home race (${homeLabel}): DNF — Rep ${homeRepHit} | Fans ${fmtFans(homeFanHit)}`);
+      } else if (result.position === 1) {
+        const homeFanBoost = rand(400, 900);
+        const homeRepBoost = rand(5, 10);
+        state.fans       = Math.max(0, state.fans + homeFanBoost);
+        state.reputation = Math.max(0, state.reputation + homeRepBoost);
+        state.dramaQueue.push({id:'home_win_'+uid(), title:'Hometown Hero',effect:'none',
+          desc:`Win in ${homeLabel}. The crowd lost their minds. This is what it's all about.`,valence:'good'});
+        addLog(state, `🏠🏆 Home race win (${homeLabel}): Rep +${homeRepBoost} | Fans +${fmtFans(homeFanBoost)}`);
+      } else if (result.position <= 5) {
+        const homeFanBoost = rand(100, 300);
+        state.fans = Math.max(0, state.fans + homeFanBoost);
+        addLog(state, `🏠 Home race top 5 (${homeLabel}): Fans +${fmtFans(homeFanBoost)}`);
+      } else if (result.position > Math.ceil(result.fieldSize * 0.6)) {
+        const homeFanHit = -rand(50, 150);
+        state.fans = Math.max(0, state.fans + homeFanHit);
+        state.dramaQueue.push({id:'home_bad_'+uid(), title:'Off Day at Home',effect:'none',
+          desc:`P${result.position} in ${homeLabel}. Not what the home crowd came to see. The drive back will be quiet.`,valence:'bad'});
+        addLog(state, `🏠 Home race (${homeLabel}): poor finish — Fans ${fmtFans(homeFanHit)}`);
+      } else {
+        const homeFanBump = rand(50, 150);
+        state.fans = Math.max(0, state.fans + homeFanBump);
+        addLog(state, `🏠 Home race (${homeLabel}): Fans +${fmtFans(homeFanBump)}`);
+      }
+    }
+  }
 
             // Sponsor happiness
             state.sponsors = state.sponsors.map(sp => {
