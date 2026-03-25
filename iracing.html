@@ -2077,7 +2077,57 @@ const TEAM_HOME_STATES = {
             },
         ];
 
+// ─── TRADE RUMORS ────────────────────────────────────────────────────────────
+function maybeFireTradeRumor(state) {
+  // Once per season, second half weighted
+  if ((state._tradeRumorFiredSeason||0) >= state.season) return;
+  const totalRaces = Object.values(state.schedules||{}).reduce(function(a,s){return a+s.length;},0);
+  const completedRaces = Object.values(state.schedules||{}).reduce(function(a,s){return a+s.filter(function(r){return r.result;}).length;},0);
+  if (totalRaces === 0) return;
+  const progress = completedRaces / totalRaces;
+  // Only fires in second half of season, increasing probability
+  if (progress < 0.5) return;
+  if (Math.random() > (progress - 0.4) * 0.8) return;
 
+  // Find series one tier above player's current highest
+  const playerTiers = (state.contracts||[]).map(function(c){
+    return (getSeries(c.seriesId)&&getSeries(c.seriesId).tier)||1;
+  });
+  if (!playerTiers.length) return;
+  const highestTier = Math.max(...playerTiers);
+  const targetSeries = SERIES.find(function(s){ return s.tier === highestTier + 1; });
+  if (!targetSeries) return;
+
+  // Pick a random team from that series
+  const teamList = TEAMS[targetSeries.id]||[];
+  if (!teamList.length) return;
+  const team = teamList[rand(0, teamList.length-1)];
+
+  state._tradeRumorFiredSeason = state.season;
+
+  const playerFirst = state.driverName.split(' ')[0];
+  const lines = [
+    `Word from someone close to the ${targetSeries.short} paddock is that ${team} has been asking questions about ${playerFirst}. Nothing official, nothing confirmed, but the people doing the asking aren't doing it casually.`,
+    `Heard through a mutual contact that ${team} in the ${targetSeries.short} has had ${playerFirst}'s name come up in their driver conversations. Whether that goes anywhere depends on how the rest of this season plays out.`,
+    `A source says ${team} sent someone to watch a couple of races recently. ${playerFirst} was specifically mentioned as someone they're monitoring. Free agency is going to be interesting.`,
+    `Not confirmed but reliable: ${team} has been making calls about ${playerFirst}. The ${targetSeries.short} team apparently likes what they've seen and wants to know more before the offseason.`,
+    `Word in the paddock is ${team} is putting together a list for next season and ${playerFirst}'s name is on it. Could be nothing. Could be the call you've been waiting for.`,
+    `Heard from someone at the ${targetSeries.short} level that ${team} has been paying close attention to ${playerFirst}'s results lately. No contact yet but the interest sounds genuine.`,
+    `A ${targetSeries.short} team owner — reportedly from ${team} — was seen at the track last weekend. ${playerFirst} was pointed out to them specifically. Make of that what you will.`,
+    `${team} is apparently in rebuild mode for next season and they're looking at drivers from lower series. ${playerFirst} came up by name according to someone who was in the room.`,
+  ];
+
+  state.dramaQueue.push({
+    id: 'trade_rumor_'+uid(),
+    title: `👀 ${targetSeries.short} Interest — ${team}`,
+    effect: 'none',
+    desc: lines[rand(0, lines.length-1)],
+    valence: 'good',
+    _isTradeRumor: true,
+  });
+
+  addLog(state, `👀 Trade rumor: ${team} (${targetSeries.short}) asking about ${state.driverName}`);
+}
         function maybeFireSponsorActivation(state) {
             if (!(state.sponsors || []).length) return;
             if (Math.random() > 0.18) return; // ~18% chance per race
@@ -3509,8 +3559,8 @@ const TEAM_HOME_STATES = {
             indexed.forEach(function (item) {
                 var d = item.d;
                 var isAction = !!d._requiresAction;
-                var borderColor = isAction ? '#F59E0B44' : d.valence === 'bad' ? '#EF444444' : d.valence === 'good' ? '#10B98133' : '#1E2433';
-                var bg = isAction ? '#1a1200' : '#0B0F1A';
+                var borderColor = isAction?'#F59E0B44':d._isTradeRumor?'#8B5CF644':d.valence==='bad'?'#EF444444':d.valence==='good'?'#10B98133':'#1E2433';
+                var bg = isAction?'#1a1200':d._isTradeRumor?'#0D0A1A':'#0B0F1A';
                 var effectTag = null;
                 if (d.effect === 'rep_hit' && d.value) {
                     var repTxt = 'Rep ' + d.value;
@@ -5300,6 +5350,7 @@ function renderRoster() {
             maybeFireRivalWin(state, seriesId, result);
             maybeFireFanMail(state);
             maybeFireSponsorActivation(state);
+            maybeFireTradeRumor(state);
 
             // Injury rolls — player and AI
             if (!result._injuryRace) {
@@ -7438,7 +7489,7 @@ function renderRoster() {
                         const skipped = !!(race.result && race.result.skipped);
                         const isNext = !done && !skipped && sched.slice(0, i).every(r => r.result);
                         const bonusDone = !!race.bonusResult;
-                        const bonusNow = done && race.fig8 && !bonusDone;
+                        const bonusNow=done&&race.fig8&&!bonusDone&&!(race.result&&race.result.rainedOut);
                         const isDQd = done && (race.result && race.result.dq);
                         const pc = done && race.result.dnf ? '#EF4444' : isDQd ? '#F97316' : done && race.result.position === 1 ? '#F59E0B' : done && race.result.position <= 5 ? '#10B981' : '#94A3B8';
                         const resultLabel = isDQd ? 'DQ' : (race.result && race.result.dnf) ? 'DNF' : done ? `P${race.result.position}` : '';
@@ -7511,8 +7562,10 @@ function renderRoster() {
           summary:'Race rained out. No points awarded.',
         };
         G.week++;
+        G.week++;
         addLog(G, `🌧️ ${sched[i].track} — rained out. No points, no penalty.`);
         saveGame(); render();
+        showSummaryToast(`🌧️ ${sched[i].track} rained out. No points, no penalty. See you next week.`, '#3B82F6', 'Rain Out');
       }),
       mkBtn('✕','btn btn-xs btn-danger',()=>{
         sched.splice(i,1);
