@@ -5768,6 +5768,7 @@
             const remaining = sched.filter(r => !r.result).length;
             if ((remaining === 0 || contract.racesCompleted >= contract.races))
                 _finalizeContract(state, seriesId, contract, s);
+        }
 
         function _finalizeContract(state, seriesId, contract, s) {
             contract.seasonsCompleted++;
