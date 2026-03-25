@@ -6570,7 +6570,7 @@ function renderRoster() {
         function renderContent() {
             const c = $('content'); c.innerHTML = '';
             const page = h('div', { className: 'page' });
-            const map={dashboard:renderDashboard,contracts:renderContracts,paddock:renderPaddock,schedule:renderSchedule,roster:renderRoster,special:renderSpecial,rivals:renderRivals,standings:renderStandings,business:renderBusiness,drivers:renderDrivers,log:renderLog,history:renderHistory,settings:renderSettings};            c.appendChild(page);
+            const map={dashboard:renderDashboard,contracts:renderContracts,paddock:renderPaddock,schedule:renderSchedule,roster:renderRoster,special:renderSpecial,rivals:renderRivals,standings:renderStandings,business:renderBusiness,drivers:renderDrivers,log:renderLog,history:renderHistory,settings:renderSettings};   if(map[activeTab]) page.appendChild(map[activeTab]());   c.appendChild(page);
         }
 
         // ─── DASHBOARD ────────────────────────────────────────────────────────────────
