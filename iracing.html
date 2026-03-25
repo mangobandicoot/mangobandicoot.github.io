@@ -4310,7 +4310,8 @@ if (d.aiStats) {
     // Promotion/demotion
     const nextSeries = SERIES.find(ns=>ns.tier===s.tier+1);
     const prevSeries = SERIES.find(ps=>ps.tier===s.tier-1);
-    if(nextSeries && d.rep>=nextSeries.reqRep && d.fans>=nextSeries.reqFans && skillRoll>65 && Math.random()<0.3) {
+if(nextSeries && d.rep>=nextSeries.reqRep && d.fans>=nextSeries.reqFans && skillRoll>65 && d.skill>=(40+(nextSeries.tier*5)) && Math.random()<0.3) {
+
       promotions.push({driver:d, from:s.id, to:nextSeries.id});
     } else if(prevSeries && d.rep<s.reqRep*0.6 && skillRoll<40 && Math.random()<0.2) {
       demotions.push({driver:d, from:s.id, to:prevSeries.id});
