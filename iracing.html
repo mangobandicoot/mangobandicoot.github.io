@@ -1099,7 +1099,6 @@
                 { name: 'Lanier National Speedway', city: 'Braselton', state: 'GA', night: true, weather: 'hot', premierName: 'Lanier 150', premierLaps: 150 },
                 { name: 'Thompson Speedway Motorsports Park', city: 'Thompson', state: 'CT', night: false, weather: 'cool', premierName: 'Thompson 200', premierLaps: 200 },
                 { name: 'Charlotte Motor Speedway', city: 'Concord', state: 'NC', night: true, weather: 'mild', premierName: 'Charlotte Invitational', premierLaps: 150 },
-            ],
 
             ],
         // Tier 3: regional short/intermediate tracks
@@ -9049,8 +9048,8 @@
             }
 
             // Track records held
-            const records = G.trackRecords || {};
-            const recordsHeld = Object.entries(records).filter(function (entry) {
+            const hlRecords = G.trackRecords || {};
+            const recordsHeld = Object.entries(hlRecords).filter(function (entry) {
                 return entry[1].overall && entry[1].overall.driver === G.driverName;
             });
             if (recordsHeld.length >= 1) {
