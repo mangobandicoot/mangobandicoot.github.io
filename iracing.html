@@ -3380,6 +3380,12 @@ function buildPreRaceNote(seriesId, raceIdx) {
     else
       notes.push(`${gap} points back with ${racesLeft} races left. Need a strong run.`);
   }
+// Confidence/streak mention
+if (G.confidence >= 2 && Math.random() < 0.6) {
+  notes.push(`You're on a run right now. The car feels right and the results are following. Don't change anything.`);
+} else if (G.confidence <= -2 && Math.random() < 0.6) {
+  notes.push(`Results have been rough lately. Something needs to click today or the questions are going to get louder.`);
+}
 
   // Rep tier flavor — fires occasionally when nothing else fills the note
   if (!notes.length || Math.random() < 0.20) {
@@ -5279,6 +5285,24 @@ function renderDashboard() {
   ));
   dc.appendChild(statBar('Reputation',Math.min(G.reputation,320),320,'#F59E0B'));
   dc.appendChild(statBar('Fans',Math.min(G.fans,500000),500000,'#EC4899'));
+  // Confidence/streak indicator
+if (G.confidence !== 0) {
+  const confColor = G.confidence >= 2 ? '#F59E0B' : G.confidence === 1 ? '#10B981' : G.confidence === -1 ? '#F97316' : '#EF4444';
+  const confLabel = G.confidence >= 3 ? '🔥 On Fire' : G.confidence === 2 ? '📈 Hot Streak' : G.confidence === 1 ? '✅ Good Form' : G.confidence === -1 ? '📉 Cold Stretch' : '❄️ Struggling';
+  const confDesc = G.confidence >= 2 ? 'Wins coming in bunches right now. Sponsors are watching.' : G.confidence === 1 ? 'Running well lately. Keep it going.' : G.confidence === -1 ? 'Results have been off. Something needs to change.' : 'Rough stretch. The paddock is starting to ask questions.';
+  dc.appendChild(h('div',{style:{
+    background:confColor+'18',border:`1px solid ${confColor}44`,
+    borderRadius:'7px',padding:'8px 12px',marginBottom:'10px',
+    display:'flex',alignItems:'center',gap:'10px',
+  }},
+    h('div',{style:{fontSize:'18px'}},confLabel.split(' ')[0]),
+    h('div',null,
+      h('div',{style:{fontSize:'13px',fontWeight:800,color:confColor}},confLabel.slice(2)),
+      h('div',{style:{fontSize:'12px',color:'#94A3B8',marginTop:'2px'}},confDesc),
+    ),
+  ));
+}
+
   const _repTier = getRepTier(G.reputation);
   dc.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'6px',marginTop:'6px',marginBottom:'4px'}},
     h('span',{style:{fontSize:'16px'}},_repTier.icon),
