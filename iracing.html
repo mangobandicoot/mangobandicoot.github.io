@@ -1151,6 +1151,334 @@ const PADDOCK_RUMORS = [
   'This one might be nothing, but two drivers who have been close for years reportedly aren\'t speaking right now.',
   'Unverified, but someone is claiming a driver failed a routine check this week and the team is managing it quietly.',
 ];
+// ─── SPONSOR ACTIVATION EVENTS ───────────────────────────────────────────────
+const SPONSOR_ACTIVATIONS = [
+  {
+    id: 'social_post',
+    title: 'Social Post Request',
+    weight: 3,
+    desc: function(sp) {
+      return [
+        `${sp.brand} reached out through the team this week; they want you to post something on social mentioning them by name. Nothing crazy, just a shoutout. They're tracking engagement this quarter and apparently your numbers are good.`,
+        `Got a message from the ${sp.brand} rep asking if you'd be willing to put something up on social about them. They've got a new product dropping and want some authentic voices behind it. Their words, not mine.`,
+        `${sp.brand} wants a social post. Something genuine, they said, not a script. They'll send talking points but you can do whatever you want with them, roughly.`,
+        `The ${sp.brand} marketing team has been unusually quiet lately and then sent over a very cheerful email asking for a social mention this week. The timing is suspicious but the ask is simple enough.`,
+        `${sp.brand} sent over a brief with suggested caption ideas for a social post. Three of them are unusable. One of them is actually pretty good. They want it up before the weekend.`,
+        `Quick ask from ${sp.brand}; they want you to post something about their new campaign. They've already drafted three options for you to choose from which is either helpful or presumptuous depending on your mood.`,
+        `${sp.brand} wants some social content before the next race. They specifically asked for something that doesn't look like an ad, which is an interesting thing to ask for in an ad request.`,
+        `The ${sp.brand} rep texted the team directly this time; they want a post this week and they're offering a small bonus for good engagement numbers. No pressure, they said. Definitely some pressure.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Post it properly', rep: -1, fans: 150, money: 0, sponsorHappy: 8, desc: 'Takes ten minutes and they love you for it. Small rep dip because some fans clock the promo energy.' },
+      { label: 'Post something vague', rep: 0, fans: 50, money: 0, sponsorHappy: 4, desc: "You mention them without really mentioning them. They'll take it but don't expect a bonus anytime soon." },
+      { label: 'Pass on it', rep: 1, fans: 0, money: 0, sponsorHappy: -8, desc: "They're not happy but they'll get over it. Probably." },
+    ],
+  },
+  {
+    id: 'trade_show',
+    title: 'Trade Show Appearance',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} has a booth at a regional trade show next weekend and they want you there for a few hours to meet people and take photos. They're covering travel and there's a decent appearance fee involved.`,
+        `The ${sp.brand} team is doing a trade show and asked if you'd come out for the afternoon. It's not glamorous but they've got a check with your name on it and it keeps the relationship warm.`,
+        `${sp.brand} wants you at their trade show booth this weekend; a few hours, some handshakes, a lot of photos with people who will definitely tell you about their own racing days whether you ask or not.`,
+        `${sp.brand} is exhibiting at a trade show and they want a driver in the booth. Their words. You are the driver. The booth will have branded pens and a banner with your face on it. Welcome to sponsorship.`,
+        `Got the trade show request from ${sp.brand} again this year. Last year went well apparently; well enough that they've upgraded the booth and are expecting a bigger crowd. Same deal, better snacks supposedly.`,
+        `${sp.brand} is at a regional expo this weekend and they want some motorsport energy in the booth. Translation: they want you standing next to their product looking enthusiastic for four hours.`,
+        `The ${sp.brand} rep was very excited on the phone about this trade show. Very excited. The kind of excited that makes you think the booth assignment was a bigger deal internally than it sounds. They want you there.`,
+        `${sp.brand} is doing a combined trade show and customer appreciation day and they want you there for the afternoon session. Apparently last year's driver appearance drove a lot of traffic and they're hoping for a repeat.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Show up', rep: 2, fans: 200, money: 800, sponsorHappy: 12, desc: "Few hours of your weekend, solid check, and they'll remember it at renewal time." },
+      { label: 'Send a signed photo instead', rep: 0, fans: 50, money: 200, sponsorHappy: 4, desc: "Not what they asked for but it's something. They appreciate the gesture, sort of." },
+      { label: "Can't make it", rep: 0, fans: 0, money: 0, sponsorHappy: -10, desc: "They understand. They don't like it but they understand." },
+    ],
+  },
+  {
+    id: 'media_appearance',
+    title: 'Media Appearance Request',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} set up an interview with a regional outlet and want you front and center. It's a puff piece mostly but their logo is going to be in every frame and they're very excited about that.`,
+        `The ${sp.brand} PR team booked a local TV segment and they want you as the face of it. Twenty minutes of your time, they said. It'll be forty-five. Budget accordingly.`,
+        `${sp.brand} has a media day coming up and your name is on the list. They want genuine, they want relaxed, and they want you wearing their gear. Two of those three are easy.`,
+        `${sp.brand} arranged a podcast appearance and want you as the guest. It's a motorsport show with a decent following and the host seems to actually know racing, which is rarer than you'd think.`,
+        `There's a regional sports magazine doing a feature on local racing and ${sp.brand} sponsored the piece. They want you in the photos and available for a brief quote. Their PR person will be there the whole time.`,
+        `${sp.brand} booked a radio spot and they want you in studio for it. Live read, their script, your voice. Twenty minutes total. The host is going to mispronounce your name at least once.`,
+        `The ${sp.brand} team put together a short video series about their involvement in motorsport and episode two apparently needs a driver interview. You're the driver. The questions are softballs.`,
+        `${sp.brand} got picked up by a regional news outlet for a business feature and they want to include some racing footage and a brief driver interview to round it out. Low pressure, good exposure.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Do it', rep: 3, fans: 300, money: 500, sponsorHappy: 10, desc: "Good exposure and they pay you for the time. Hard to argue with." },
+      { label: 'Do it but keep it short', rep: 1, fans: 100, money: 200, sponsorHappy: 5, desc: "You show up, you deliver, you leave. They wanted more but they got something." },
+      { label: 'Pass', rep: 0, fans: 0, money: 0, sponsorHappy: -8, desc: "They booked a slot with someone else. It's fine. It's not fine." },
+    ],
+  },
+  {
+    id: 'store_appearance',
+    title: 'Store Meet and Greet',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} wants you at one of their locations for a meet and greet on Saturday afternoon. Sign some stuff, take some photos, talk to customers who are going to tell you about their own racing days whether you ask or not.`,
+        `Got a request from ${sp.brand} to come out to their store for a few hours and meet some fans. They're running a promotion and having a driver there is part of the pitch. Fans get to meet you; you get paid.`,
+        `${sp.brand} is doing an in-store event and they want you there. Couple hours, good crowd, decent check. The downside is someone will definitely ask you to sign something weird.`,
+        `${sp.brand} is running a weekend promotion and they want a driver presence in store. You'd be signing autographs, taking photos, and occasionally explaining what you actually do to customers who wandered in for something else entirely.`,
+        `The ${sp.brand} store manager apparently specifically requested you for their meet and greet. That's either very flattering or means the regular requests went to someone else first. Either way the check clears.`,
+        `${sp.brand} has a new location opening and they want some motorsport flavor at the launch event. A few hours, good energy, and the kind of crowd that actually wants to be there rather than just passing through.`,
+        `Got a call about a ${sp.brand} store event; they're doing a customer appreciation weekend and want you there for the Saturday afternoon slot. Probably two hundred people, maybe more if the weather holds.`,
+        `${sp.brand} is hosting a community day at their location and they want you as a draw. It's genuinely a nice event from what the rep described; families, food, and racing content. Could be fun actually.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Go', rep: 3, fans: 400, money: 600, sponsorHappy: 12, desc: "Fans love it, sponsor loves it, you sign something weird. Worth it." },
+      { label: 'Go for an hour only', rep: 1, fans: 150, money: 300, sponsorHappy: 6, desc: "You show face and get out. They wanted longer but they got something on the books." },
+      { label: "Not this weekend", rep: 0, fans: 0, money: 0, sponsorHappy: -9, desc: "They'll ask again. Maybe." },
+    ],
+  },
+  {
+    id: 'car_livery',
+    title: 'Special Livery Request',
+    weight: 1,
+    desc: function(sp) {
+      return [
+        `${sp.brand} wants to run a special livery for one race this season; their anniversary edition branding, basically the whole car. They're excited about it. You have opinions about the color scheme.`,
+        `The ${sp.brand} marketing team has been working on a special paint scheme and they want to run it at an upcoming race. It's their call technically but they're asking nicely. The design is bold.`,
+        `${sp.brand} asked about doing a one-off livery for a race this season. Full rebrand for the weekend, their colors, their layout. Could look great. Could look like a moving billboard. Probably both.`,
+        `${sp.brand} has a milestone coming up and they want to mark it with a special paint scheme on the car for one race. They sent over a mock-up. It's a lot. There's a lot going on in that design.`,
+        `The ${sp.brand} design team has apparently been sitting on a livery concept for months and they finally want to pull the trigger on it. One race, full wrap, their branding everywhere. The check is substantial.`,
+        `${sp.brand} is turning twenty-five this year and they want to celebrate with a throwback livery on the car for a race. The old branding is actually pretty clean. This might be one of the easier livery conversations.`,
+        `Got sent over a livery proposal from ${sp.brand} for a one-race special scheme tied to a product launch. The colors are aggressive. The logo placement is aggressive. The entire thing is aggressive. They're very proud of it.`,
+        `${sp.brand} wants to do a charity-themed livery for one race with a portion of the visibility going toward a cause they're backing this quarter. The design is tasteful and the cause is legitimate.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Give them the car', rep: 0, fans: 100, money: 1500, sponsorHappy: 15, desc: "They're thrilled, they pay well for it, and you spend the whole weekend explaining the color choices to journalists." },
+      { label: 'Negotiate the design', rep: 1, fans: 50, money: 800, sponsorHappy: 8, desc: "You keep some input, they keep most of it. Compromise livery. Could be worse." },
+      { label: 'Keep your current scheme', rep: 2, fans: 0, money: 0, sponsorHappy: -6, desc: "Your car, your call. They respect it a little. Not a lot." },
+    ],
+  },
+  {
+    id: 'charity_tie_in',
+    title: 'Charity Partnership Request',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} is doing a charity push this quarter and they want you involved; a joint announcement, some content, maybe a small donation matched by them. Good optics for everyone and genuinely not a bad cause.`,
+        `The ${sp.brand} team reached out about a charity tie-in they're running. They want a driver's face on it and they picked yours. The cause is legitimate and they're putting real money behind it.`,
+        `${sp.brand} wants to do something with a local charity and have you front the announcement with them. Low effort on your end, good for the community, and it makes their quarterly report look excellent.`,
+        `${sp.brand} is partnering with a kids racing program this season and they want you involved in the launch. It's a half day, good cause, and the kind of thing that follows you positively for a long time.`,
+        `Got a request from ${sp.brand} about a food bank partnership they're running; they want a driver to help with a weekend distribution event and do a bit of press around it. Simple ask, genuine cause.`,
+        `${sp.brand} is backing a scholarship fund for young drivers from lower-income backgrounds and they want you to be part of the announcement. You'd be presenting the first award at a small ceremony.`,
+        `The ${sp.brand} foundation has a hospital visit program and they want to bring you along on the next one. No cameras unless you're comfortable with it; they're pretty clear that it's about the kids not the content.`,
+        `${sp.brand} is running a youth motorsport awareness campaign and they want you to record a short message for schools in the area. Twenty minutes of your time, goes out to a few thousand kids.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Get involved', rep: 6, fans: 350, money: 0, sponsorHappy: 12, desc: "Costs you nothing but time and it genuinely means something. The fans notice too." },
+      { label: 'Lend your name only', rep: 3, fans: 150, money: 0, sponsorHappy: 6, desc: "You're on the poster but not at the event. Half credit." },
+      { label: 'Sit this one out', rep: -2, fans: -100, money: 0, sponsorHappy: -5, desc: "They find someone else. The optics aren't great." },
+    ],
+  },
+  {
+    id: 'product_launch',
+    title: 'Product Launch Event',
+    weight: 1,
+    desc: function(sp) {
+      return [
+        `${sp.brand} is launching a new product line and wants you at the launch event. It's an evening thing, decent crowd, open bar that you probably shouldn't touch too much of. Good check and solid exposure.`,
+        `${sp.brand} has a product launch coming up and your name is on the VIP list as their featured guest. Dress code is business casual which is already asking a lot, but the appearance fee is real.`,
+        `Got an invite from ${sp.brand} for their product launch; they want you there as a brand ambassador for the night. It's the kind of event where everyone is trying to seem important. You'll fit right in.`,
+        `${sp.brand} is unveiling something new and they want motorsport energy in the room for it. You'd be mingling, talking about the brand, and occasionally pretending you use the product regularly.`,
+        `The ${sp.brand} launch event is apparently a bigger deal than their usual stuff; they've hired a proper venue and invited press. Your job is to stand near the product, look fast, and say nice things if asked.`,
+        `${sp.brand} sent over a formal invitation to their product reveal dinner. It's a seated event, about eighty people, and you're listed as a featured guest. The food is supposed to be genuinely good.`,
+        `${sp.brand} is doing a dealer preview for their new lineup and they want you there as the racing connection. Dealers love that kind of thing apparently and your face moves product more than you'd expect.`,
+        `Got a last-minute ask from ${sp.brand}; someone dropped out of their launch event and they want you to fill the slot. Short notice but the check is larger than usual to compensate.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Attend', rep: 2, fans: 200, money: 1200, sponsorHappy: 12, desc: "You shake hands, say the right things, and leave with a check. Smooth." },
+      { label: 'Send a video message instead', rep: 0, fans: 50, money: 400, sponsorHappy: 5, desc: "They wanted you in the room but a video is better than nothing. Barely." },
+      { label: 'Skip it', rep: 0, fans: 0, money: 0, sponsorHappy: -8, desc: "They launch without you. Someone else gets in the photos." },
+    ],
+  },
+  {
+    id: 'fan_contest',
+    title: 'Fan Contest Sponsorship',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} wants to run a fan contest where the winner gets to meet you at a race. They handle everything; the promotion, the logistics, the winner's travel. You just show up and spend an hour with whoever wins.`,
+        `${sp.brand} is doing a sweepstakes tied to their current campaign and the grand prize is a VIP race day experience with you. They've run these before and they go well. The winner is always genuinely excited.`,
+        `Got a proposal from ${sp.brand} for a fan contest; winner gets a pit lane tour and a meet with you at the next home race. Simple concept, good PR, and honestly the winners are usually the best part of the day.`,
+        `${sp.brand} wants to do a trivia contest on social with racing questions and the prize is a chance to hang out with you for an afternoon at the track. Low effort on your end and their audience loves this stuff.`,
+        `The ${sp.brand} team pitched a contest where fans submit videos about why they love racing and you pick the winner. You'd spend a couple hours judging entries and then meet the winner at a race.`,
+        `${sp.brand} is running a photo contest; fans submit their best racing photos and the winner gets to spend race day in the pit area with you. They want your name attached to the judging.`,
+        `Got asked by ${sp.brand} to be the prize in a customer loyalty contest. First place gets a signed helmet and a phone call with you. Second place gets a signed photo. They've already written the copy.`,
+        `${sp.brand} wants to run a 'design the car' contest for fans where you pick the winning submission and it gets used for a test day. They want you involved in the judging and the announcement.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Do it', rep: 4, fans: 500, money: 300, sponsorHappy: 11, desc: "Fans go crazy for this stuff and the winner will tell everyone they know for the rest of their life." },
+      { label: 'Do it but limit your time', rep: 2, fans: 200, money: 150, sponsorHappy: 6, desc: "You show up for thirty minutes instead of an hour. Still meaningful, just shorter." },
+      { label: 'Pass', rep: 0, fans: 0, money: 0, sponsorHappy: -7, desc: "They run the contest with a different prize. Less exciting for everyone." },
+    ],
+  },
+  {
+    id: 'school_program',
+    title: 'School Outreach Program',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} sponsors a STEM program at a few local schools and they want to bring you in for a visit; talk about racing, physics, how cars work, that kind of thing. The kids are middle schoolers so expect good questions and no filter.`,
+        `${sp.brand} has a relationship with the local school district and they're putting together a career day program. They want a racing driver on the lineup. The other speakers are an accountant and a nurse. You'll stand out.`,
+        `Got a request from ${sp.brand} about visiting a high school automotive program. The teacher reached out through the sponsor and the ask is simple; come talk to the class about what you do for an hour.`,
+        `${sp.brand} does an annual school visit program and this year they want to include racing. You'd go to two or three schools, talk about the sport, and answer questions from kids who have probably already watched your race footage on YouTube.`,
+        `The ${sp.brand} community team is running a 'meet a professional' series at elementary schools in the area and they specifically requested someone from motorsport. One afternoon, three classrooms, a lot of very small handshakes.`,
+        `${sp.brand} is sponsoring a science fair this year and they want a racing driver to judge the engineering category and give a short talk about how racing and engineering connect. Right in your wheelhouse actually.`,
+        `Got a message through ${sp.brand} from a teacher whose class has been following your season as part of a math project; tracking points, calculating averages, that kind of thing. The sponsor wants to make a moment out of it with a school visit.`,
+        `${sp.brand} does a summer program for underprivileged kids and they've added a motorsport day this year. They want you there for the afternoon to show the kids around a car and talk about the sport.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Go visit', rep: 5, fans: 250, money: 0, sponsorHappy: 10, desc: "Genuinely one of the better ways to spend an afternoon. The kids are great and the sponsor loves the photos." },
+      { label: 'Send some signed merchandise instead', rep: 2, fans: 50, money: 0, sponsorHappy: 4, desc: "Not as good as showing up but the teacher will make the most of it." },
+      { label: 'Skip this one', rep: -1, fans: 0, money: 0, sponsorHappy: -6, desc: "They find another driver. The kids are fine. You feel slightly bad about it." },
+    ],
+  },
+  {
+    id: 'content_day',
+    title: 'Content Creation Day',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} wants to bring a camera crew to the garage for a content day; behind the scenes stuff, car walkaround, short interview. Half a day, they handle everything, and the content goes on their channels.`,
+        `The ${sp.brand} digital team wants to shoot some content with you for their social channels. Nothing complicated; a walkaround of the car, a few talking head clips, maybe some action footage if there's testing happening.`,
+        `${sp.brand} has been building out their content library and they want some motorsport material. They're sending a two-person crew for the day and the plan is pretty relaxed; just you, the car, and a camera.`,
+        `Got a request from ${sp.brand} for a content shoot at the track. They want authentic behind-the-scenes material and they've specifically said they don't want it to feel produced. Which means it'll take twice as long to produce.`,
+        `${sp.brand} is redoing their website and they want new photography and video content featuring you and the car. Professional crew, half day, you basically just need to show up and be yourself near the vehicle.`,
+        `The ${sp.brand} marketing team wants to do a day-in-the-life style video following you through a race weekend. Documentary style, minimal scripting, just cameras following the process. Could be interesting actually.`,
+        `${sp.brand} wants to shoot a series of short clips for their social channels; the kind of stuff that does well on short video platforms. Ten to fifteen clips, most of them thirty seconds or less, all at the track.`,
+        `Got a content brief from ${sp.brand} that's actually pretty well thought out; they want to document the car preparation process and use it for an engineering-focused campaign. Crew shows up Friday morning.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Full day shoot', rep: 1, fans: 300, money: 900, sponsorHappy: 13, desc: "They get great content, you get a solid check, and the garage looks good on camera." },
+      { label: 'Half day only', rep: 0, fans: 150, money: 450, sponsorHappy: 7, desc: "You give them the morning and they make the most of it. Not everything they wanted but close." },
+      { label: 'Not the right time', rep: 0, fans: 0, money: 0, sponsorHappy: -7, desc: "They reschedule or find another angle. The content calendar slips." },
+    ],
+  },
+  {
+    id: 'hospitality_event',
+    title: 'Sponsor Hospitality Hosting',
+    weight: 1,
+    desc: function(sp) {
+      return [
+        `${sp.brand} is bringing some of their top clients to the next race and they want you to host a hospitality suite for the afternoon. Meet and greet, track tour, the works. These are the people who write the big checks internally.`,
+        `The ${sp.brand} team is entertaining clients at the race this weekend and they've asked if you'd spend some time in their hospitality area between sessions. An hour, maybe ninety minutes; shaking hands with people who are very excited to be there.`,
+        `${sp.brand} has a hospitality tent at the next race and they want you available for their VIP guests for part of the day. These are dealers and distributors mostly; good people to know and they respond well to direct time with drivers.`,
+        `Got a request to host a hospitality session for ${sp.brand} at the upcoming race; their regional sales team is attending and a driver appearance is apparently a big deal for morale. Ninety minutes, catered, easy crowd.`,
+        `${sp.brand} is doing a client appreciation event at the track this weekend and they want you as the centerpiece. Think of it as a meet and greet but the guests are wearing business casual and asking about your lap times.`,
+        `The ${sp.brand} national team is in town for a conference and they've tagged on a race day experience. They want to bring the whole group through the paddock and have you available for Q&A. About forty people.`,
+        `${sp.brand} won a group of high-value clients in a lottery and they want to give them a race experience. You'd do a paddock walk, answer some questions, and generally be the reason they tell everyone at the office about their weekend.`,
+        `Got asked to spend an afternoon with ${sp.brand}'s franchise owners who are in for their annual conference. They're hosting at the track and want a driver to make it feel special. These are the people who actually stock ${sp.brand} products.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Host them properly', rep: 2, fans: 100, money: 1400, sponsorHappy: 14, desc: "The clients love it, the sponsor loves it, and you get the best check of the activation options. Worth the time." },
+      { label: 'Quick appearance only', rep: 1, fans: 50, money: 600, sponsorHappy: 7, desc: "You do thirty minutes and head back to the garage. They got something, you got paid." },
+      { label: "Can't commit to it", rep: 0, fans: 0, money: 0, sponsorHappy: -11, desc: "These were important clients and the sponsor is going to remember you said no to this one." },
+    ],
+  },
+  {
+    id: 'podcast_guest',
+    title: 'Podcast Guest Spot',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} sponsors a motorsport podcast and they want you on as a guest. The host is good, the audience knows racing, and the sponsor gets a read and some mentions worked into the conversation naturally. Or as naturally as these things go.`,
+        `Got a booking request through ${sp.brand} for a podcast appearance; it's a general sports show that covers motorsport occasionally and they want a driver perspective. About forty-five minutes, recorded remotely, no prep required.`,
+        `${sp.brand} has a relationship with a popular automotive podcast and they've arranged a guest spot for you. The host specifically asked for someone who races at the grassroots level and you fit the brief.`,
+        `The ${sp.brand} marketing team co-produces a small racing podcast and they want you as a featured guest for their season preview episode. The show has a dedicated audience and the questions are usually solid.`,
+        `Got a podcast request that came through ${sp.brand}; it's a business and sports crossover show that does well with the demographic the sponsor is targeting. An hour of your time, recorded at your convenience.`,
+        `${sp.brand} sponsors a regional sports radio program that does a podcast version and they've arranged for you to be the guest on this week's episode. Live to tape format, about an hour, the host does their homework.`,
+        `A racing history podcast that ${sp.brand} sponsors wants to do an episode on current grassroots racing and they want you as the contemporary voice. The other guest is a historian. It'll be more interesting than it sounds.`,
+        `${sp.brand} is launching their own podcast and you're their first guest. No pressure, fresh audience, and they want the conversation to go wherever it goes. The production quality looks decent from the brief they sent over.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Record the episode', rep: 3, fans: 400, money: 300, sponsorHappy: 9, desc: "Good audience, genuine conversation, and the episode lives online long after the recording." },
+      { label: 'Do a short segment only', rep: 1, fans: 150, money: 100, sponsorHappy: 4, desc: "You phone in for twenty minutes. Not the feature they wanted but it fills the slot." },
+      { label: 'Pass on this one', rep: 0, fans: 0, money: 0, sponsorHappy: -6, desc: "They book someone else. The episode goes up without you." },
+    ],
+  },
+  {
+    id: 'autograph_signing',
+    title: 'Autograph Session',
+    weight: 2,
+    desc: function(sp) {
+      return [
+        `${sp.brand} is setting up an autograph session at one of their retail partners and they want you signing for a couple hours. They'll have merchandise ready, it's well promoted, and the turnout is expected to be solid.`,
+        `Got a signing request from ${sp.brand}; they've arranged a two-hour autograph session at a local retailer that carries their products. The store has done these before and they run smoothly.`,
+        `${sp.brand} wants you to do a signing session at a motorsport retailer they partner with. Two hours, whatever people bring, their team handles the queue and logistics. You just need to show up and have a working pen.`,
+        `The ${sp.brand} rep put together a signing event at a car parts retailer. It's a Saturday afternoon, they're running a promotion around it, and they're expecting a decent line based on the advance interest.`,
+        `${sp.brand} set up a signing at an automotive show and they want you there for the afternoon session. Bigger crowd than a typical retail signing, more varied audience, and the sponsor gets good visibility from the foot traffic.`,
+        `Got asked to do a signing through ${sp.brand} at a race memorabilia shop that carries their branded gear. The owner is a longtime fan of the sport and has been asking the sponsor to arrange this for months apparently.`,
+        `${sp.brand} is doing a signing tour at their dealer locations and you're on the schedule for the regional stop. Half a dozen locations over a weekend, they handle all the travel, and each stop is about forty-five minutes.`,
+        `The ${sp.brand} team set up a signing at a motorsport museum that's hosting a temporary exhibition on grassroots racing. Curated crowd, genuinely interested people, and the setting is pretty cool actually.`,
+      ][rand(0,7)];
+    },
+    options: [
+      { label: 'Do the full session', rep: 3, fans: 450, money: 400, sponsorHappy: 11, desc: "Two hours, good crowd, everybody leaves happy. These sessions build real fan loyalty." },
+      { label: 'Do a shorter session', rep: 1, fans: 200, money: 200, sponsorHappy: 5, desc: "One hour instead of two. The line is longer than it looks when you have to cut it off." },
+      { label: 'Skip it', rep: 0, fans: 0, money: 0, sponsorHappy: -8, desc: "The store is disappointed. The sponsor is disappointed. A lot of disappointed people." },
+    ],
+  },
+];
+
+
+function maybeFireSponsorActivation(state) {
+  if (!(state.sponsors||[]).length) return;
+  if (Math.random() > 0.18) return; // ~18% chance per race
+
+  // Pick a sponsor weighted toward primary and happier ones
+  const eligible = state.sponsors.filter(function(sp){ return sp.happiness >= 40; });
+  if (!eligible.length) return;
+  const sp = eligible[rand(0, eligible.length-1)];
+
+  // Don't fire the same activation twice in a row for the same sponsor
+  const lastAct = sp._lastActivation;
+  const available = SPONSOR_ACTIVATIONS.filter(function(a){ return a.id !== lastAct; });
+  if (!available.length) return;
+
+  const total = available.reduce(function(s,a){return s+a.weight;},0);
+  let r = Math.random()*total;
+  let act = null;
+  for (const a of available) { r-=a.weight; if(r<=0){act=a;break;} }
+  if (!act) act = available[rand(0,available.length-1)];
+
+  sp._lastActivation = act.id;
+
+  const desc = act.desc(sp);
+
+  state.dramaQueue.push({
+    id: 'spact_'+uid(),
+    title: `${sp.brand} — ${act.title}`,
+    effect: 'none',
+    desc,
+    valence: 'neutral',
+    _isSponsor: true,
+    _isActivation: true,
+    _activationOptions: act.options,
+    _activationSponsorId: sp.id,
+  });
+}
+
 
 function maybeFireFanMail(state) {
   // Once per season, weighted toward good results
@@ -3966,6 +4294,8 @@ if(Math.random()<0.10){
   maybeFirePaddockRumor(state);
   maybeFireRivalWin(state, seriesId, result);
 maybeFireFanMail(state);
+maybeFireSponsorActivation(state);
+
   // Injury rolls — player and AI
   if (!result._injuryRace) {
     processPlayerInjury(state, seriesId, result);
@@ -6502,12 +6832,56 @@ if(bizQueue.length){
     const item = h('div',{style:{padding:'10px 0',borderBottom:'1px solid #0D1117'}});
     item.appendChild(h('div',{style:{fontSize:'15px',fontWeight:700,color:'#F9FAFB',marginBottom:'4px'}},d.title));
     item.appendChild(h('div',{style:{fontSize:'14px',color:'#E2E8F0',lineHeight:'1.5',marginBottom:'8px'}},d.desc));
-    item.appendChild(h('div',{style:{textAlign:'right'}},
-      mkBtn('Dismiss','btn btn-sm btn-primary',function(){
-        const idx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
-        if(idx>=0) doDismissDrama(idx);
-      })
-    ));
+if (d._isActivation && d._activationOptions) {
+      const sp = (G.sponsors||[]).find(function(s){return s.id===d._activationSponsorId;});
+      item.appendChild(h('div',{style:{display:'flex',flexDirection:'column',gap:'8px',marginTop:'8px'}},
+        ...d._activationOptions.map(function(opt){
+          return h('div',{style:{
+            background:'#060A10',border:'1px solid #1E2433',borderRadius:'8px',padding:'10px 12px',
+            cursor:'pointer',
+          }},
+            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}},
+              h('div',{style:{fontSize:'14px',fontWeight:700,color:'#F9FAFB'}},opt.label),
+              h('div',{style:{display:'flex',gap:'10px',fontSize:'13px'}},
+                opt.money>0?h('span',{style:{color:'#10B981'}},'+'+fmtMoney(opt.money)):opt.money<0?h('span',{style:{color:'#EF4444'}},fmtMoney(opt.money)):null,
+                opt.rep>0?h('span',{style:{color:'#F59E0B'}},'+'+opt.rep+' rep'):opt.rep<0?h('span',{style:{color:'#EF4444'}},opt.rep+' rep'):null,
+                opt.fans>0?h('span',{style:{color:'#EC4899'}},'+'+fmtFans(opt.fans)+' fans'):opt.fans<0?h('span',{style:{color:'#EF4444'}},fmtFans(opt.fans)+' fans'):null,
+                opt.sponsorHappy>0?h('span',{style:{color:'#10B981'}},'😊 +'+opt.sponsorHappy+'%'):h('span',{style:{color:'#EF4444'}},'😟 '+opt.sponsorHappy+'%'),
+              ),
+            ),
+            h('div',{style:{fontSize:'13px',color:'#94A3B8'}},opt.desc),
+            h('button',{
+              className:'btn btn-sm btn-secondary',
+              style:{marginTop:'8px'},
+              onClick:function(){
+                if(sp){
+                  sp.happiness = clamp(sp.happiness + opt.sponsorHappy, 0, 100);
+                }
+                G.reputation = Math.max(0, G.reputation + opt.rep);
+                G.fans = Math.max(0, G.fans + opt.fans);
+                G.money += opt.money;
+                if(opt.money > 0) G.totalPrizeMoney += opt.money;
+                addLog(G, '🤝 Sponsor activation ('+d.title+'): '+opt.label+' — '+[
+                  opt.money?fmtMoney(opt.money):null,
+                  opt.rep?opt.rep+' rep':null,
+                  opt.fans?fmtFans(opt.fans)+' fans':null,
+                ].filter(Boolean).join(', '));
+                const idx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+                if(idx>=0) G.dramaQueue.splice(idx,1);
+                saveGame(); render();
+              },
+            },'Choose This'),
+          );
+        }),
+      ));
+    } else {
+      item.appendChild(h('div',{style:{textAlign:'right'}},
+        mkBtn('Dismiss','btn btn-sm btn-primary',function(){
+          const idx = G.dramaQueue.findIndex(function(x){return x.id===d.id;});
+          if(idx>=0) doDismissDrama(idx);
+        })
+      ));
+    }
     bq.appendChild(item);
   });
   f.appendChild(bq);
