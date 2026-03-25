@@ -3993,30 +3993,30 @@ maybeFireFanMail(state);
   const hardRace = result.position <= 5;
   const incidentRace = (result.incidentDrivers||[]).length > 0 || result.dnf;
   const tier = s ? s.tier : 1;
+  
+  // Tire degradation — tier 1-2 assumed included in entry fee, minimal wear
+const tireDeg = tier<=2 ? rand(0,2) : tier===3 ? rand(3,6) : tier<=5 ? rand(6,10) : rand(10,16);
 
-  // Tire degradation scales by tier — lower tiers swap fresh rubber every race
-  const tireDeg = tier<=2 ? rand(2,4) : tier===3 ? rand(4,7) : tier<=5 ? rand(6,10) : rand(8,14);
+// Brakes — consistent wear, harder races wear faster
+const brakeDeg = rand(3,6) + (hardRace?3:0);
 
-  // Brakes — consistent wear across tiers, harder races wear faster
-  const brakeDeg = rand(3,6) + (hardRace?3:0);
+// Engine — minimal baseline, big hit only on engine-related DNF
+const engineDNFHit = result.dnf&&result.dnfReason&&/engine|motor|rod|bearing|blown/i.test(result.dnfReason||'') ? 40 : 0;
+const engineDeg = rand(0,2) + engineDNFHit;
 
-  // Engine — baseline wear, big hit only on engine-related DNF
-  const engineDNFHit = result.dnf&&result.dnfReason&&/engine|motor|rod|bearing|blown/i.test(result.dnfReason||'') ? 40 : 0;
-  const engineDeg = rand(2,5) + engineDNFHit;
+// Chassis — near zero clean race, meaningful only on incidents
+const chassisIncidentHit = incidentRace ? rand(5,10) : 0;
+const chassisDeg = rand(0,1) + chassisIncidentHit;
 
-  // Chassis — minor wear per race, meaningful hit only on actual incidents
-  const chassisIncidentHit = incidentRace ? rand(5,10) : 0;
-  const chassisDeg = rand(1,3) + chassisIncidentHit;
+// Suspension — low baseline, incident penalty
+const suspIncidentHit = incidentRace ? rand(6,12) : 0;
+const suspDeg = rand(1,3) + suspIncidentHit;
 
-  // Suspension — similar to chassis, incident penalty reduced from original
-  const suspIncidentHit = incidentRace ? rand(6,12) : 0;
-  const suspDeg = rand(2,5) + suspIncidentHit;
-
-  cc.tires      = clamp(cc.tires      - tireDeg  * (cond.tireWear||1), 0, 100);
-  cc.brakes     = clamp(cc.brakes     - brakeDeg, 0, 100);
-  cc.engine     = clamp(cc.engine     - engineDeg, 0, 100);
-  cc.chassis    = clamp(cc.chassis    - chassisDeg, 0, 100);
-  cc.suspension = clamp(cc.suspension - suspDeg, 0, 100);
+cc.tires      = clamp(cc.tires      - tireDeg  * (cond.tireWear||1), 0, 100);
+cc.brakes     = clamp(cc.brakes     - brakeDeg, 0, 100);
+cc.engine     = clamp(cc.engine     - engineDeg, 0, 100);
+cc.chassis    = clamp(cc.chassis    - chassisDeg, 0, 100);
+cc.suspension = clamp(cc.suspension - suspDeg, 0, 100);
 //warn if criticals are too high
 const criticals = [];
 if (cc.engine < 25)     criticals.push('Engine');
