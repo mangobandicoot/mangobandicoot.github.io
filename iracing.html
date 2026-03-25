@@ -4032,9 +4032,46 @@ if (cc.chassis < 20)    criticals.push('Chassis');
 
   // Milestone checking
   checkMilestones(state);
+  // Win streak check
+if (!result.dnf && !result.dq && result.position === 1) {
+  const lastFive = (state.raceHistory||[]).slice(-5);
+  const streak = lastFive.filter(r=>r.pos===1&&!r.dnf&&!r.dq).length;
+  if (streak >= 3) {
+    state.dramaQueue.push({
+      id:'streak_'+uid(),
+      title:`🔥 ${streak} Wins in a Row`,
+      effect:'none',
+      desc:`${state.driverName} has won ${streak} consecutive races. The paddock is taking notice. Sponsors are happy. Rivals are not.`,
+      valence:'good',
+    });
+  }
+}
 
   // Track favorite/weak spot check
   checkTrackFavoritePerformance(state, race.track, result);
+  // Track record check
+if (!result.dnf && !result.dq && result.finishOrder) {
+  const playerEntry = (result.finishOrder||[]).find(e=>e.isPlayer);
+  if (playerEntry && playerEntry.lapTime) {
+    const lapSec = lapTimeToSeconds(playerEntry.lapTime);
+    if (lapSec) {
+      if (!state.trackRecords) state.trackRecords = {};
+      const existing = state.trackRecords[race.track];
+      if (!existing || lapSec < existing.time) {
+        state.trackRecords[race.track] = { time: playerEntry.lapTime, season: state.season, week: state.week };
+        if (existing) {
+          state.dramaQueue.push({
+            id:'tr_'+uid(),
+            title:`⚡ Track Record — ${race.track}`,
+            effect:'none',
+            desc:`${state.driverName} set a new personal best at ${race.track}: ${playerEntry.lapTime}. Previous best was ${existing.time}.`,
+            valence:'good',
+          });
+        }
+      }
+    }
+  }
+}
 
   // Championship pressure — late in season
   const seriesRaces = s.races;
@@ -5867,6 +5904,12 @@ function renderSchedule() {
             : h('div',{style:{display:'flex',gap:'4px',alignItems:'center'}},
                 !race.qualifying?mkBtn('Qualify','btn btn-sm btn-secondary',()=>openQualModal(contract.seriesId,i)):null,
                 mkBtn('Enter Result →','btn btn-sm btn-success',()=>openRaceModal(contract.seriesId,i)),
+mkBtn('✕','btn btn-xs btn-danger',()=>{
+  sched.splice(i,1);
+  sched.forEach(function(r,idx){r.round=idx+1;});
+  saveGame();
+  renderRows();
+}),
               ),
         );
 
