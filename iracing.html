@@ -4842,6 +4842,18 @@ function renderRoster() {
                 }
             }
 
+            // Premier event mention — always fires for premier races
+            if (race.isPremier) {
+                const premierNotes = [
+                    `This is the ${race.premierName}. Bigger field, double points, more eyes on the result. Everything that happens today matters more than usual.`,
+                    `${race.premierName} weekend. The expanded field means faster cars and drivers who don't normally show up at this level. Treat it differently.`,
+                    `This isn't a normal race weekend. The ${race.premierName} brings out drivers you won't see again all season. Be ready for that.`,
+                    `The ${race.premierName} is the race people remember at the end of the season. Win here and it follows you into the offseason conversations.`,
+                    `Double points on the line today at the ${race.premierName}. The standings are going to move more after this race than any other this season.`,
+                ];
+                return premierNotes[rand(0, premierNotes.length-1)];
+            }
+
             if (!notes.length) return null;
             return notes[rand(0, notes.length - 1)];
         }
@@ -4949,14 +4961,48 @@ function renderRoster() {
             return d;
         }
 
-        function integrateFinishOrder(state, seriesId, finishOrder) {
-            finishOrder.forEach(entry => {
+        function integrateFinishOrder(state, seriesId, finishOrder, isPremier) {
+  // Get the regular series field — drivers already assigned to this series
+  const regularDriverNames = new Set(
+    (state.drivers||[])
+      .filter(function(d){ return d.active && d.currentSeriesId === seriesId; })
+      .map(function(d){ return d.name.toLowerCase(); })
+  );
+
+  finishOrder.forEach(function(entry) {
     if (entry.isPlayer || !entry.name) return;
+
+    const nameLower = entry.name.toLowerCase();
+    const isRegular = regularDriverNames.has(nameLower);
+    const isGuest = !isRegular;
+
+    if (isGuest) {
+      // Guest entry — create a temporary driver tagged as guest
+      // Don't add them permanently to the series field
+      const existing = (state.drivers||[]).find(function(d){
+        return d.name.toLowerCase() === nameLower;
+      });
+      if (!existing) {
+        // Create guest driver with higher skill for premier events
+        const guestSkill = isPremier ? rand(55, 85) : rand(35, 65);
+        const guestDriver = createDriver(entry.name, guestSkill, seriesId, 'generated');
+        guestDriver._guestEntry = true;
+        guestDriver._guestSeason = state.season;
+        guestDriver.active = false; // not a permanent roster member
+        state.drivers.push(guestDriver);
+      } else {
+        existing._guestEntry = true;
+        existing._guestSeason = state.season;
+      }
+      // Guest entries don't get starts counted toward their career
+      return;
+    }
+
+    // Regular driver — full processing
     const d = findOrCreateDriver(state, entry.name);
-    if (!d.currentSeriesId || d.currentSeriesId!==seriesId) {
+    if (!d.currentSeriesId || d.currentSeriesId !== seriesId) {
       d.currentSeriesId = seriesId;
     }
-    // Update car number from paste if present and not already set
     if (entry.carNumber && !d.carNumber) {
       d.carNumber = entry.carNumber;
       d._carNumberSeniority = d.starts || 0;
@@ -4964,37 +5010,37 @@ function renderRoster() {
     d.starts++;
   });
 
-            // Auto-fill empty teammate slots from known drivers in this race
-            const contract = (state.contracts || []).find(c => c.seriesId === seriesId);
-            if (contract && contract.teammates) {
-                const emptySlots = contract.teammates.filter(t => !t || !t.name).length;
-                if (emptySlots > 0) {
-                    const alreadyTm = (state.teammates || []).map(t => t.name.toLowerCase());
-                    const candidates = finishOrder
-                        .filter(e => !e.isPlayer && e.name)
-                        .map(e => (state.drivers || []).find(d => d.name.toLowerCase() === e.name.toLowerCase()))
-                        .filter(d => d && d.source === 'known' && !alreadyTm.includes(d.name.toLowerCase()));
-                    let filled = 0;
-                    contract.teammates = contract.teammates.map(t => {
-                        if ((!t || !t.name) && candidates[filled]) {
-                            const d = candidates[filled++];
-                            d.currentTeam = contract.team;
-                            state.teammates.push({ name: d.name, seriesId });
-                            addLog(state, `📋 ${contract.team} teammate slot filled: ${d.name}`);
-                            state.dramaQueue.push({
-                                id: 'tm_assigned_' + uid(),
-                                title: `${contract.team} Teammate Confirmed`,
-                                effect: 'none',
-                                desc: `${d.name} will be your teammate at ${contract.team} this season. They're in the same car program. Worth keeping an eye on how they run.`,
-                                valence: 'neutral',
-                            });
-                            return { name: d.name, seriesId };
-                        }
-                        return t;
-                    });
-                }
-            }
+  // Auto-fill empty teammate slots from known drivers in this race
+  const contract = (state.contracts||[]).find(function(c){ return c.seriesId === seriesId; });
+  if (contract && contract.teammates) {
+    const emptySlots = contract.teammates.filter(function(t){ return !t || !t.name; }).length;
+    if (emptySlots > 0) {
+      const alreadyTm = (state.teammates||[]).map(function(t){ return t.name.toLowerCase(); });
+      const candidates = finishOrder
+        .filter(function(e){ return !e.isPlayer && e.name; })
+        .map(function(e){ return (state.drivers||[]).find(function(d){ return d.name.toLowerCase() === e.name.toLowerCase(); }); })
+        .filter(function(d){ return d && d.source === 'known' && !d._guestEntry && !alreadyTm.includes(d.name.toLowerCase()); });
+      let filled = 0;
+      contract.teammates = contract.teammates.map(function(t) {
+        if ((!t || !t.name) && candidates[filled]) {
+          const d = candidates[filled++];
+          d.currentTeam = contract.team;
+          state.teammates.push({ name: d.name, seriesId });
+          addLog(state, `📋 ${contract.team} teammate slot filled: ${d.name}`);
+          state.dramaQueue.push({
+            id: 'tm_assigned_'+uid(),
+            title: `${contract.team} Teammate Confirmed`,
+            effect: 'none',
+            desc: `${d.name} will be your teammate at ${contract.team} this season. They're in the same car program. Worth keeping an eye on how they run.`,
+            valence: 'neutral',
+          });
+          return { name: d.name, seriesId };
         }
+        return t;
+      });
+    }
+  }
+}
 
         // ─── RACE RESULT PROCESSING ──────────────────────────────────────────────────
         function processRaceResult(state, seriesId, raceIdx, result) {
@@ -5023,7 +5069,21 @@ function renderRoster() {
             }
 
             race.result = result;
-
+// Premier event modifiers — double points, prize already set from race modal
+            if (race.isPremier && !result.dnf && !result.dq) {
+                result.points = (result.points || 0) * 2;
+                state.dramaQueue.push({
+                    id: 'premier_' + uid(),
+                    title: `⭐ ${race.premierName}`,
+                    effect: 'none',
+                    desc: result.position === 1
+                        ? `${state.driverName} wins the ${race.premierName}. Double points, bigger field, and a result that will be remembered. That's what these races are for.`
+                        : result.position <= 5
+                        ? `P${result.position} in the ${race.premierName}. Bigger field, tougher competition, double points. Not a bad showing when it mattered.`
+                        : `P${result.position} in the ${race.premierName}. The expanded field made it tougher but the double points still count for something.`,
+                    valence: result.position <= 3 ? 'good' : 'neutral',
+                });
+            }
             // Entry fee — driver pays this every race, contract or indie
             const entryFee = contract ? (contract.entryFee || s.fee) : s.fee;
             state.money -= entryFee;
@@ -5343,14 +5403,17 @@ function renderRoster() {
             });
 
             // Update driver database from finish order
-            integrateFinishOrder(state, seriesId, order);
+            integrateFinishOrder(state, seriesId, result.finishOrder||[], race.isPremier||false);
 
-            // Championship field tracking
+            // Championship field tracking — guest entries don't score points
             if (!state.seriesFields[seriesId]) state.seriesFields[seriesId] = {};
             const field = state.seriesFields[seriesId];
             order.forEach((entry, idx) => {
                 if (!entry.name || /\byou\b/i.test(entry.name) || entry.name.toLowerCase() === myLower || entry.isPlayer) return;
                 const clean = entry.name.trim(); if (!clean) return;
+                // Check if this driver is a guest entry — don't give them championship points
+                const driverObj = (state.drivers||[]).find(function(d){ return d.name.toLowerCase() === clean.toLowerCase(); });
+                if (driverObj && driverObj._guestEntry) return;
                 if (!field[clean]) field[clean] = { points: 0, wins: 0, top5s: 0, starts: 0 };
                 const p = idx + 1;
                 field[clean].points += IRACING_PTS[idx] || 1;
