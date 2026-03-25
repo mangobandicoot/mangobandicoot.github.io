@@ -5413,7 +5413,19 @@ function renderRoster() {
                 const clean = entry.name.trim(); if (!clean) return;
                 // Check if this driver is a guest entry — don't give them championship points
                 const driverObj = (state.drivers||[]).find(function(d){ return d.name.toLowerCase() === clean.toLowerCase(); });
-                if (driverObj && driverObj._guestEntry) return;
+if (driverObj && driverObj._guestEntry) {
+  // Guest entries don't score championship points but do get win recognition
+  if (idx === 0 && race.isPremier) {
+    state.dramaQueue.push({
+      id: 'guest_win_'+uid(),
+      title: `${clean} Wins the ${race.premierName||'Premier Event'}`,
+      effect: 'none',
+      desc: `${clean} came in as a guest entry and took the win. They get the trophy and the check; your regular season standings are unaffected.`,
+      valence: 'neutral',
+    });
+  }
+  return;
+}
                 if (!field[clean]) field[clean] = { points: 0, wins: 0, top5s: 0, starts: 0 };
                 const p = idx + 1;
                 field[clean].points += IRACING_PTS[idx] || 1;
