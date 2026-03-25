@@ -6805,9 +6805,14 @@ function renderStandings() {
     const playerPos=rows.findIndex(r=>r.isPlayer)+1;
     const ptsBack=rows[0]&&!rows[0].isPlayer?rows[0].points-myPts:0;
     const card=h('div',{className:'card',style:{marginBottom:'18px'}});
-    card.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'14px'}},
+    const standKey = 'stand_'+sid;
+const standCollapsed = isCollapsed(standKey, false);
+card.appendChild(h('div',{
+  style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'14px',cursor:'pointer'},
+  onClick: function(){ toggleCollapse(standKey, false); render(); }
+},
       h('div',{style:{width:'4px',height:'34px',background:s.color,borderRadius:'2px'}}),
-      h('div',null,
+      h('div',{style:{flex:1}},
         h('div',{style:{fontSize:'17px',fontWeight:900,color:'#F9FAFB'}},s.name),
         h('div',{style:{fontSize:'14px',color:'#94A3B8'}},
           `${racesRun} of ${s.races} races · ${rows.length} drivers tracked`,
@@ -6816,7 +6821,9 @@ function renderStandings() {
         ),
       ),
       h('div',{style:{marginLeft:'auto',fontSize:'24px',fontWeight:900,color:s.color}},`${myPts} pts`),
+      h('span',{style:{fontSize:'16px',color:'#64748B',transform:standCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s',marginLeft:'8px'}},'▾'),
     ));
+if (!standCollapsed) {
     const tbl=h('table',{className:'stn-table'});
     tbl.appendChild(h('tr',null,...['','Driver','Pts','W','T5','St'].map(hd=>h('th',null,hd))));
     const tmNames=new Set((G.teammates||[]).filter(t=>t.seriesId===sid).map(t=>t.name.toLowerCase()));
@@ -6883,11 +6890,13 @@ function renderStandings() {
           })
         )
       );
-      card.appendChild(strip);
+            card.appendChild(strip);
     }
 
+} // close standCollapsed check
     f.appendChild(card);
   });
+
 
   // Performance graph
   f.appendChild(renderPerfGraph());
