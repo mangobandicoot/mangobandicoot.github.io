@@ -4385,8 +4385,75 @@ NATIONAL_TIERS.forEach(function(tier){
   state.drivers.forEach(d => {
     if (!d.active) { retireDriverAsJrCandidate(d); return; }
     const s2 = getSeries(d.currentSeriesId);
-    if ((s2&&s2.tier) === 1 && d.starts > 60 && d.skill < 35 && Math.random() < 0.15) {
+    const age = d.aiStats ? d.aiStats.age : 40;
+    const shouldRetire = 
+      (age >= 65) ||
+      (age >= 55 && d.skill < 30 && Math.random() < 0.25) ||
+      ((s2&&s2.tier) === 1 && d.starts > 60 && d.skill < 35 && Math.random() < 0.15);
+
+    if (shouldRetire) {
+      d.active = false;
       retireDriverAsJrCandidate(d);
+
+      // Paddock notice for notable retirements
+      const isRival  = (state.rivals||[]).some(r=>r.name===d.name&&['rival','frenemy'].includes(relationship(r)));
+      const isFriend = (state.rivals||[]).some(r=>r.name===d.name&&['friend','racing_rival'].includes(relationship(r)));
+      const isTm     = (state.teammates||[]).some(t=>t.name===d.name);
+      if (isRival || isFriend || isTm || d.source==='known') {
+        const lines = [
+          `${d.name} has retired after ${d.starts} career starts. Word came through the paddock at the end of the season.`,
+          `${d.name} is done racing; the announcement came quietly but it's official. ${d.starts} starts, ${d.wins} wins. Not a bad run.`,
+          `Heard at the end of season banquet that ${d.name} is hanging it up. ${d.starts} starts over their career. The paddock will be different without them.`,
+          `${d.name} confirmed retirement this offseason. ${d.wins > 0 ? d.wins+' wins and ' : ''}${d.starts} starts. They earned their exit.`,
+        ];
+        const line = lines[rand(0,lines.length-1)];
+        state.dramaQueue.push({
+          id: 'retire_'+uid(),
+          title: `${d.name} Retires`,
+          effect: 'none',
+          desc: line,
+          valence: isRival ? 'good' : 'neutral',
+        });
+        addLog(state, `🏁 ${d.name} retired after ${d.starts} starts.`);
+      }
+
+      // Spawn replacement driver
+      let newName = generateAIName();
+      let tries = 0;
+      while (state.drivers.find(x=>x.name===newName) && tries < 200) { newName = generateAIName(); tries++; }
+      
+      // Small chance of Jr. connection
+      const parts = d.name.replace(/ Jr\.?$/i,'').trim().split(' ');
+      const lastName = parts[parts.length-1];
+      if (Math.random() < 0.20 && lastName && lastName.length > 2) {
+        const firstPool = ['Kyle','Chase','Tyler','Austin','Logan','Cody','Blake','Carson'];
+        const jrFirst = firstPool[rand(0,firstPool.length-1)];
+        newName = jrFirst + ' ' + lastName + ' Jr.';
+        if (state.drivers.find(x=>x.name===newName)) newName = generateAIName();
+      }
+
+      const newDriver = createDriver(newName, rand(30,55), d.currentSeriesId, 'generated');
+      state.drivers.push(newDriver);
+
+      // Only notify about replacements for known series
+      if (isRival || isFriend || isTm || d.source==='known') {
+        const isJr = newName.includes('Jr.');
+        const repLines = isJr ? [
+          `${newName} is joining the ${(s2&&s2.short)||'series'} field this season; that last name will be familiar to anyone who followed ${d.name}'s career.`,
+          `A familiar name is back in the ${(s2&&s2.short)||'series'}; ${newName} takes over the seat vacated by ${d.name}.`,
+        ] : [
+          `${newName} joins the ${(s2&&s2.short)||'series'} field to fill the vacancy left by ${d.name}'s retirement.`,
+          `The seat ${d.name} vacated goes to ${newName} for the upcoming season.`,
+          `${newName} gets their shot in the ${(s2&&s2.short)||'series'} after ${d.name} stepped away.`,
+        ];
+        state.dramaQueue.push({
+          id: 'newdriver_retire_'+uid(),
+          title: `${newName} Joins ${(s2&&s2.short)||'Series'}`,
+          effect: 'none',
+          desc: repLines[rand(0,repLines.length-1)],
+          valence: 'neutral',
+        });
+      }
     }
   });
 
