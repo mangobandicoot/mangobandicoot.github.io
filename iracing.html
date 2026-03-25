@@ -6940,11 +6940,30 @@ function renderTracks() {
 function renderLog() {
   const f=document.createDocumentFragment();
   f.appendChild(h('div',{className:'page-title'},'Race Log'));
+  f.appendChild(h('div',{className:'page-sub'},(G.log||[]).length+' entries'));
+
+  const searchIn = h('input',{type:'text',placeholder:'Search log...',style:{width:'100%',marginBottom:'12px'}});
+  f.appendChild(searchIn);
+
   const card=h('div',{className:'card'});
   const inner=h('div',{style:{maxHeight:'520px',overflowY:'auto'}});
-  [...(G.log||[])].reverse().forEach((entry,i)=>{
-    inner.appendChild(h('div',{style:{padding:'7px 0',borderBottom:'1px solid #0B0F1A',fontSize:'14px',color:i===0?'#F9FAFB':'#94A3B8',lineHeight:'1.5'}},entry));
-  });
+
+  function renderEntries() {
+    inner.innerHTML='';
+    const query = searchIn.value.toLowerCase();
+    const entries = [...(G.log||[])].reverse();
+    const filtered = query ? entries.filter(e=>e.toLowerCase().includes(query)) : entries;
+    if(!filtered.length){
+      inner.appendChild(h('div',{style:{padding:'16px',color:'#94A3B8',textAlign:'center',fontSize:'14px'}},'No entries match.'));
+      return;
+    }
+    filtered.forEach(function(entry,i){
+      inner.appendChild(h('div',{style:{padding:'7px 0',borderBottom:'1px solid #0B0F1A',fontSize:'14px',color:i===0&&!query?'#F9FAFB':'#94A3B8',lineHeight:'1.5'}},entry));
+    });
+  }
+
+  searchIn.addEventListener('input', renderEntries);
+  renderEntries();
   card.appendChild(inner);
   f.appendChild(card);
   return f;
