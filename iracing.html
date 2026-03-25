@@ -1089,16 +1089,17 @@ const TEAM_HOME_STATES = {
 
         const SERIES_TRACKS = {
             // Tier 1-2: local short tracks
-            local: [
-                { name: 'Langley Speedway', city: 'Hampton', state: 'VA' },
-                { name: 'USA International Speedway', city: 'Lakeland', state: 'FL' },
-                { name: 'Southern National Motorsports Park', city: 'Kenly', state: 'NC' },
-                { name: 'South Boston Speedway', city: 'South Boston', state: 'VA' },
-                { name: 'Concord Speedway', city: 'Concord', state: 'NC' },
-                { name: 'Oxford Plains Speedway', city: 'Oxford', state: 'ME' },
-                { name: 'Lanier National Speedway', city: 'Braselton', state: 'GA' },
-                { name: 'Thompson Speedway Motorsports Park', city: 'Thompson', state: 'CT' },
-                { name: 'Charlotte Motor Speedway', city: 'Concord', state: 'NC' },
+            llocal: [
+    { name: 'Langley Speedway',                   city: 'Hampton',       state: 'VA', night: true,  weather: 'humid',    premierName: 'Hampton Heat 200',         premierLaps: 200 },
+    { name: 'USA International Speedway',          city: 'Lakeland',      state: 'FL', night: false, weather: 'hot',      premierName: 'Sunshine 150',             premierLaps: 150 },
+    { name: 'Southern National Motorsports Park',  city: 'Kenly',         state: 'NC', night: true,  weather: 'humid',    premierName: 'Carolina 150',             premierLaps: 150 },
+    { name: 'South Boston Speedway',               city: 'South Boston',  state: 'VA', night: true,  weather: 'mild',     premierName: 'South Boston 200',         premierLaps: 200 },
+    { name: 'Concord Speedway',                    city: 'Concord',       state: 'NC', night: true,  weather: 'mild',     premierName: 'Concord 150',              premierLaps: 150 },
+    { name: 'Oxford Plains Speedway',              city: 'Oxford',        state: 'ME', night: false, weather: 'cool',     premierName: 'Oxford 250',               premierLaps: 250 },
+    { name: 'Lanier National Speedway',            city: 'Braselton',     state: 'GA', night: true,  weather: 'hot',      premierName: 'Lanier 150',               premierLaps: 150 },
+    { name: 'Thompson Speedway Motorsports Park',  city: 'Thompson',      state: 'CT', night: false, weather: 'cool',     premierName: 'Thompson 200',             premierLaps: 200 },
+    { name: 'Charlotte Motor Speedway',            city: 'Concord',       state: 'NC', night: true,  weather: 'mild',     premierName: 'Charlotte Invitational',   premierLaps: 150 },
+],
 
             ],
             // Tier 3: regional short/intermediate tracks
@@ -3421,33 +3422,108 @@ function maybeFireTradeRumor(state) {
         }
 
         // ─── SCHEDULE GENERATION ─────────────────────────────────────────────────────
-        function generateSchedule(seriesId, trackPools) {
-            const s = getSeries(seriesId);
-            const tier = s ? s.tier : 1;
-            // Pick track pool by tier
-            let pool;
-            if (tier <= 2) pool = SERIES_TRACKS.local;
-            else if (tier === 3) pool = SERIES_TRACKS.regional;
-            else if (tier <= 5) pool = SERIES_TRACKS.national;
-            else pool = SERIES_TRACKS.cup;
+  function generateSchedule(seriesId, trackPools) {
+  const s = getSeries(seriesId);
+  const tier = s ? s.tier : 1;
 
-            const useSlinger = tier <= 2;
-            const slinger = useSlinger ? SERIES_TRACKS.fig8[0] : null;
-            const rest = pool.filter(t => !t.fig8);
-            const mainCount = s.races - (slinger ? 1 : 0);
-            const shuffled = shuffle(rest);
-            const picks = [];
-            while (picks.length < mainCount) shuffled.forEach(t => { if (picks.length < mainCount) picks.push(t); });
-            if (slinger) picks.push(slinger);
-            return picks.map((t, i) => ({
-                round: i + 1,
-                track: t.name, city: t.city, state: t.state,
-                fig8: !!t.fig8,
-                qualifying: null,
-                result: null,
-                bonusResult: null,
-            }));
-        }
+  let pool;
+  if (tier <= 2)      pool = SERIES_TRACKS.local;
+  else if (tier === 3) pool = SERIES_TRACKS.regional;
+  else if (tier <= 5)  pool = SERIES_TRACKS.national;
+  else                 pool = SERIES_TRACKS.cup;
+
+  const rest = pool.filter(function(t){ return !t.fig8; });
+  const mainCount = s.races;
+
+  // Find home track — player's home region gets weighted 4x
+  const playerHomeState = (typeof G !== 'undefined' && G) ? G.homeState : null;
+  const contract = (typeof G !== 'undefined' && G && G.contracts) ? G.contracts.find(function(c){return c.seriesId===seriesId;}) : null;
+  const teamHomeState = contract ? (TEAM_HOME_STATES[contract.team]||null) : null;
+
+  // Build weighted pool — home region tracks appear 4x, team home 2x, others 1x
+  const weightedPool = [];
+  rest.forEach(function(t) {
+    const isPlayerHome = playerHomeState && isSameRegion(t.state, playerHomeState);
+    const isTeamHome = teamHomeState && isSameRegion(t.state, teamHomeState);
+    const weight = isPlayerHome ? 4 : isTeamHome ? 2 : 1;
+    for (let w = 0; w < weight; w++) weightedPool.push(t);
+  });
+
+  const shuffled = shuffle(weightedPool);
+  const picks = [];
+  const usedNames = {};
+
+  // First pass — pick from weighted pool avoiding too many repeats
+  for (let i = 0; i < shuffled.length && picks.length < mainCount; i++) {
+    const t = shuffled[i];
+    const count = usedNames[t.name] || 0;
+    const maxRepeats = tier <= 2 ? 3 : 2; // home track can appear up to 3x at local level
+    if (count < maxRepeats) {
+      picks.push(t);
+      usedNames[t.name] = count + 1;
+    }
+  }
+
+  // Backfill if not enough unique picks
+  while (picks.length < mainCount) {
+    rest.forEach(function(t){
+      if (picks.length < mainCount) picks.push(t);
+    });
+  }
+
+  // Determine premier event — one per season, at home track if possible, otherwise best track
+  let premierIdx = -1;
+  if (tier <= 2) {
+    // Find the home track in picks or best candidate
+    let bestIdx = -1;
+    let bestScore = -1;
+    picks.forEach(function(t, i) {
+      const isPlayerHome = playerHomeState && isSameRegion(t.state, playerHomeState);
+      const hasPremierId = !!t.premierName;
+      const score = (isPlayerHome ? 10 : 0) + (hasPremierId ? 5 : 0);
+      if (score > bestScore) { bestScore = score; bestIdx = i; }
+    });
+    // Place premier event in second half of season
+    if (bestIdx >= 0) {
+      const secondHalfStart = Math.floor(mainCount * 0.6);
+      premierIdx = Math.max(bestIdx, secondHalfStart);
+      // Swap the best track into the second half position
+      const tmp = picks[premierIdx];
+      picks[premierIdx] = picks[bestIdx];
+      picks[bestIdx] = tmp;
+    }
+  }
+
+  // Add weather conditions per race
+  const WEATHER_OPTIONS = {
+    'hot':   ['clear','clear','clear','hot_dry'],
+    'humid': ['clear','clear','humid','overcast'],
+    'cool':  ['clear','clear','cool_damp','overcast'],
+    'mild':  ['clear','clear','clear','overcast'],
+  };
+
+  return picks.map(function(t, i) {
+    const isPremier = (i === premierIdx);
+    const weatherPool = WEATHER_OPTIONS[t.weather||'mild']||['clear'];
+    const condition = weatherPool[rand(0, weatherPool.length-1)];
+
+    return {
+      round: i + 1,
+      track: t.name,
+      city: t.city,
+      state: t.state,
+      fig8: false,
+      night: !!t.night,
+      condition: condition,
+      qualifying: null,
+      result: null,
+      bonusResult: null,
+      isPremier: isPremier,
+      premierName: isPremier ? (tier <= 2 ? (t.name.split(' ')[0]+' Invitational 75') : (t.premierName || 'Season Invitational')) : null,
+      premierLaps: isPremier ? (tier <= 2 ? 75 : tier === 3 ? 150 : t.premierLaps || 200) : null,
+    };
+  });
+}
 
         // ─── CONTRACT GENERATION ─────────────────────────────────────────────────────
         function makeContract(seriesId, quality) {
@@ -7517,13 +7593,14 @@ function renderRoster() {
                             dragHandle,
                             h('div', { style: { width: '26px', height: '26px', borderRadius: '4px', background: done ? '#060A10' : isNext ? s.color + '18' : '#060A10', border: `1px solid ${done ? '#1E2433' : isNext ? s.color : '#1E2433'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 800, color: isNext ? s.color : '#94A3B8', flexShrink: 0 } }, i + 1),
                             h('div', { style: { flex: 1 } },
-                                h('div', { style: { fontSize: '14px', fontWeight: 700, color: '#F9FAFB' } },
-                                    race.track,
-                                    race.state && G.homeState && race.state === G.homeState
-                                        ? h('span', { style: { fontSize: '12px', color: '#F59E0B', marginLeft: '6px', fontWeight: 700 } }, '🏠 Home')
-                                        : null,
-                                ),
-                                h('div', { style: { fontSize: '14px', color: '#94A3B8' } }, `${race.city}, ${race.state}`,
+                               h('div', { style: { fontSize: '14px', fontWeight: 700, color: '#F9FAFB' } },
+    race.isPremier ? h('span',{style:{fontSize:'12px',color:'#F59E0B',marginRight:'6px',fontWeight:700,background:'#F59E0B18',border:'1px solid #F59E0B44',padding:'1px 6px',borderRadius:'3px'}},'⭐ '+race.premierName) : race.track,
+    race.night ? h('span',{style:{fontSize:'12px',color:'#8B5CF6',marginLeft:'6px',fontWeight:700}},'🌙 Night') : null,
+    race.state && G.homeState && isSameRegion(race.state, G.homeState)
+        ? h('span', { style: { fontSize: '12px', color: '#F59E0B', marginLeft: '6px', fontWeight: 700 } }, '🏠 Home')
+        : null,
+),
+                                h('div', { style: { fontSize: '14px', color: '#94A3B8' } }, race.isPremier ? race.track+' · ' : '', `${race.city}, ${race.state}`,
                                     race.qualifying ? h('span', { style: { color: '#8B5CF6', marginLeft: '10px' } }, `Qual: P${race.qualifying.position}${race.qualifying.pole ? ' (POLE)' : ''}`) : '',
                                 ),
                             ),
