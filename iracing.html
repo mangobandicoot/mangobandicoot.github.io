@@ -7143,7 +7143,7 @@ if((G.sponsorOffers||[]).length){
         h('span',{style:{fontSize:'16px',color:'#64748B',transform:offersCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s'}},'▾'),
       ),
       ...(!offersCollapsed ? (G.sponsorOffers||[]).map(sp=>h('div',{className:'row-item'},
-      ...(G.sponsorOffers||[]).map(sp=>h('div',{className:'row-item'},
+
         h('div',{style:{flex:1}},
           h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB',display:'flex',gap:'8px',alignItems:'center'}},sp.brand,sp.international?badge('INTERNATIONAL','#F59E0B'):null),
 h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
@@ -7172,6 +7172,29 @@ f.appendChild(h('div',{style:{marginBottom:'16px'}},
       h('div',{className:'card-title',style:{margin:0}},'ACTIVE SPONSORS'),
       h('span',{style:{fontSize:'16px',color:'#64748B',transform:sponsorCollapsed?'rotate(-90deg)':'rotate(0deg)',transition:'transform 0.2s'}},'▾'),
     ),
+    ...(!sponsorCollapsed ? [
+      !(G.sponsors||[]).length ? h('div',{className:'card',style:{color:'#94A3B8',textAlign:'center',padding:'16px',fontSize:'14px'}},'No active sponsors.') :
+      frag(...(G.sponsors||[]).map(sp=>{
+        const hc=sp.happiness>=60?'#10B981':sp.happiness>=35?'#F59E0B':'#EF4444';
+        return h('div',{className:'row-item'},
+          h('div',{style:{flex:1}},
+            h('div',{style:{fontWeight:800,fontSize:'15px',color:'#F9FAFB'}},sp.brand,sp.international?badge('INTL','#F59E0B'):null),
+            h('div',{style:{fontSize:'14px',color:'#94A3B8',marginTop:'2px'}},
+              (SPONSOR_TYPES[sp.type]||{}).label+' · '+
+              ((getSeries(sp.seriesId)&&getSeries(sp.seriesId).short)||sp.seriesId||'All Series')+' · '+
+              fmtMoney(sp.valuePerSeason)+'/season · '+
+              sp.seasonsLeft+' season(s) left'
+            ),
+          ),
+          h('div',{style:{textAlign:'right',flexShrink:0}},
+            h('div',{style:{fontSize:'12px',color:'#94A3B8'}},'HAPPINESS'),
+            h('div',{style:{fontSize:'20px',fontWeight:900,color:hc}},`${sp.happiness}%`),
+          ),
+          h('div',{className:'happy-wrap'},h('div',{className:'happy-bar'},h('div',{className:'happy-fill',style:{width:`${sp.happiness}%`,background:hc}}))),
+        );
+      }))
+    ] : [])
+  ));
 
 !sponsorCollapsed && (!(G.sponsors||[]).length?h('div',{className:'card',style:{color:'#94A3B8',textAlign:'center',padding:'16px',fontSize:'14px'}},'No active sponsors.'):
     frag(...(G.sponsors||[]).map(sp=>{
