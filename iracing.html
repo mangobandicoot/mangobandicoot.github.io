@@ -4842,9 +4842,9 @@
                     notes.push(`National Contender status means the pre-race chatter includes your name. Own it.`);
                 else if (G.reputation >= 70)
                     notes.push(`Regional Threat. People in this paddock know the name. Time to make sure they remember it.`);
-                else if (G.reputation >= 30)
+                                else if (G.reputation >= 30 && race.state && G.homeState && isSameRegion(race.state, G.homeState))
                     notes.push(`Local Hero walking into their home territory. The crowd has expectations.`);
-            }
+   }
             // Track record mention
             if (G.trackRecords && G.trackRecords[race.track]) {
                 const rec = G.trackRecords[race.track];
@@ -5117,8 +5117,8 @@
             state.starts++;
             state.week++;
 
-            const pts = result.points || 0;
-            state.championshipPoints[seriesId] = (state.championshipPoints[seriesId] || 0) + pts;
+            const pts = result._injuryRace ? 0 : (result.points || 0);
+                state.championshipPoints[seriesId] = (state.championshipPoints[seriesId] || 0) + pts;
 
             if (!result.dnf && !result.dq) {
                 if (result.position === 1) state.wins++;
@@ -5366,14 +5366,14 @@
                 }
 
                 // Team decision -- needs 3+ races before anything happens
-                if (tm.races >= 3) {
-                    const playerStruggle = tm.happiness <= 30;
+                                if (tm.races >= 6) {
+                    const playerStruggle = tm.happiness <= 20;
                     const playerStrong = tm.happiness >= 65;
                     const tmStruggling = tm.tmForm <= 30;
 
                     // Case A: player underperforming, teammate doing well -- warn or drop player
                     if (playerStruggle && !tmStruggling) {
-                        if (tm.happiness <= 15 && !tm._fired) {
+                        if (tm.happiness <= 8 && !tm._fired) {
                             tm._fired = true;
                             const c2 = state.contracts.find(c => c.seriesId === seriesId);
                             if (c2) {
@@ -5386,7 +5386,7 @@
                                     desc: `${c2.team} let you go. The numbers between you and ${tm.name} told the story the team didn't want to say out loud. They went with ${tm.name}.`, valence: 'bad'
                                 });
                             }
-                        } else if (tm.happiness <= 30 && !tm._warnedLow) {
+                        } else if (tm.happiness <= 20 && !tm._warnedLow) {
                             tm._warnedLow = true;
                             state.dramaQueue.push({
                                 id: 'tm_warn_' + uid(), title: 'Team Watching the Gap', effect: 'none',
@@ -6502,7 +6502,8 @@
             state.lastSocialPost = {};
             state._elimNotified = null;
             state.teammates = state.teammates.filter(t => state.contracts.find(c => c.seriesId === t.seriesId));
-
+             state.playerInjury = null;
+            
             // Car condition: partial offseason restoration per series
             if (!state.carCondition) state.carCondition = {};
             Object.keys(state.carCondition).forEach(function (sid) {
@@ -6688,12 +6689,12 @@
         }
 
         // ─── PERSISTENCE ─────────────────────────────────────────────────────────────
-        function saveGame() { if (G) localStorage.setItem('ft_save', JSON.stringify(G)); }
+        function saveGame() { if (G) localStorage.setItem('ft_save', JSON.stringify(G, (_k, v) => v === undefined ? null : v)); }
         function loadGame() {
             const raw = localStorage.getItem('ft_save');
             if (raw) {
                 try {
-                    G = JSON.parse(raw);
+                    G = JSON.parse(raw.replace(/:undefined([,}\]])/g, ':null$1'));
                     // ── Data hygiene: remove driver entries whose names are purely numeric
                     //    or too short — these are artefacts from the old parser that treated
                     //    position numbers as driver names.
@@ -7712,7 +7713,7 @@
 
                                         return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' } },
                                             h('div', { style: { display: 'flex', gap: '4px', alignItems: 'center' } },
-                                                !race.qualifying ? mkBtn('Qualify', 'btn btn-sm btn-secondary', () => openQualModal(contract.seriesId, i)) : null,
+                                                null,
                                                 mkBtn('Enter Result →', 'btn btn-sm btn-success', () => openRaceModal(contract.seriesId, i), isBlocked),
                                                 mkBtn('🌧️', 'btn btn-xs btn-secondary', () => {
                                                     sched[i].result = {
