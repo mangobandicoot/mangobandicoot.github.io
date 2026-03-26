@@ -2712,7 +2712,6 @@
         }
         // ─── AI DRIVER NAME POOL ─────────────────────────────────────────────────────
         const AI_FIRST = [
-    // Your originals...
     'Kyle','Jimmy','Dale','Bobby','Ronnie','Chase','Tyler','Rick','Austin','Hank',
     'Luke','Cody','Ray','Brent','Travis','Mitch','Greg','Aaron','Vince','Wade',
     'Jason','Connor','Mike','Gary','Dave','Shawn','Neil','Vance','Brett','Derek',
@@ -2720,22 +2719,60 @@
     'Jeb','Earl','Floyd','Lonnie','Doyle','Merle','Dwayne','Leroy','Clyde','Gus',
     'Scotty','Robby','Donnie','Kenny','Rusty','Buddy','Grady','Tucker','Knox','Reid',
 
-    // Modern / popular
-    'Liam','Noah','Elijah','Oliver','James','Benjamin','Lucas','Henry','Alexander','Mason',
-    'Sebastian','Jack','Owen','Theodore','Aiden','Samuel','Joseph','Levi','Mateo','David',
-    'John','Wyatt','Matthew','Asher','Carter','Julian','Grayson','Leo','Jayden','Gabriel',
+    // Expanded
+    'Liam','Noah','Oliver','Elijah','James','William','Benjamin','Lucas','Henry','Alexander',
+    'Mason','Michael','Ethan','Daniel','Jacob','Logan','Jackson','Levi','Sebastian','Mateo',
+    'Jack','Owen','Theodore','Aiden','Samuel','Joseph','John','Wyatt','Matthew','Luke',
+    'Asher','Carter','Julian','Grayson','Leo','Jayden','Gabriel','Isaac','Lincoln','Anthony',
 
-    // Short / punchy
     'Max','Eli','Ian','Kai','Zane','Jace','Dean','Jude','Troy','Reed',
     'Cole','Beau','Lane','Roy','Clark','Grant','Scott','Brock','Quinn','Tate',
+    'Hayes','Jett','Crew','Rhys','Dax','Zeke','Kade','Boone','Trace','Rex',
 
-    // Slightly uncommon but natural
-    'Callum','Alistair','Bennett','Desmond','Emmett','Finnegan','Hugo','Isidore','Jasper','Keaton',
-    'Lachlan','Magnus','Niall','Orson','Percy','Roscoe','Sullivan','Thatcher','Ulric','Vaughn'
+    'Caleb','Jared','Spencer','Preston','Gage','Branson','Colby','Devin','Casey','Corey',
+    'Zack','Tanner','Emmett','Jesse','Marshall','Ricky','Frankie','Leon','Alvin','Harvey',
+    'Otis','Vernon','Elmer','Chester','Wallace','Edgar','Milton','Stanley','Howard','Clarence',
+
+    'Bennett','Desmond','Emmett','Finnegan','Hugo','Jasper','Keaton','Lachlan','Magnus','Niall',
+    'Orson','Percy','Roscoe','Sullivan','Thatcher','Vaughn','Wesley','Zander','Archer','Beckett',
+    'Callum','Ellis','Harlan','Indy','Kellan','Leland','Merritt','Nico','Oakley','Porter',
+    'Quincy','Ronan','Soren','Trenton','Ulric','Valen','Wilder','Yates','Zavier'
+];
+
+const AI_LAST = [
+    'McAllister','Hayes','Whitfield','Duvall','Boone','Cantrell','Phelps','Hargrove',
+    'Farris','Holt','Deen','Finch','Dillon','Marsh','Sutton','Holloway','Pruitt',
+    'Corley','Hobbs','Cutler','Rideout','Kowalski','Malone','Voss','Dawson','Hensley',
+    'Cope','Speed','Bodine','Wallace','Nemechek','Kenseth','Waltrip','Labonte',
+    'Earnhardt','Petty','Allison','Yarborough','Pearson','Thomas','Craven','Trickle',
+    'Setzer','Pressley','Grissom','Sauter','Lund','Weatherly','Lorenzen','Marcis',
+    'Andretti','Mears','Biffle','Burton','Kahne','Truex','Logano','Chastain','Preece','Hemric',
+
+    // Expanded
+    'Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez',
+    'Hernandez','Lopez','Gonzalez','Wilson','Anderson','Taylor','Moore','Jackson','Martin','Lee',
+    'Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker',
+
+    'Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green',
+    'Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts','Gomez',
+
+    'Phillips','Evans','Turner','Diaz','Parker','Cruz','Edwards','Collins','Reyes','Stewart',
+    'Morris','Morales','Murphy','Cook','Rogers','Gutierrez','Ortiz','Morgan','Cooper','Peterson',
+
+    'Bailey','Reed','Kelly','Howard','Ramos','Kim','Cox','Ward','Richardson','Watson',
+    'Brooks','Chavez','Wood','James','Bennett','Gray','Mendoza','Ruiz','Hughes','Price',
+
+    'Alvarez','Castillo','Sanders','Patel','Myers','Long','Ross','Foster','Jimenez','Powell',
+    'Jenkins','Perry','Russell','Sullivan','Bell','Coleman','Butler','Henderson','Barnes','Gonzales',
+
+    'Fisher','Vasquez','Simmons','Romero','Jordan','Patterson','Alexander','Hamilton','Graham','Reynolds',
+    'Griffin','Wallace','West','Cole','Hayden','Stone','Barker','Caldwell','Stephens','Lawson',
+
+    'Hawkins','Barrett','Wheeler','Chapman','Fuller','Moss','Cross','Knight','Spencer','Hudson',
+    'Owens','Bishop','Carpenter','Crawford','Boyd','Mason','Porter','Hunter','Hicks','Dunn'
 ];
 
 const AI_FIRST_FEMALE = [
-    // Your originals...
     'Hailie','Natalie','Jessica','Ashley','Courtney','Amber','Brittany','Kelley',
     'Danica','Jennifer','Tara','Leilani','Sarah','Megan','Kenzie','Reagan',
     'Caylin','Taylor','Jordan','Peyton','Morgan','Ryann','Brooke','Lindsey',
@@ -2745,16 +2782,22 @@ const AI_FIRST_FEMALE = [
     'Regan','Charlene','June','Loretta','Betty','Connie','Angie','Bobbie',
     'Trish','Darla','Roxanne','Nadine',
 
-    // Modern / popular
+    // Expanded
     'Olivia','Emma','Ava','Sophia','Isabella','Mia','Charlotte','Amelia','Harper','Evelyn',
     'Abigail','Emily','Ella','Scarlett','Aria','Penelope','Chloe','Layla','Riley','Zoey',
+    'Nora','Lily','Eleanor','Hannah','Lillian','Addison','Aubrey','Ellie','Stella','Natalia',
 
-    // Short / punchy
     'Luna','Nova','Ivy','Zoe','Skye','Sage','Blair','Quinn','Lane','Wren',
+    'Remi','Ari','Eden','Kai','Noa','Rue','Lux','Bryn','Shae','Vale',
 
-    // Slightly uncommon
-    'Adelaide','Beatrix','Clementine','Delilah','Elowen','Felicity','Genevieve','Imogen','Juniper','Kaia',
-    'Liora','Marigold','Nerissa','Ophelia','Rosalind','Seraphina','Tallulah','Verity','Winona','Zinnia'
+    'Madeline','Paisley','Everly','Emery','Willow','Autumn','Summer','Sienna','Delilah','Adeline',
+    'Eliza','Rose','Iris','Jade','Ruby','Alice','Clara','Vivian','Josephine','Naomi',
+
+    'Adelaide','Beatrix','Clementine','Felicity','Genevieve','Imogen','Juniper','Kaia','Liora','Marigold',
+    'Nerissa','Ophelia','Rosalind','Seraphina','Tallulah','Verity','Winona','Zinnia',
+
+    'Faith','Hope','Charity','Brandy','Misty','Stormy','Sunny','Daisy','Heidi','Amberly',
+    'Kelsey','Whitney','Jamie','Leslie','Robin','Casey','Dana','Shannon','Terry','Kelly'
 ];
 
         const MIDDLE_INITIALS = 'ABCDEFGHJKLMNPRSTW'.split('');
