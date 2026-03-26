@@ -2712,33 +2712,58 @@
         }
         // ─── AI DRIVER NAME POOL ─────────────────────────────────────────────────────
         const AI_FIRST = [
-            'Kyle', 'Jimmy', 'Dale', 'Bobby', 'Ronnie', 'Chase', 'Tyler', 'Rick', 'Austin', 'Hank',
-            'Luke', 'Cody', 'Ray', 'Brent', 'Travis', 'Mitch', 'Greg', 'Aaron', 'Vince', 'Wade',
-            'Jason', 'Connor', 'Mike', 'Gary', 'Dave', 'Shawn', 'Neil', 'Vance', 'Brett', 'Derek',
-            'Shane', 'Lance', 'Todd', 'Denny', 'Clint', 'David', 'Matt', 'Blake', 'Carson', 'Logan',
-            'Jeb', 'Earl', 'Floyd', 'Lonnie', 'Doyle', 'Merle', 'Dwayne', 'Leroy', 'Clyde', 'Gus',
-            'Scotty', 'Robby', 'Donnie', 'Kenny', 'Rusty', 'Buddy', 'Grady', 'Tucker', 'Knox', 'Reid',
-        ];
-        const AI_LAST = [
-            'McAllister', 'Hayes', 'Whitfield', 'Duvall', 'Boone', 'Cantrell', 'Phelps', 'Hargrove',
-            'Farris', 'Holt', 'Deen', 'Finch', 'Dillon', 'Marsh', 'Sutton', 'Holloway', 'Pruitt',
-            'Corley', 'Hobbs', 'Cutler', 'Rideout', 'Kowalski', 'Malone', 'Voss', 'Dawson', 'Hensley',
-            'Cope', 'Speed', 'Bodine', 'Wallace', 'Nemechek', 'Kenseth', 'Waltrip', 'Labonte',
-            'Earnhardt', 'Petty', 'Allison', 'Yarborough', 'Pearson', 'Thomas', 'Craven', 'Trickle',
-            'Setzer', 'Pressley', 'Grissom', 'Sauter', 'Lund', 'Weatherly', 'Lorenzen', 'Marcis',
-            'Andretti', 'Mears', 'Biffle', 'Burton', 'Kahne', 'Truex', 'Logano', 'Chastain', 'Preece', 'Hemric',
-        ];
+    // Your originals...
+    'Kyle','Jimmy','Dale','Bobby','Ronnie','Chase','Tyler','Rick','Austin','Hank',
+    'Luke','Cody','Ray','Brent','Travis','Mitch','Greg','Aaron','Vince','Wade',
+    'Jason','Connor','Mike','Gary','Dave','Shawn','Neil','Vance','Brett','Derek',
+    'Shane','Lance','Todd','Denny','Clint','David','Matt','Blake','Carson','Logan',
+    'Jeb','Earl','Floyd','Lonnie','Doyle','Merle','Dwayne','Leroy','Clyde','Gus',
+    'Scotty','Robby','Donnie','Kenny','Rusty','Buddy','Grady','Tucker','Knox','Reid',
 
-        const AI_FIRST_FEMALE = [
-            'Hailie', 'Natalie', 'Jessica', 'Ashley', 'Courtney', 'Amber', 'Brittany', 'Kelley',
-            'Danica', 'Jennifer', 'Tara', 'Leilani', 'Sarah', 'Megan', 'Kenzie', 'Reagan',
-            'Caylin', 'Taylor', 'Jordan', 'Peyton', 'Morgan', 'Ryann', 'Brooke', 'Lindsey',
-            'Crystal', 'Lacey', 'Shelby', 'Savannah', 'Kayla', 'Caitlin', 'Erin', 'Paige',
-            'Holly', 'Donna', 'Lisa', 'Tammy', 'Christy', 'Stacy', 'Gina', 'Renee',
-            'Deb', 'Wanda', 'Carla', 'Brenda', 'Rhonda', 'Sherry', 'Vickie', 'Paula',
-            'Regan', 'Charlene', 'June', 'Loretta', 'Betty', 'Connie', 'Angie', 'Bobbie',
-            'Trish', 'Darla', 'Roxanne', 'Nadine',
-        ];
+    // Modern / popular
+    'Liam','Noah','Elijah','Oliver','James','Benjamin','Lucas','Henry','Alexander','Mason',
+    'Sebastian','Jack','Owen','Theodore','Aiden','Samuel','Joseph','Levi','Mateo','David',
+    'John','Wyatt','Matthew','Asher','Carter','Julian','Grayson','Leo','Jayden','Gabriel',
+
+    // Short / punchy
+    'Max','Eli','Ian','Kai','Zane','Jace','Dean','Jude','Troy','Reed',
+    'Cole','Beau','Lane','Roy','Clark','Grant','Scott','Brock','Quinn','Tate',
+
+    // International mix
+    'Diego','Santiago','Mateo','Luca','Enzo','Marco','Nico','Andrei','Ivan','Mikhail',
+    'Hiro','Kenji','Ren','Tariq','Omar','Amir','Ravi','Arjun','Kian','Zaid',
+
+    // Slightly uncommon but natural
+    'Callum','Alistair','Bennett','Desmond','Emmett','Finnegan','Hugo','Isidore','Jasper','Keaton',
+    'Lachlan','Magnus','Niall','Orson','Percy','Roscoe','Sullivan','Thatcher','Ulric','Vaughn'
+];
+
+const AI_FIRST_FEMALE = [
+    // Your originals...
+    'Hailie','Natalie','Jessica','Ashley','Courtney','Amber','Brittany','Kelley',
+    'Danica','Jennifer','Tara','Leilani','Sarah','Megan','Kenzie','Reagan',
+    'Caylin','Taylor','Jordan','Peyton','Morgan','Ryann','Brooke','Lindsey',
+    'Crystal','Lacey','Shelby','Savannah','Kayla','Caitlin','Erin','Paige',
+    'Holly','Donna','Lisa','Tammy','Christy','Stacy','Gina','Renee',
+    'Deb','Wanda','Carla','Brenda','Rhonda','Sherry','Vickie','Paula',
+    'Regan','Charlene','June','Loretta','Betty','Connie','Angie','Bobbie',
+    'Trish','Darla','Roxanne','Nadine',
+
+    // Modern / popular
+    'Olivia','Emma','Ava','Sophia','Isabella','Mia','Charlotte','Amelia','Harper','Evelyn',
+    'Abigail','Emily','Ella','Scarlett','Aria','Penelope','Chloe','Layla','Riley','Zoey',
+
+    // Short / punchy
+    'Luna','Nova','Ivy','Zoe','Skye','Sage','Blair','Quinn','Lane','Wren',
+
+    // International mix
+    'Camila','Valentina','Sofia','Lucia','Elena','Anya','Freya','Ingrid','Sakura','Mei',
+    'Aisha','Fatima','Nadia','Priya','Anika','Zara','Leila','Noor','Esme','Yara',
+
+    // Slightly uncommon
+    'Adelaide','Beatrix','Clementine','Delilah','Elowen','Felicity','Genevieve','Imogen','Juniper','Kaia',
+    'Liora','Marigold','Nerissa','Ophelia','Rosalind','Seraphina','Tallulah','Verity','Winona','Zinnia'
+];
 
         const MIDDLE_INITIALS = 'ABCDEFGHJKLMNPRSTW'.split('');
 
