@@ -2650,133 +2650,57 @@
         }
 
         // ─── INTERNATIONAL NAME POOLS ────────────────────────────────────────────────
+        const INTL_NAMES = {
             Europe: {
-        first: [
-            'Luca','Marco','Matteo','Lorenzo','Alessandro','Francesco','Pierre','Antoine',
-            'Julien','Romain','Sebastien','Nicolas','Maxime','Theo','Max','Lars',
-            'Nico','Felix','Kevin','Marcel','Timo','Mick','Carlos','Fernando',
-            'Alvaro','Sergio','Dani','Javier','Pablo','Ruben','Lewis','George',
-            'Lando','Oliver','Jack','Will','Tom','Harry',
-
-            // Female mixed in
-            'Sofia','Giulia','Francesca','Chiara','Alessia','Elena',
-            'Camille','Claire','Amelie','Juliette','Manon',
-            'Emma','Hannah','Leonie','Mila','Lena',
-            'Freya','Ingrid','Astrid','Signe',
-            'Eva','Anna','Clara','Lucia'
-        ],
-        last: [
-            'Rossi','Ferrari','Lombardi','Ricci','Conti','Mancini','Greco','Esposito',
-             'Leclerc','Gasly','Ocon','Grosjean','Vergne','Lapierre','Vandoorne',
-              'Verstappen','Magnussen','Eriksson','Lindqvist','Ronning','Haugen',
-              'Dubois','Lefevre','Moreau','Girard','Andre','Lambert','Bonnet','Renaud',
-              'Chevalier','Blanchard','Schmidt','Weber','Fischer','Wagner','Becker','Hoffmann',
-              'Keller','Braun','Kruger','Neumann','Jansen','DeVries','VanDijk','Romano',
-              'Gallo','Costa','Rinaldi','Moretti','DeLuca','Marchetti','Bellini','Caruso',
-              'Fontana','Bianchi','Sorrentino','Vitale','Rinaldo','Barone','Ferraro','Martini'
-        ]
-    },
-
-    Asia: {
-        first: [
-            'Yuki','Sho','Ryo','Kenji','Takumi','Hiroshi','Daiki','Naoki',
-            'Wei','Jian','Hao','Ming','Lei','Tao','Peng','Cheng',
-            'Ji-Woo','Min-Jun','Tae-Yang','Hyun','Seung','Jae','Dong','Young',
-            'Arjun','Kush','Jehan','Ruhaan','Akhil','Raj','Vicky','Aditya',
-
-            // Female mixed in
-            'Yuna','Hina','Sakura','Aoi','Rin',
-            'Mei','Xinyi','Li Na','Xia','Yan',
-            'Ji-Eun','Soo-Min','Hye-Jin','Ara',
-            'Ananya','Priya','Isha','Kavya','Neha'
-        ],
-        last: [
-            'Tsunoda','Yamamoto','Kobayashi','Nakajima','Sato','Matsushita','Otsu','Makino',
-          'Zhou','Wang','Li','Zhang','Chen','Liu','Yang','Wu',
-          'Kim','Park','Lee','Choi','Jung','Kang','Yoon','Lim',
-          'Maini','Mehta','Daruvala','Narain','Karthikeyan','Singhania',
-          'Sharma','Patel','Reddy','Nair','Iyer','Chopra','Bose','Kapoor','Bhat','Desai',
-          'Shin','Han','Seo','Kwon','Hwang','Ahn','Song','Yoo','Gupta','Verma','Rao','Joshi'
-        ]
-    },
-
-    Africa: {
-        first: [
-            'Jann','Sacha','Kelvin','Nathanael','Liam','Jordan','Caleb','Ethan',
-            'Kwame','Kofi','Yaw','Nana','Kojo','Fiifi',
-            'Tariq','Bilal','Youssef','Omar','Karim','Hassan','Nabil','Rachid',
-
-            // Female mixed in
-            'Ama','Akosua','Abena','Efua',
-            'Amina','Fatima','Zahra','Imane',
-            'Thandi','Naledi','Zola','Ayanda',
-            'Nia','Zuri','Imani','Asha'
-        ],
-        last: [
-            'Monger','Fenestraz','Beckmann','Soulet','Thiim',
-          'Asante','Mensah','Owusu','Boateng','Amoah','Osei','Darko','Agyei',
-          'Benali','Mansouri','Khalidi','Bensalem','Azizi','Ouali','Hajji','Berrada',
-          'Okafor','Nwosu','Balogun','Adebayo','Ogunleye','Nkosi','Dlamini','Mokoena',
-          'Ndlovu','Khumalo','Zulu','Mthembu','Traore','Coulibaly','Keita','Konate','Diop',
-          'Mbaye','Diallo','Sow','Kamara','Abebe','Tesfaye','Okeke','Onyango','Chike'
-        ]
-    },
-
-    'South America': {
-        first: [
-            'Gabriel','Felipe','Pietro','Enzo','Caio','Thiago','Matheus','Lucas',
-            'Sebastian','Nicolas','Facundo','Matias','Agustin','Ignacio','Santiago','Tomas',
-            'Juan','Julio','Carlos','Eduardo','Rodrigo','Andres','Diego','Miguel',
-
-            // Female mixed in
-            'Sofia','Valentina','Camila','Isabella','Martina','Luciana',
-            'Gabriela','Daniela','Mariana','Paula','Carla','Juliana',
-            'Antonella','Renata','Bianca'
-        ],
-        last: [
-            'Bortoleto','Drugovich','Fittipaldi','Piquet','Senna','Barrichello','Nasr','Fraga',
-          'Colapinto','Dapero','Nannini','Vesti','Hauger','Marti','Bearman',
-          'Montoya','Maldonado','Urrutia','Rojas','Fuenmayor','Guerrieri','Girolami',
-          'Silva','Santos','Oliveira','Souza','Pereira','Costa','Ribeiro','Alves','Carvalho',
-          'Gomes','Fernandez','Gomez','Lopez','Diaz','Torres','Vargas','Cabrera','Mendoza',
-          'Castillo','Herrera','Ramirez','Morales','Gonzalez','Perez','Vega','Rios','Campos'
-        ]
-    },
-
-    'Central America': {
-        first: [
-            'Esteban','Ricardo','Sergio','Roberto','Mario','Memo','Adrian','Raul',
-            'Josue','Alejandro','Sebastian','Andres','Felipe','Arturo','Hector','Ernesto',
-
-            // Female mixed in
-            'Maria','Guadalupe','Fernanda','Valeria','Ximena','Andrea',
-            'Daniela','Gabriela','Lucia','Ana','Paola','Carmen'
-        ],
-        last: [
-            'Guerrieri','Soto','Jimenez','Herrera','Mendez','Vasquez','Castillo','Cruz',
-          'Rodriguez','Morales','Garcia','Lopez','Martinez','Gonzalez','Perez','Ramirez',
-          'Navarro','Delgado','Rios','Campos','Ortega','Salazar','Vega','Carrillo','Mejia',
-          'Pineda','Reyes','Cortez','Dominguez','Fuentes','Valdez','Estrada','Serrano',
-          'Palacios','Molina','Alvarado','Benitez','Pacheco','Acosta','Torres','Carmona'
-        ]
-    },
-
-    Australia: {
-        first: [
-            'Oscar','Jack','Will','Scott','Mark','Daniel','James','Ryan',
-            'Liam','Nathan','Dylan','Jake','Broc','Cameron','Matthew','Todd',
-
-            // Female mixed in
-            'Chloe','Sophie','Emily','Olivia','Isla','Mia',
-            'Zoe','Grace','Ella','Ruby','Matilda','Evie'
-        ],
-        last: [
-           'Piastri','Doohan','Power','McLaughlin','Webber','Ricciardo','Courtney','Briscoe',
-          'Percat','Whincup','Mostert','Reynolds','Waters','Heimgartner','Slade','Smith',
-          'Jones','Taylor','Brown','Williams','Wilson','Evans','Thomas','Roberts','Walker',
-          'Wright','Robinson','Thompson','Baker','Hughes','Murphy','Kelly','Mason','Turner',
-          'Harrison','Edwards','Cooper','Mitchell','Campbell'
-               },
+                first: ['Luca', 'Marco', 'Matteo', 'Lorenzo', 'Alessandro', 'Francesco', 'Pierre', 'Antoine',
+                    'Julien', 'Romain', 'Sebastien', 'Nicolas', 'Maxime', 'Theo', 'Max', 'Lars',
+                    'Nico', 'Felix', 'Kevin', 'Marcel', 'Timo', 'Mick', 'Carlos', 'Fernando',
+                    'Alvaro', 'Sergio', 'Dani', 'Javier', 'Pablo', 'Ruben', 'Lewis', 'George',
+                    'Lando', 'Oliver', 'Jack', 'Will', 'Tom', 'Harry'],
+                last: ['Rossi', 'Ferrari', 'Lombardi', 'Ricci', 'Conti', 'Mancini', 'Greco', 'Esposito',
+                    'Leclerc', 'Gasly', 'Ocon', 'Grosjean', 'Vergne', 'Lapierre', 'Vandoorne',
+                    'Verstappen', 'Magnussen', 'Eriksson', 'Lindqvist', 'Ronning', 'Haugen',
+                    'Sainz', 'Alonso', 'Molina', 'Fuentes', 'Herrero', 'Martinez', 'Castillo',
+                    'Hamilton', 'Russell', 'Norris', 'Rowland', 'Harvey', 'Chilton', 'Tincknell'],
+            },
+            Asia: {
+                first: ['Yuki', 'Sho', 'Ryo', 'Kenji', 'Takumi', 'Hiroshi', 'Daiki', 'Naoki',
+                    'Wei', 'Jian', 'Hao', 'Ming', 'Lei', 'Tao', 'Peng', 'Cheng',
+                    'Ji-Woo', 'Min-Jun', 'Tae-Yang', 'Hyun', 'Seung', 'Jae', 'Dong', 'Young',
+                    'Arjun', 'Kush', 'Jehan', 'Ruhaan', 'Akhil', 'Raj', 'Vicky', 'Aditya'],
+                last: ['Tsunoda', 'Yamamoto', 'Kobayashi', 'Nakajima', 'Sato', 'Matsushita', 'Otsu', 'Makino',
+                    'Zhou', 'Wang', 'Li', 'Zhang', 'Chen', 'Liu', 'Yang', 'Wu',
+                    'Kim', 'Park', 'Lee', 'Choi', 'Jung', 'Kang', 'Yoon', 'Lim',
+                    'Maini', 'Mehta', 'Daruvala', 'Narain', 'Karthikeyan', 'Singhania'],
+            },
+            Africa: {
+                first: ['Jann', 'Sacha', 'Kelvin', 'Nathanael', 'Liam', 'Jordan', 'Caleb', 'Ethan',
+                    'Kwame', 'Kofi', 'Yaw', 'Nana', 'Kojo', 'Fiifi',
+                    'Tariq', 'Bilal', 'Youssef', 'Omar', 'Karim', 'Hassan', 'Nabil', 'Rachid'],
+                last: ['Monger', 'Fenestraz', 'Beckmann', 'Soulet', 'Thiim',
+                    'Asante', 'Mensah', 'Owusu', 'Boateng', 'Amoah', 'Osei', 'Darko', 'Agyei',
+                    'Benali', 'Mansouri', 'Khalidi', 'Bensalem', 'Azizi', 'Ouali', 'Hajji', 'Berrada'],
+            },
+            'South America': {
+                first: ['Gabriel', 'Felipe', 'Pietro', 'Enzo', 'Caio', 'Thiago', 'Matheus', 'Lucas',
+                    'Sebastian', 'Nicolas', 'Facundo', 'Matias', 'Agustin', 'Ignacio', 'Santiago', 'Tomas',
+                    'Juan', 'Julio', 'Carlos', 'Eduardo', 'Rodrigo', 'Andres', 'Diego', 'Miguel'],
+                last: ['Bortoleto', 'Drugovich', 'Fittipaldi', 'Piquet', 'Senna', 'Barrichello', 'Nasr', 'Fraga',
+                    'Colapinto', 'Dapero', 'Nannini', 'Vesti', 'Hauger', 'Marti', 'Bearman',
+                    'Montoya', 'Maldonado', 'Urrutia', 'Rojas', 'Fuenmayor', 'Guerrieri', 'Girolami'],
+            },
+            'Central America': {
+                first: ['Esteban', 'Ricardo', 'Sergio', 'Roberto', 'Mario', 'Memo', 'Adrian', 'Raul',
+                    'Josue', 'Alejandro', 'Sebastian', 'Andres', 'Felipe', 'Arturo', 'Hector', 'Ernesto'],
+                last: ['Guerrieri', 'Soto', 'Jimenez', 'Herrera', 'Mendez', 'Vasquez', 'Castillo', 'Cruz',
+                    'Rodriguez', 'Morales', 'Garcia', 'Lopez', 'Martinez', 'Gonzalez', 'Perez', 'Ramirez'],
+            },
+            Australia: {
+                first: ['Oscar', 'Jack', 'Will', 'Scott', 'Mark', 'Daniel', 'James', 'Ryan',
+                    'Liam', 'Nathan', 'Dylan', 'Jake', 'Broc', 'Cameron', 'Matthew', 'Todd'],
+                last: ['Piastri', 'Doohan', 'Power', 'McLaughlin', 'Webber', 'Ricciardo', 'Courtney', 'Briscoe',
+                    'Percat', 'Whincup', 'Mostert', 'Reynolds', 'Waters', 'Heimgartner', 'Slade'],
+            },
         };
 
         function generateIntlName(region) {
@@ -2788,93 +2712,33 @@
         }
         // ─── AI DRIVER NAME POOL ─────────────────────────────────────────────────────
         const AI_FIRST = [
-    'Kyle','Jimmy','Dale','Bobby','Ronnie','Chase','Tyler','Rick','Austin','Hank',
-    'Luke','Cody','Ray','Brent','Travis','Mitch','Greg','Aaron','Vince','Wade',
-    'Jason','Connor','Mike','Gary','Dave','Shawn','Neil','Vance','Brett','Derek',
-    'Shane','Lance','Todd','Denny','Clint','David','Matt','Blake','Carson','Logan',
-    'Jeb','Earl','Floyd','Lonnie','Doyle','Merle','Dwayne','Leroy','Clyde','Gus',
-    'Scotty','Robby','Donnie','Kenny','Rusty','Buddy','Grady','Tucker','Knox','Reid',
+            'Kyle', 'Jimmy', 'Dale', 'Bobby', 'Ronnie', 'Chase', 'Tyler', 'Rick', 'Austin', 'Hank',
+            'Luke', 'Cody', 'Ray', 'Brent', 'Travis', 'Mitch', 'Greg', 'Aaron', 'Vince', 'Wade',
+            'Jason', 'Connor', 'Mike', 'Gary', 'Dave', 'Shawn', 'Neil', 'Vance', 'Brett', 'Derek',
+            'Shane', 'Lance', 'Todd', 'Denny', 'Clint', 'David', 'Matt', 'Blake', 'Carson', 'Logan',
+            'Jeb', 'Earl', 'Floyd', 'Lonnie', 'Doyle', 'Merle', 'Dwayne', 'Leroy', 'Clyde', 'Gus',
+            'Scotty', 'Robby', 'Donnie', 'Kenny', 'Rusty', 'Buddy', 'Grady', 'Tucker', 'Knox', 'Reid',
+        ];
+        const AI_LAST = [
+            'McAllister', 'Hayes', 'Whitfield', 'Duvall', 'Boone', 'Cantrell', 'Phelps', 'Hargrove',
+            'Farris', 'Holt', 'Deen', 'Finch', 'Dillon', 'Marsh', 'Sutton', 'Holloway', 'Pruitt',
+            'Corley', 'Hobbs', 'Cutler', 'Rideout', 'Kowalski', 'Malone', 'Voss', 'Dawson', 'Hensley',
+            'Cope', 'Speed', 'Bodine', 'Wallace', 'Nemechek', 'Kenseth', 'Waltrip', 'Labonte',
+            'Earnhardt', 'Petty', 'Allison', 'Yarborough', 'Pearson', 'Thomas', 'Craven', 'Trickle',
+            'Setzer', 'Pressley', 'Grissom', 'Sauter', 'Lund', 'Weatherly', 'Lorenzen', 'Marcis',
+            'Andretti', 'Mears', 'Biffle', 'Burton', 'Kahne', 'Truex', 'Logano', 'Chastain', 'Preece', 'Hemric',
+        ];
 
-    // Expanded
-    'Liam','Noah','Oliver','Elijah','James','William','Benjamin','Lucas','Henry','Alexander',
-    'Mason','Michael','Ethan','Daniel','Jacob','Logan','Jackson','Levi','Sebastian','Mateo',
-    'Jack','Owen','Theodore','Aiden','Samuel','Joseph','John','Wyatt','Matthew','Luke',
-    'Asher','Carter','Julian','Grayson','Leo','Jayden','Gabriel','Isaac','Lincoln','Anthony',
-
-    'Max','Eli','Ian','Kai','Zane','Jace','Dean','Jude','Troy','Reed',
-    'Cole','Beau','Lane','Roy','Clark','Grant','Scott','Brock','Quinn','Tate',
-    'Hayes','Jett','Crew','Rhys','Dax','Zeke','Kade','Boone','Trace','Rex',
-
-    'Caleb','Jared','Spencer','Preston','Gage','Branson','Colby','Devin','Casey','Corey',
-    'Zack','Tanner','Emmett','Jesse','Marshall','Ricky','Frankie','Leon','Alvin','Harvey',
-    'Otis','Vernon','Elmer','Chester','Wallace','Edgar','Milton','Stanley','Howard','Clarence',
-
-    'Bennett','Desmond','Emmett','Finnegan','Hugo','Jasper','Keaton','Lachlan','Magnus','Niall',
-    'Orson','Percy','Roscoe','Sullivan','Thatcher','Vaughn','Wesley','Zander','Archer','Beckett',
-    'Callum','Ellis','Harlan','Indy','Kellan','Leland','Merritt','Nico','Oakley','Porter',
-    'Quincy','Ronan','Soren','Trenton','Ulric','Valen','Wilder','Yates','Zavier'
-];
-
-const AI_LAST = [
-    'McAllister','Hayes','Whitfield','Duvall','Boone','Cantrell','Phelps','Hargrove',
-    'Farris','Holt','Deen','Finch','Dillon','Marsh','Sutton','Holloway','Pruitt',
-    'Corley','Hobbs','Cutler','Rideout','Kowalski','Malone','Voss','Dawson','Hensley',
-    'Cope','Speed','Bodine','Wallace','Nemechek','Kenseth','Waltrip','Labonte',
-    'Earnhardt','Petty','Allison','Yarborough','Pearson','Thomas','Craven','Trickle',
-    'Setzer','Pressley','Grissom','Sauter','Lund','Weatherly','Lorenzen','Marcis',
-    'Andretti','Mears','Biffle','Burton','Kahne','Truex','Logano','Chastain','Preece','Hemric',
-
-    // Expanded
-    'Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez',
-    'Hernandez','Lopez','Gonzalez','Wilson','Anderson','Taylor','Moore','Jackson','Martin','Lee',
-    'Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker',
-
-    'Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green',
-    'Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts','Gomez',
-
-    'Phillips','Evans','Turner','Diaz','Parker','Cruz','Edwards','Collins','Reyes','Stewart',
-    'Morris','Morales','Murphy','Cook','Rogers','Gutierrez','Ortiz','Morgan','Cooper','Peterson',
-
-    'Bailey','Reed','Kelly','Howard','Ramos','Kim','Cox','Ward','Richardson','Watson',
-    'Brooks','Chavez','Wood','James','Bennett','Gray','Mendoza','Ruiz','Hughes','Price',
-
-    'Alvarez','Castillo','Sanders','Patel','Myers','Long','Ross','Foster','Jimenez','Powell',
-    'Jenkins','Perry','Russell','Sullivan','Bell','Coleman','Butler','Henderson','Barnes','Gonzales',
-
-    'Fisher','Vasquez','Simmons','Romero','Jordan','Patterson','Alexander','Hamilton','Graham','Reynolds',
-    'Griffin','Wallace','West','Cole','Hayden','Stone','Barker','Caldwell','Stephens','Lawson',
-
-    'Hawkins','Barrett','Wheeler','Chapman','Fuller','Moss','Cross','Knight','Spencer','Hudson',
-    'Owens','Bishop','Carpenter','Crawford','Boyd','Mason','Porter','Hunter','Hicks','Dunn'
-];
-
-const AI_FIRST_FEMALE = [
-    'Hailie','Natalie','Jessica','Ashley','Courtney','Amber','Brittany','Kelley',
-    'Danica','Jennifer','Tara','Leilani','Sarah','Megan','Kenzie','Reagan',
-    'Caylin','Taylor','Jordan','Peyton','Morgan','Ryann','Brooke','Lindsey',
-    'Crystal','Lacey','Shelby','Savannah','Kayla','Caitlin','Erin','Paige',
-    'Holly','Donna','Lisa','Tammy','Christy','Stacy','Gina','Renee',
-    'Deb','Wanda','Carla','Brenda','Rhonda','Sherry','Vickie','Paula',
-    'Regan','Charlene','June','Loretta','Betty','Connie','Angie','Bobbie',
-    'Trish','Darla','Roxanne','Nadine',
-
-    // Expanded
-    'Olivia','Emma','Ava','Sophia','Isabella','Mia','Charlotte','Amelia','Harper','Evelyn',
-    'Abigail','Emily','Ella','Scarlett','Aria','Penelope','Chloe','Layla','Riley','Zoey',
-    'Nora','Lily','Eleanor','Hannah','Lillian','Addison','Aubrey','Ellie','Stella','Natalia',
-
-    'Luna','Nova','Ivy','Zoe','Skye','Sage','Blair','Quinn','Lane','Wren',
-    'Remi','Ari','Eden','Kai','Noa','Rue','Lux','Bryn','Shae','Vale',
-
-    'Madeline','Paisley','Everly','Emery','Willow','Autumn','Summer','Sienna','Delilah','Adeline',
-    'Eliza','Rose','Iris','Jade','Ruby','Alice','Clara','Vivian','Josephine','Naomi',
-
-    'Adelaide','Beatrix','Clementine','Felicity','Genevieve','Imogen','Juniper','Kaia','Liora','Marigold',
-    'Nerissa','Ophelia','Rosalind','Seraphina','Tallulah','Verity','Winona','Zinnia',
-
-    'Faith','Hope','Charity','Brandy','Misty','Stormy','Sunny','Daisy','Heidi','Amberly',
-    'Kelsey','Whitney','Jamie','Leslie','Robin','Casey','Dana','Shannon','Terry','Kelly'
-];
+        const AI_FIRST_FEMALE = [
+            'Hailie', 'Natalie', 'Jessica', 'Ashley', 'Courtney', 'Amber', 'Brittany', 'Kelley',
+            'Danica', 'Jennifer', 'Tara', 'Leilani', 'Sarah', 'Megan', 'Kenzie', 'Reagan',
+            'Caylin', 'Taylor', 'Jordan', 'Peyton', 'Morgan', 'Ryann', 'Brooke', 'Lindsey',
+            'Crystal', 'Lacey', 'Shelby', 'Savannah', 'Kayla', 'Caitlin', 'Erin', 'Paige',
+            'Holly', 'Donna', 'Lisa', 'Tammy', 'Christy', 'Stacy', 'Gina', 'Renee',
+            'Deb', 'Wanda', 'Carla', 'Brenda', 'Rhonda', 'Sherry', 'Vickie', 'Paula',
+            'Regan', 'Charlene', 'June', 'Loretta', 'Betty', 'Connie', 'Angie', 'Bobbie',
+            'Trish', 'Darla', 'Roxanne', 'Nadine',
+        ];
 
         const MIDDLE_INITIALS = 'ABCDEFGHJKLMNPRSTW'.split('');
 
