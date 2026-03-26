@@ -2650,59 +2650,112 @@
         }
 
         // ─── INTERNATIONAL NAME POOLS ────────────────────────────────────────────────
-        const INTL_NAMES = {
-            Europe: {
-                first: ['Luca', 'Marco', 'Matteo', 'Lorenzo', 'Alessandro', 'Francesco', 'Pierre', 'Antoine',
-                    'Julien', 'Romain', 'Sebastien', 'Nicolas', 'Maxime', 'Theo', 'Max', 'Lars',
-                    'Nico', 'Felix', 'Kevin', 'Marcel', 'Timo', 'Mick', 'Carlos', 'Fernando',
-                    'Alvaro', 'Sergio', 'Dani', 'Javier', 'Pablo', 'Ruben', 'Lewis', 'George',
-                    'Lando', 'Oliver', 'Jack', 'Will', 'Tom', 'Harry'],
-                last: ['Rossi', 'Ferrari', 'Lombardi', 'Ricci', 'Conti', 'Mancini', 'Greco', 'Esposito',
-                    'Leclerc', 'Gasly', 'Ocon', 'Grosjean', 'Vergne', 'Lapierre', 'Vandoorne',
-                    'Verstappen', 'Magnussen', 'Eriksson', 'Lindqvist', 'Ronning', 'Haugen',
-                    'Sainz', 'Alonso', 'Molina', 'Fuentes', 'Herrero', 'Martinez', 'Castillo',
-                    'Hamilton', 'Russell', 'Norris', 'Rowland', 'Harvey', 'Chilton', 'Tincknell'],
-            },
-            Asia: {
-                first: ['Yuki', 'Sho', 'Ryo', 'Kenji', 'Takumi', 'Hiroshi', 'Daiki', 'Naoki',
-                    'Wei', 'Jian', 'Hao', 'Ming', 'Lei', 'Tao', 'Peng', 'Cheng',
-                    'Ji-Woo', 'Min-Jun', 'Tae-Yang', 'Hyun', 'Seung', 'Jae', 'Dong', 'Young',
-                    'Arjun', 'Kush', 'Jehan', 'Ruhaan', 'Akhil', 'Raj', 'Vicky', 'Aditya'],
-                last: ['Tsunoda', 'Yamamoto', 'Kobayashi', 'Nakajima', 'Sato', 'Matsushita', 'Otsu', 'Makino',
-                    'Zhou', 'Wang', 'Li', 'Zhang', 'Chen', 'Liu', 'Yang', 'Wu',
-                    'Kim', 'Park', 'Lee', 'Choi', 'Jung', 'Kang', 'Yoon', 'Lim',
-                    'Maini', 'Mehta', 'Daruvala', 'Narain', 'Karthikeyan', 'Singhania'],
-            },
-            Africa: {
-                first: ['Jann', 'Sacha', 'Kelvin', 'Nathanael', 'Liam', 'Jordan', 'Caleb', 'Ethan',
-                    'Kwame', 'Kofi', 'Yaw', 'Nana', 'Kojo', 'Fiifi',
-                    'Tariq', 'Bilal', 'Youssef', 'Omar', 'Karim', 'Hassan', 'Nabil', 'Rachid'],
-                last: ['Monger', 'Fenestraz', 'Beckmann', 'Soulet', 'Thiim',
-                    'Asante', 'Mensah', 'Owusu', 'Boateng', 'Amoah', 'Osei', 'Darko', 'Agyei',
-                    'Benali', 'Mansouri', 'Khalidi', 'Bensalem', 'Azizi', 'Ouali', 'Hajji', 'Berrada'],
-            },
-            'South America': {
-                first: ['Gabriel', 'Felipe', 'Pietro', 'Enzo', 'Caio', 'Thiago', 'Matheus', 'Lucas',
-                    'Sebastian', 'Nicolas', 'Facundo', 'Matias', 'Agustin', 'Ignacio', 'Santiago', 'Tomas',
-                    'Juan', 'Julio', 'Carlos', 'Eduardo', 'Rodrigo', 'Andres', 'Diego', 'Miguel'],
-                last: ['Bortoleto', 'Drugovich', 'Fittipaldi', 'Piquet', 'Senna', 'Barrichello', 'Nasr', 'Fraga',
-                    'Colapinto', 'Dapero', 'Nannini', 'Vesti', 'Hauger', 'Marti', 'Bearman',
-                    'Montoya', 'Maldonado', 'Urrutia', 'Rojas', 'Fuenmayor', 'Guerrieri', 'Girolami'],
-            },
-            'Central America': {
-                first: ['Esteban', 'Ricardo', 'Sergio', 'Roberto', 'Mario', 'Memo', 'Adrian', 'Raul',
-                    'Josue', 'Alejandro', 'Sebastian', 'Andres', 'Felipe', 'Arturo', 'Hector', 'Ernesto'],
-                last: ['Guerrieri', 'Soto', 'Jimenez', 'Herrera', 'Mendez', 'Vasquez', 'Castillo', 'Cruz',
-                    'Rodriguez', 'Morales', 'Garcia', 'Lopez', 'Martinez', 'Gonzalez', 'Perez', 'Ramirez'],
-            },
-            Australia: {
-                first: ['Oscar', 'Jack', 'Will', 'Scott', 'Mark', 'Daniel', 'James', 'Ryan',
-                    'Liam', 'Nathan', 'Dylan', 'Jake', 'Broc', 'Cameron', 'Matthew', 'Todd'],
-                last: ['Piastri', 'Doohan', 'Power', 'McLaughlin', 'Webber', 'Ricciardo', 'Courtney', 'Briscoe',
-                    'Percat', 'Whincup', 'Mostert', 'Reynolds', 'Waters', 'Heimgartner', 'Slade'],
-            },
-        };
+const INTL_NAMES = {
+    Europe: {
+        first: ['Luca', 'Marco', 'Matteo', 'Lorenzo', 'Alessandro', 'Francesco', 'Pierre', 'Antoine',
+            'Julien', 'Romain', 'Sebastien', 'Nicolas', 'Maxime', 'Theo', 'Max', 'Lars',
+            'Nico', 'Felix', 'Kevin', 'Marcel', 'Timo', 'Mick', 'Carlos', 'Fernando',
+            'Alvaro', 'Sergio', 'Dani', 'Javier', 'Pablo', 'Ruben', 'Lewis', 'George',
+            'Lando', 'Oliver', 'Jack', 'Will', 'Tom', 'Harry',
+            'Sofia','Giulia','Francesca','Chiara','Alessia','Elena',
+            'Camille','Claire','Amelie','Juliette','Manon',
+            'Emma','Hannah','Leonie','Mila','Lena',
+            'Freya','Ingrid','Astrid','Signe',
+            'Eva','Anna','Clara','Lucia',
+            'Isabella','Victoria','Helena','Margot','Amara','Elise','Nina','Paula','Saskia','Katarina',
+            'Marina','Verena','Diana','Bianca','Livia','Jasmin','Anika','Petra','Elena','Cecilia',
+            'Louis','Theo','Julien','Gabriel','Simon','Mathis','Elias','Adrian','Raphael','Dominik',
+            'Vincent','Sebastian','Jonathan','Benjamin','Christian','Anton','Fabian','Oliver','Daniel','Niklas'],
+        last: ['Rossi', 'Ferrari', 'Lombardi', 'Ricci', 'Conti', 'Mancini', 'Greco', 'Esposito',
+            'Leclerc', 'Gasly', 'Ocon', 'Grosjean', 'Vergne', 'Lapierre', 'Vandoorne',
+            'Verstappen', 'Magnussen', 'Eriksson', 'Lindqvist', 'Ronning', 'Haugen',
+            'Sainz', 'Alonso', 'Molina', 'Fuentes', 'Herrero', 'Martinez', 'Castillo',
+            'Hamilton', 'Russell', 'Norris', 'Rowland', 'Harvey', 'Chilton', 'Tincknell',
+            'Dubois','Lefevre','Moreau','Girard','Andre','Lambert','Bonnet','Renaud',
+            'Chevalier','Blanchard','Schmidt','Weber','Fischer','Wagner','Becker','Hoffmann',
+            'Keller','Braun','Kruger','Neumann','Jansen','DeVries','VanDijk','Romano',
+            'Gallo','Costa','Rinaldi','Moretti','DeLuca','Marchetti','Bellini','Caruso',
+            'Fontana','Bianchi','Sorrentino','Vitale','Rinaldo','Barone','Ferraro','Martini',
+            'Kovacs','Nagy','Horvath','Toth','Szabo','Varga','Molnar','Fischer','Schulz','Klein',
+            'Becker','Maier','Richter','Schneider','Wolf','Bauer','Koch','Hoffman','Schmitt','Meier']
+    },
 
+    Asia: {
+        first: ['Yuki', 'Sho', 'Ryo', 'Kenji', 'Takumi', 'Hiroshi', 'Daiki', 'Naoki',
+            'Wei', 'Jian', 'Hao', 'Ming', 'Lei', 'Tao', 'Peng', 'Cheng',
+            'Ji-Woo', 'Min-Jun', 'Tae-Yang', 'Hyun', 'Seung', 'Jae', 'Dong', 'Young',
+            'Arjun', 'Kush', 'Jehan', 'Ruhaan', 'Akhil', 'Raj', 'Vicky', 'Aditya',
+            'Yuna','Hina','Sakura','Aoi','Rin',
+            'Mei','Xinyi','Li Na','Xia','Yan',
+            'Ji-Eun','Soo-Min','Hye-Jin','Ara',
+            'Ananya','Priya','Isha','Kavya','Neha',
+            'Haruto','Sota','Ren','Yuto','Kaito','Riku','Hikaru','Daichi','Takashi','Shota',
+            'Aarav','Rohan','Vihaan','Ira','Saanvi','Anika','Meera','Priya','Tanvi','Diya'],
+        last: ['Tsunoda', 'Yamamoto', 'Kobayashi', 'Nakajima', 'Sato', 'Matsushita', 'Otsu', 'Makino',
+            'Zhou', 'Wang', 'Li', 'Zhang', 'Chen', 'Liu', 'Yang', 'Wu',
+            'Kim', 'Park', 'Lee', 'Choi', 'Jung', 'Kang', 'Yoon', 'Lim',
+            'Maini', 'Mehta', 'Daruvala', 'Narain', 'Karthikeyan', 'Singhania',
+            'Tanaka','Fujimoto','Matsumoto','Ishikawa','Kawasaki','Takahashi','Okada','Shimizu','Yamaguchi','Hasegawa',
+            'Gupta','Sharma','Patel','Reddy','Nair','Iyer','Chopra','Bose','Kapoor','Bhat']
+    },
+
+    Africa: {
+        first: ['Jann', 'Sacha', 'Kelvin', 'Nathanael', 'Liam', 'Jordan', 'Caleb', 'Ethan',
+            'Kwame', 'Kofi', 'Yaw', 'Nana', 'Kojo', 'Fiifi',
+            'Tariq', 'Bilal', 'Youssef', 'Omar', 'Karim', 'Hassan', 'Nabil', 'Rachid',
+            'Ama','Akosua','Abena','Efua',
+            'Amina','Fatima','Zahra','Imane',
+            'Thandi','Naledi','Zola','Ayanda',
+            'Nia','Zuri','Imani','Asha',
+            'Amara','Sade','Chimamanda','Ify','Ayo','Lindiwe','Keletso','Sibongile','Bongi','Mbali'],
+        last: ['Monger', 'Fenestraz', 'Beckmann', 'Soulet', 'Thiim',
+            'Asante', 'Mensah', 'Owusu', 'Boateng', 'Amoah', 'Osei', 'Darko', 'Agyei',
+            'Benali', 'Mansouri', 'Khalidi', 'Bensalem', 'Azizi', 'Ouali', 'Hajji', 'Berrada',
+            'Okafor','Nwosu','Balogun','Adebayo','Ogunleye','Nkosi','Dlamini','Mokoena',
+            'Ndlovu','Khumalo','Zulu','Mthembu','Traore','Coulibaly','Keita','Konate','Diop',
+            'Mbaye','Diallo','Sow','Kamara','Abebe','Tesfaye','Adeyemi','Obi','Achebe','Chike']
+    },
+
+    'South America': {
+        first: ['Gabriel', 'Felipe', 'Pietro', 'Enzo', 'Caio', 'Thiago', 'Matheus', 'Lucas',
+            'Sebastian', 'Nicolas', 'Facundo', 'Matias', 'Agustin', 'Ignacio', 'Santiago', 'Tomas',
+            'Juan', 'Julio', 'Carlos', 'Eduardo', 'Rodrigo', 'Andres', 'Diego', 'Miguel',
+            'Sofia','Valentina','Camila','Isabella','Martina','Luciana',
+            'Gabriela','Daniela','Mariana','Paula','Carla','Juliana',
+            'Antonella','Renata','Bianca','Fernanda','Liliana','Adriana','Isabel','Veronica','Elena','Catalina'],
+        last: ['Bortoleto', 'Drugovich', 'Fittipaldi', 'Piquet', 'Senna', 'Barrichello', 'Nasr', 'Fraga',
+            'Colapinto', 'Dapero', 'Nannini', 'Vesti', 'Hauger', 'Marti', 'Bearman',
+            'Montoya', 'Maldonado', 'Urrutia', 'Rojas', 'Fuenmayor', 'Guerrieri', 'Girolami',
+            'Silva','Santos','Oliveira','Souza','Pereira','Costa','Ribeiro','Alves','Carvalho',
+            'Gomes','Fernandez','Gomez','Lopez','Diaz','Torres','Vargas','Cabrera','Mendoza',
+            'Castillo','Herrera','Ramirez','Morales','Gonzalez','Perez','Vega','Rios','Campos','Almeida','Farias','Barros','Moura']
+    },
+
+    'Central America': {
+        first: ['Esteban', 'Ricardo', 'Sergio', 'Roberto', 'Mario', 'Memo', 'Adrian', 'Raul',
+            'Josue', 'Alejandro', 'Sebastian', 'Andres', 'Felipe', 'Arturo', 'Hector', 'Ernesto',
+            'Maria','Guadalupe','Fernanda','Valeria','Ximena','Andrea',
+            'Daniela','Gabriela','Lucia','Ana','Paola','Carmen','Isabel','Monica','Patricia','Claudia'],
+        last: ['Guerrieri', 'Soto', 'Jimenez', 'Herrera', 'Mendez', 'Vasquez', 'Castillo', 'Cruz',
+            'Rodriguez', 'Morales', 'Garcia', 'Lopez', 'Martinez', 'Gonzalez', 'Perez', 'Ramirez',
+            'Navarro','Delgado','Rios','Campos','Ortega','Salazar','Vega','Carrillo','Mejia',
+            'Pineda','Reyes','Cortez','Dominguez','Fuentes','Valdez','Estrada','Serrano',
+            'Palacios','Molina','Alvarado','Benitez','Pacheco','Acosta','Torres','Carmona','Vidal','Espinoza','Galvez']
+    },
+
+    Australia: {
+        first: ['Oscar', 'Jack', 'Will', 'Scott', 'Mark', 'Daniel', 'James', 'Ryan',
+            'Liam', 'Nathan', 'Dylan', 'Jake', 'Broc', 'Cameron', 'Matthew', 'Todd',
+            'Chloe','Sophie','Emily','Olivia','Isla','Mia',
+            'Zoe','Grace','Ella','Ruby','Matilda','Evie','Lily','Charlotte','Amelia','Holly',
+            'Abigail','Madeline','Jessica','Leah','Sienna','Georgia','Maya','Imogen','Poppy','Harper'],
+        last: ['Piastri', 'Doohan', 'Power', 'McLaughlin', 'Webber', 'Ricciardo', 'Courtney', 'Briscoe',
+            'Percat', 'Whincup', 'Mostert', 'Reynolds', 'Waters', 'Heimgartner', 'Slade',
+            'Smith','Jones','Taylor','Brown','Williams','Wilson','Evans','Thomas','Roberts','Walker',
+            'Wright','Robinson','Thompson','Baker','Hughes','Murphy','Kelly','Mason','Turner',
+            'Harrison','Edwards','Cooper','Mitchell','Campbell','Bell','Carter','Phillips','Parker','Cook']
+    }
+};
         function generateIntlName(region) {
             var pool = INTL_NAMES[region];
             if (!pool) return null;
