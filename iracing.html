@@ -3564,23 +3564,52 @@
 
         function generateOffers(rep, fans) {
             const offers = [];
-            // Find player's highest completed series tier
             const completedSeriesIds = new Set((G && G.raceHistory || []).map(r => r.seriesId));
             const highestCompletedTier = completedSeriesIds.size > 0
                 ? Math.max(...[...completedSeriesIds].map(sid => (getSeries(sid) && getSeries(sid).tier) || 1))
                 : 1;
-            // Only offer series within 2 tiers of highest completed — no ARCA offers from mini stock
             const maxOfferTier = highestCompletedTier + 2;
 
             SERIES.forEach(s => {
-                if (s.tier > maxOfferTier) return; // ladder progression gate
+                if (s.tier > maxOfferTier) return;
                 if (rep >= s.reqRep - 10 && fans >= s.reqFans * 0.5) {
                     const q = rep >= s.reqRep + 50 ? 'good' : rep >= s.reqRep + 20 ? 'average' : 'poor';
-                    if (Math.random() < (rep >= s.reqRep ? 0.65 : 0.25))
-                        offers.push(makeContract(s.id, q));
+                    const chance = rep >= s.reqRep ? 0.65 : 0.25;
+                    if (Math.random() < chance) {
+                        const c = makeContract(s.id, q);
+                        // Tier 1-2: mostly independent — no teammates, no salary, keep full prize
+                        if (s.tier <= 2) {
+                            c.indie = false; // still a "team" but in name only
+                            c.teammates = []; // no teammates — solo operation
+                            c.salary = 0;
+                            c.prizeShare = q === 'good' ? 0.90 : 0.85; // keep most of it
+                            c.winBonus = Math.floor(c.winBonus * 0.4); // small contingency bonus
+                            c.teamStyle = 'independent';
+                        }
+                        // Tier 3: shared shop / small team — maybe one teammate
+                        else if (s.tier === 3) {
+                            c.teammates = Math.random() < 0.4 ? [null] : []; // 40% chance of one shared-shop partner
+                            c.salary = 0;
+                            c.prizeShare = q === 'good' ? 0.82 : 0.75;
+                            c.teamStyle = 'small_team';
+                        }
+                        // Tier 4+: proper development/pro teams — already correct
+                        else {
+                            c.teamStyle = s.tier >= 6 ? 'pro_team' : 'development_team';
+                        }
+                        offers.push(c);
+                    }
                 }
             });
-            if (!offers.length) offers.push(makeContract('mini_stock', 'poor'));
+            if (!offers.length) {
+                const fallback = makeContract('mini_stock', 'poor');
+                fallback.indie = false;
+                fallback.teammates = [];
+                fallback.salary = 0;
+                fallback.prizeShare = 0.85;
+                fallback.teamStyle = 'independent';
+                offers.push(fallback);
+            }
             return shuffle(offers).slice(0, 4);
         }
 
@@ -4241,12 +4270,51 @@
                 for (let i = 0; i < count; i++) {
                     let name = generateAIName();
                     while (drivers.find(d => d.name === name)) name = generateAIName();
-                    // Skill range scales with series tier — higher tiers have a tighter, better baseline
                     const skillMin = Math.min(30 + s.tier * 5, 55);
                     const skillMax = Math.min(55 + s.tier * 7, 92);
                     drivers.push(createDriver(name, rand(skillMin, skillMax), s.id, 'generated'));
                 }
             });
+
+            // Post-generation pass: re-assign car numbers per series so they are
+            // unique within each series from the very first career race.
+            // createDriver can't do this correctly when G is null (no driver list yet).
+            const useSuffixes = function (tier) { return tier <= 2; };
+            const suffixes = ['X', 'A', 'B'];
+            SERIES.forEach(function (s) {
+                const inSeries = drivers.filter(function (d) { return d.currentSeriesId === s.id; });
+                const taken = new Set();
+                inSeries.forEach(function (d) {
+                    let num;
+                    let tries = 0;
+                    // Try plain numbers first
+                    do {
+                        num = String(rand(1, 99));
+                        tries++;
+                    } while (taken.has(num) && tries < 200);
+                    // If plain numbers exhausted and tier allows suffixes, try suffixed
+                    if (taken.has(num) && useSuffixes(s.tier)) {
+                        let found = false;
+                        for (let si = 0; si < suffixes.length && !found; si++) {
+                            for (let n = 1; n <= 99 && !found; n++) {
+                                const candidate = String(n) + suffixes[si];
+                                if (!taken.has(candidate)) { num = candidate; found = true; }
+                            }
+                        }
+                        // 0-prefix fallback (03, 07 etc)
+                        if (!found) {
+                            for (let n = 1; n <= 99 && !found; n++) {
+                                const candidate = '0' + String(n);
+                                if (!taken.has(candidate)) { num = candidate; found = true; }
+                            }
+                        }
+                    }
+                    d.carNumber = num;
+                    d._carNumberSeniority = 0;
+                    taken.add(num);
+                });
+            });
+
             return drivers;
         }
 
@@ -7708,7 +7776,12 @@
                     f.appendChild(h('div', { className: 'row-item', style: { borderColor: s.color + '28' } },
                         accent(s.color),
                         h('div', { style: { flex: 1 } },
-                            h('span', { style: { fontWeight: 800, fontSize: '14px', color: '#F9FAFB' } }, c.indie ? '🔧 Independent' : c.team),
+                            h('span', { style: { fontWeight: 800, fontSize: '14px', color: '#F9FAFB' } },
+                                c.indie ? '🔧 Independent' :
+                                c.teamStyle === 'independent' ? '🔧 ' + c.team + ' (Independent)' :
+                                c.teamStyle === 'small_team' ? '🏚️ ' + c.team :
+                                c.team
+                            ),
                             h('span', { style: { color: '#94A3B8', fontSize: '14px' } }, ` — ${s.short} · ${racesLeft} races · ${seasonsLeft} season(s) left`),
                             h('div', { style: { fontSize: '14px', color: '#94A3B8', marginTop: '2px' } },
                                 c.indie
