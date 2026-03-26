@@ -3738,11 +3738,225 @@
         function renderRoster() {
             const f = document.createDocumentFragment();
             f.appendChild(h('div', { className: 'page-title' }, 'Race Roster'));
-            f.appendChild(h('div', { className: 'page-sub' }, 'Current drivers assigned to each series. Set these in iRacing before racing. Tap a driver to see their stats and bio.'));
 
             if (!G.contracts.length) {
+                f.appendChild(h('div', { className: 'page-sub' }, 'Current drivers assigned to each series. Set these in iRacing before racing.'));
                 f.appendChild(h('div', { className: 'card', style: { textAlign: 'center', padding: '24px', color: '#94A3B8' } }, 'No active contracts. Sign one to see your roster.'));
                 return f;
+            }
+
+            // Check if any upcoming race this week is a premier event
+            const upcomingPremier = (function () {
+                for (var ci = 0; ci < G.contracts.length; ci++) {
+                    var contract = G.contracts[ci];
+                    var sched = G.schedules[contract.seriesId] || [];
+                    var nextIdx = sched.findIndex(function (r) { return !r.result; });
+                    if (nextIdx >= 0 && sched[nextIdx].isPremier) {
+                        return { race: sched[nextIdx], contract: contract, series: getSeries(contract.seriesId) };
+                    }
+                }
+                return null;
+            })();
+
+            // Sub-tabs — only show if a premier is coming up
+            if (upcomingPremier) {
+                const subTabRow = h('div', { style: { display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '2px solid #1E2433', paddingBottom: '0' } });
+                [
+                    { id: 'regular', label: 'Regular Roster' },
+                    { id: 'premier', label: '⭐ ' + upcomingPremier.race.premierName },
+                ].forEach(function (st) {
+                    const isActive = rosterView === st.id;
+                    const btn = h('button', {
+                        style: {
+                            background: 'transparent',
+                            border: 'none',
+                            borderBottom: isActive ? '3px solid #F59E0B' : '3px solid transparent',
+                            color: isActive ? '#F59E0B' : '#94A3B8',
+                            padding: '8px 18px',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            letterSpacing: '0.05em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                            marginBottom: '-2px',
+                        },
+                        onClick: function () { rosterView = st.id; render(); },
+                    }, st.label);
+                    subTabRow.appendChild(btn);
+                });
+                f.appendChild(subTabRow);
+            } else {
+                // No premier coming — reset to regular view
+                rosterView = 'regular';
+                f.appendChild(h('div', { className: 'page-sub' }, 'Current drivers assigned to each series. Set these in iRacing before racing. Tap a driver to see their stats and bio.'));
+            }
+
+            // ── PREMIER EVENT VIEW ────────────────────────────────────────────────────
+            if (rosterView === 'premier' && upcomingPremier) {
+                const pr = upcomingPremier.race;
+                const s = upcomingPremier.series;
+                const contract = upcomingPremier.contract;
+
+                // Generate guest field
+                const regularNames = new Set(
+                    (G.drivers || [])
+                        .filter(function (d) { return d.active && d.currentSeriesId === contract.seriesId; })
+                        .map(function (d) { return d.name.toLowerCase(); })
+                );
+                const guestPool = (G.drivers || []).filter(function (d) {
+                    return d.source === 'known' && d.active && !regularNames.has(d.name.toLowerCase());
+                }).sort(function () { return Math.random() - 0.5; });
+
+                const guestCount = Math.min(14, guestPool.length);
+                var guestNames = guestPool.slice(0, guestCount).map(function (d) { return d.name; });
+                while (guestNames.length < 8) {
+                    var name = generateAIName();
+                    var tries = 0;
+                    while (guestNames.includes(name) && tries < 50) { name = generateAIName(); tries++; }
+                    guestNames.push(name);
+                }
+
+                const regularDrivers = (G.drivers || []).filter(function (d) {
+                    return d.active && d.currentSeriesId === contract.seriesId;
+                }).sort(function (a, b) {
+                    if (a.source === 'known' && b.source !== 'known') return -1;
+                    if (b.source === 'known' && a.source !== 'known') return 1;
+                    return (parseInt(a.carNumber) || 999) - (parseInt(b.carNumber) || 999);
+                });
+
+                const normalFieldSize = SERIES_FIELD_SIZE[contract.seriesId] || 20;
+                const premierFieldSize = Math.min(normalFieldSize + guestNames.length, normalFieldSize + 14);
+
+                // Press release blurb
+                const blurbs = [
+                    `The ${pr.premierName} at ${pr.track} is the marquee event on the ${s.short} calendar — the one race all season that pulls drivers from outside the normal field. Expect cars you haven't seen all year, higher skill levels throughout the field, and a crowd that knows they're watching something different. The regular season points are doubled. The competition is stiffer. The result will be talked about longer than any other race on the schedule.`,
+                    `${pr.track} hosts the ${pr.premierName}, and the entry list reflects what makes this event different. Guest drivers who don't run the full ${s.short} schedule have entered for this race only — some from higher series, some from regional circuits with something to prove. Double points make every position worth fighting for. Set your iRacing AI roster accordingly before you start.`,
+                    `Once a season, the ${s.short} opens the gates. The ${pr.premierName} at ${pr.track} is that race — an expanded field, double championship points, and drivers who don't normally share a track with you. The regular roster will be supplemented by guest entries this week. Treat it differently than a normal Saturday night. The paddock does.`,
+                    `The ${pr.premierName} is ${pr.premierLaps} laps, double points, and a bigger field than you've seen all season. Guest drivers enter specifically for this event — they won't be on your roster next week, but they're on it now, and some of them are fast. Update your iRacing AI lineup before the race. This is the one they remember at the end-of-season banquet.`,
+                    `Not every race on the ${s.short} schedule carries the same weight. The ${pr.premierName} at ${pr.track} carries more. Double points shift the championship picture. Guest entries expand the field and raise the overall competition level. Some of the fastest drivers in the region show up for this one specifically. Your regular-season results got you here. What you do here is a different conversation.`,
+                ];
+                const blurb = blurbs[Math.floor(Math.random() * blurbs.length)];
+
+                // Press release card
+                f.appendChild(h('div', {
+                    style: {
+                        background: 'linear-gradient(135deg, #0D0A00, #1A1200)',
+                        border: '1px solid #F59E0B55',
+                        borderRadius: '10px',
+                        padding: '20px 22px',
+                        marginBottom: '18px',
+                    }
+                },
+                    h('div', { style: { display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: '14px' } },
+                        h('div', { style: { fontSize: '36px', lineHeight: 1, flexShrink: 0 } }, '⭐'),
+                        h('div', null,
+                            h('div', { style: { fontSize: '11px', color: '#D97706', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '4px' } }, s.short + ' · Premier Event'),
+                            h('div', { style: { fontSize: '22px', fontWeight: 900, color: '#F59E0B', lineHeight: 1.1, marginBottom: '4px' } }, pr.premierName),
+                            h('div', { style: { fontSize: '14px', color: '#D97706' } }, pr.track + ' · ' + pr.city + ', ' + pr.state),
+                        ),
+                    ),
+                    h('div', { style: { display: 'flex', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' } },
+                        ...[
+                            ['Laps', pr.premierLaps, '#F59E0B'],
+                            ['Points', '2× this week', '#10B981'],
+                            ['Field', premierFieldSize + ' drivers', '#3B82F6'],
+                            ['Guests', guestNames.length + ' entries', '#8B5CF6'],
+                        ].map(function (item) {
+                            return h('div', {
+                                style: {
+                                    background: '#060A10',
+                                    border: '1px solid ' + item[2] + '33',
+                                    borderRadius: '7px',
+                                    padding: '8px 12px',
+                                    minWidth: '90px',
+                                }
+                            },
+                                h('div', { style: { fontSize: '11px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em' } }, item[0]),
+                                h('div', { style: { fontSize: '15px', fontWeight: 800, color: item[2], marginTop: '2px' } }, item[1]),
+                            );
+                        }),
+                    ),
+                    h('div', { style: { fontSize: '14px', color: '#CBD5E1', lineHeight: '1.75', fontStyle: 'italic', borderLeft: '3px solid #F59E0B44', paddingLeft: '14px' } }, blurb),
+                ));
+
+                // Instructions card
+                f.appendChild(h('div', { className: 'card', style: { marginBottom: '18px', borderColor: '#F59E0B33' } },
+                    h('div', { style: { fontSize: '13px', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '12px' } }, '📋 iRacing Setup — Before You Race'),
+                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: '8px' } },
+                        ...[
+                            ['1', 'Add the guest drivers below to your iRacing AI roster for this session.'],
+                            ['2', 'Set guest driver skill higher than your regulars — this field is faster than a normal week.'],
+                            ['3', 'Run ' + pr.premierLaps + ' laps. Double points apply automatically when you submit.'],
+                            ['4', 'After the race, remove guest drivers from your iRacing roster. They don\'t race next week.'],
+                        ].map(function (step) {
+                            return h('div', { style: { display: 'flex', gap: '10px', alignItems: 'flex-start' } },
+                                h('div', {
+                                    style: {
+                                        width: '22px', height: '22px', borderRadius: '50%',
+                                        background: '#F59E0B22', border: '1px solid #F59E0B44',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '11px', fontWeight: 900, color: '#F59E0B', flexShrink: 0,
+                                    }
+                                }, step[0]),
+                                h('div', { style: { fontSize: '14px', color: '#CBD5E1', lineHeight: '1.5', paddingTop: '2px' } }, step[1]),
+                            );
+                        }),
+                    ),
+                ));
+
+                // Guest entries
+                f.appendChild(h('div', { className: 'card', style: { marginBottom: '18px', borderColor: '#8B5CF633' } },
+                    h('div', { style: { fontSize: '13px', fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '4px' } }, '🏁 Guest Entries — This Race Only'),
+                    h('div', { style: { fontSize: '13px', color: '#64748B', marginBottom: '12px' } }, 'Add these to iRacing before the race. Remove them after.'),
+                    h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } },
+                        ...guestNames.map(function (name) {
+                            const knownDriver = (G.drivers || []).find(function (d) { return d.name === name && d.source === 'known'; });
+                            return h('div', {
+                                style: {
+                                    background: '#0D0A1A',
+                                    border: '1px solid #8B5CF644',
+                                    borderRadius: '6px',
+                                    padding: '6px 11px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                }
+                            },
+                                h('span', { style: { fontSize: '13px', fontWeight: 700, color: '#DDD6FE' } }, name),
+                                knownDriver ? h('span', { style: { fontSize: '10px', color: '#10B981', fontWeight: 700 } }, '●') : null,
+                            );
+                        }),
+                    ),
+                    h('div', { style: { fontSize: '12px', color: '#374151', marginTop: '10px' } }, '● = driver known from your results  |  Others are generated entries'),
+                ));
+
+                // Regular drivers still running
+                f.appendChild(h('div', { className: 'card' },
+                    h('div', { style: { fontSize: '13px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '10px' } }, 'Regular Field — ' + contract.team),
+                    h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } },
+                        ...regularDrivers.map(function (d) {
+                            const isTm = (G.teammates || []).some(function (t) { return t.name === d.name; });
+                            const col = d.source === 'known' ? '#10B981' : '#94A3B8';
+                            return h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 0', borderBottom: '1px solid #0D1117' } },
+                                d.carNumber ? h('div', { style: { width: '30px', height: '30px', borderRadius: '5px', background: s.color + '18', border: '1px solid ' + s.color + '44', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 900, color: s.color, flexShrink: 0 } }, d.carNumber) : h('div', { style: { width: '30px', height: '30px', borderRadius: '5px', background: '#1E2433', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#64748B', flexShrink: 0 } }, '#?'),
+                                h('div', { style: { flex: 1 } },
+                                    h('div', { style: { fontSize: '13px', fontWeight: 700, color: '#F9FAFB' } }, d.name,
+                                        isTm ? h('span', { style: { fontSize: '10px', color: '#3B82F6', marginLeft: '6px', fontWeight: 700 } }, 'TEAMMATE') : null,
+                                    ),
+                                    h('div', { style: { fontSize: '12px', color: '#64748B' } }, d.currentTeam || ''),
+                                ),
+                                h('span', { style: { fontSize: '11px', color: col, fontWeight: 700 } }, d.source === 'known' ? 'KNOWN' : 'GEN'),
+                            );
+                        }),
+                    ),
+                ));
+
+                return f;
+            }
+
+            // ── REGULAR ROSTER VIEW ───────────────────────────────────────────────────
+            if (!upcomingPremier) {
+                f.appendChild(h('div', { className: 'page-sub' }, ''));
             }
 
             G.contracts.forEach(function (contract) {
@@ -6625,6 +6839,7 @@
         }
 
         let activeTab = 'dashboard';
+        let rosterView = 'regular'; // 'regular' | 'premier'
 
         // ─── DOM HELPERS ─────────────────────────────────────────────────────────────
         function h(tag, attrs, ...children) {
@@ -11672,26 +11887,109 @@
             // Show pre-race condition card briefly, then open result modal
             if (cond) {
                 const s = getSeries(seriesId);
+                const isPremier = !!(race && race.isPremier);
+
+                // Premier event: generate guest field for roster card
+                let premierGuestNames = [];
+                if (isPremier) {
+                    const regularNames = new Set(
+                        (G.drivers || [])
+                            .filter(d => d.active && d.currentSeriesId === seriesId)
+                            .map(d => d.name.toLowerCase())
+                    );
+                    // Pull known drivers from one tier higher for guest flavor
+                    const guestPool = (G.drivers || []).filter(d =>
+                        d.source === 'known' && d.active &&
+                        !regularNames.has(d.name.toLowerCase())
+                    );
+                    // Shuffle and take up to 8 guest names
+                    const shuffledGuests = guestPool.sort(() => Math.random() - 0.5);
+                    premierGuestNames = shuffledGuests.slice(0, Math.min(8, shuffledGuests.length)).map(d => d.name);
+                    // Pad with generated names if needed
+                    while (premierGuestNames.length < 5) {
+                        let name = generateAIName();
+                        let tries = 0;
+                        while (premierGuestNames.includes(name) && tries < 50) { name = generateAIName(); tries++; }
+                        premierGuestNames.push(name);
+                    }
+                }
+
                 openModal(h('div', {},
+                    // Premier banner
+                    isPremier ? h('div', {
+                        style: {
+                            background: 'linear-gradient(135deg, #78350F, #92400E)',
+                            border: '1px solid #F59E0B',
+                            borderRadius: '8px',
+                            padding: '10px 14px',
+                            marginBottom: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                        }
+                    },
+                        h('div', { style: { fontSize: '24px' } }, '⭐'),
+                        h('div', null,
+                            h('div', { style: { fontSize: '13px', fontWeight: 900, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.15em' } }, 'Premier Event'),
+                            h('div', { style: { fontSize: '15px', fontWeight: 800, color: '#FDE68A' } }, race.premierName),
+                            h('div', { style: { fontSize: '13px', color: '#D97706' } }, `${race.premierLaps} laps · Double points · Expanded field`),
+                        ),
+                    ) : null,
+
                     h('div', { className: 'modal-eyebrow' }, `${(s && s.short) || ''} Round ${(race && race.round) || ''} — Race Day`),
-                    h('div', { className: 'modal-title' }, (race && race.track) || ''),
-                    h('div', { className: 'modal-sub' }, `${(race && race.city) || ''}, ${(race && race.state) || ''}`),
-                    h('div', { style: { textAlign: 'center', padding: '20px 0' } },
-                        h('div', { style: { fontSize: '64px', marginBottom: '8px' } }, cond.icon),
+                    h('div', { className: 'modal-title' }, isPremier ? race.premierName : (race && race.track) || ''),
+                    h('div', { className: 'modal-sub' }, `${(race && race.track) || ''} · ${(race && race.city) || ''}, ${(race && race.state) || ''}`),
+
+                    // Premier roster card
+                    isPremier ? h('div', {
+                        style: {
+                            background: '#060A10',
+                            border: '1px solid #F59E0B33',
+                            borderRadius: '8px',
+                            padding: '12px 14px',
+                            marginBottom: '14px',
+                        }
+                    },
+                        h('div', { style: { fontSize: '11px', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '8px' } }, '📋 Guest Entries — Add to iRacing Roster'),
+                        h('div', { style: { fontSize: '13px', color: '#94A3B8', marginBottom: '8px', lineHeight: '1.5' } },
+                            'These drivers are entered for this event only. Add them to your iRacing AI roster before starting. Remove them after the race.'
+                        ),
+                        h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } },
+                            ...premierGuestNames.map(name =>
+                                h('span', {
+                                    style: {
+                                        background: '#F59E0B18',
+                                        border: '1px solid #F59E0B44',
+                                        borderRadius: '4px',
+                                        padding: '3px 9px',
+                                        fontSize: '13px',
+                                        fontWeight: 700,
+                                        color: '#FDE68A',
+                                    }
+                                }, name)
+                            )
+                        ),
+                        h('div', { style: { fontSize: '12px', color: '#64748B', marginTop: '8px' } },
+                            'Field is larger this week. Use a higher skill range for guest drivers in iRacing AI settings.'
+                        ),
+                    ) : null,
+
+                    h('div', { style: { textAlign: 'center', padding: isPremier ? '12px 0' : '20px 0' } },
+                        h('div', { style: { fontSize: isPremier ? '40px' : '64px', marginBottom: '8px' } }, cond.icon),
                         conditionBadge(cond.id),
                         h('div', { style: { fontSize: '14px', color: '#CBD5E1', marginTop: '10px', fontFamily: 'sans-serif', lineHeight: '1.5' } }, cond.desc),
                         cond.prizeMult < 1 ? h('div', { style: { fontSize: '14px', color: '#F59E0B', marginTop: '6px' } }, `⚠️ Shortened race — prize money and points at ${Math.round(cond.prizeMult * 100)}%`) : null,
                         cond.fanBonus > 0 ? h('div', { style: { fontSize: '14px', color: '#EC4899', marginTop: '4px' } }, `+${fmtFans(cond.fanBonus)} fan bonus for racing in these conditions`) : null,
                     ),
                     h('div', { className: 'modal-actions' },
-                        mkBtn('Let\'s Race →', 'btn btn-lg btn-primary', () => {
+                        mkBtn(isPremier ? '⭐ Race Day →' : 'Let\'s Race →', 'btn btn-lg btn-primary', () => {
                             try {
                                 closeModal();
                                 if (race) race._pendingCondition = { cond, prizeMult: cond.prizeMult, fanBonus: cond.fanBonus };
                                 _origOpenRaceModal(seriesId, raceIdx);
                             } catch (err) {
                                 console.error('Let\'s Race error:', err);
-                                alert('Error opening race modal:\n' + err.message + '\n\nLine: ' + (err.stack || '').split('\n')[1]);
+                                alert('Error opening race modal:\\n' + err.message + '\\n\\nLine: ' + (err.stack || '').split('\\n')[1]);
                             }
                         })
                     )
