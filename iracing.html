@@ -4135,26 +4135,63 @@
                 careerHistory: [],
                 aliases: [],
                 homeState: randomHomeState(),
-                // AI Racing stats
-                aiStats: {
-                    relativeSkill: rand(30, 70),
-                    aggression: rand(20, 80),
-                    optimism: rand(30, 70),
-                    smoothness: rand(30, 70),
-                    age: rand(18, 45),
-                    pitCrewSkill: rand(30, 70),
-                    pittingRisk: rand(20, 60),
-                },
+                // AI Racing stats — weighted toward realistic means per driver tier
+                // Uses a normal-ish distribution: mean ± spread, clamped 0-100
+                aiStats: (() => {
+                    function wrand(mean, spread) {
+                        // Average of two rand calls gives a bell-curve lean toward mean
+                        return clamp(Math.round((rand(mean - spread, mean + spread) + rand(mean - spread, mean + spread)) / 2), 0, 100);
+                    }
+                    // Tier determines competitive level: 1-2 local, 3 regional, 4+ national
+                    const topField    = tier >= 4;
+                    const midField    = tier === 3 || tier === 2;
+                    // ~30% top drivers, ~50% mid-pack, ~20% backmarkers within any field
+                    const roll = Math.random();
+                    const level = topField
+                        ? (roll < 0.25 ? 'top' : roll < 0.80 ? 'mid' : 'back')
+                        : midField
+                            ? (roll < 0.15 ? 'top' : roll < 0.70 ? 'mid' : 'back')
+                            : (roll < 0.10 ? 'top' : roll < 0.55 ? 'mid' : 'back');
+                    const profiles = {
+                        top:  { rs: 90, ag: 80, op: 77, sm: 65, spread: 8 },
+                        mid:  { rs: 77, ag: 72, op: 70, sm: 52, spread: 10 },
+                        back: { rs: 62, ag: 77, op: 77, sm: 42, spread: 12 },
+                    };
+                    const p = profiles[level];
+                    return {
+                        relativeSkill: wrand(p.rs, p.spread),
+                        aggression:    wrand(p.ag, p.spread),
+                        optimism:      wrand(p.op, p.spread),
+                        smoothness:    wrand(p.sm, p.spread),
+                        age:           rand(18, 45),
+                        pitCrewSkill:  topField ? wrand(72, 12) : wrand(55, 15),
+                        pittingRisk:   level === 'back' ? wrand(60, 15) : wrand(40, 15),
+                        _level: level,
+                    };
+                })(),
                 carNumber: (() => {
+                    const resolvedSeries = seriesId || 'mini_stock';
+                    const resolvedTier   = (getSeries(resolvedSeries) && getSeries(resolvedSeries).tier) || 1;
                     const taken = new Set((typeof G !== 'undefined' && G && G.drivers ? G.drivers : [])
-                        .filter(function (d) { return d.currentSeriesId === (seriesId || 'mini_stock') && d.carNumber; })
+                        .filter(function (d) { return d.currentSeriesId === resolvedSeries && d.carNumber; })
                         .map(function (d) { return String(d.carNumber); }));
+                    // Tier 1-2 local: allow suffixes X, A, B, 0-prefix (e.g. 03, 3X)
+                    // Tier 3+: plain numbers only
+                    const useSuffixes = resolvedTier <= 2;
+                    const suffixes = ['', '', '', '', 'X', 'A', 'B', '0']; // weighted toward plain
                     let num;
                     let tries = 0;
                     do {
-                        num = String(rand(1, 99));
+                        const base = rand(1, 99);
+                        if (useSuffixes && tries > 30) {
+                            // Plain numbers exhausted — try suffixed
+                            const suffix = suffixes[rand(1, suffixes.length - 1)];
+                            num = suffix === '0' ? '0' + String(base) : String(base) + suffix;
+                        } else {
+                            num = String(base);
+                        }
                         tries++;
-                    } while (taken.has(num) && tries < 200);
+                    } while (taken.has(num) && tries < 300);
                     return num;
                 })(),
                 _carNumberSeniority: 0,
@@ -4204,7 +4241,10 @@
                 for (let i = 0; i < count; i++) {
                     let name = generateAIName();
                     while (drivers.find(d => d.name === name)) name = generateAIName();
-                    drivers.push(createDriver(name, rand(25, 85), s.id, 'generated'));
+                    // Skill range scales with series tier — higher tiers have a tighter, better baseline
+                    const skillMin = Math.min(30 + s.tier * 5, 55);
+                    const skillMax = Math.min(55 + s.tier * 7, 92);
+                    drivers.push(createDriver(name, rand(skillMin, skillMax), s.id, 'generated'));
                 }
             });
             return drivers;
@@ -4919,9 +4959,18 @@
         // ─── PRIZE MONEY ─────────────────────────────────────────────────────────────
         function calcPrize(seriesId, pos, fs) {
             const s = getSeries(seriesId);
-            if (pos === 1) return s.pay + s.winBonus;
-            const pct = Math.max(0.10, 0.70 - ((pos - 2) / (fs - 2)) * 0.60);
-            return Math.floor(s.pay * pct);
+            // Pool = entry fees from the whole field, supplemented by promoter/purse money
+            // s.pay represents the promoter's base purse per car equivalent
+            const pool = s.fee * Math.max(fs, 10) + s.pay * Math.max(fs, 10) * 0.5;
+            if (pos === 1) return Math.floor(pool * 0.18 + s.winBonus);
+            // Descending share: P2=12%, P3=9%, tapering to ~1% at last place
+            // Each position gets a diminishing share of the pool
+            const topShare   = 0.18;  // P1 already paid above
+            const remaining  = 1.0 - topShare;
+            const decay      = Math.pow(remaining, 1 / Math.max(fs - 1, 1));
+            // Simple geometric-ish taper: pct drops by ~(0.60 / field) per position
+            const pct = Math.max(0.008, 0.12 - ((pos - 2) / (Math.max(fs - 2, 1))) * 0.11);
+            return Math.floor(pool * pct);
         }
 
         // ─── AI RIVALRY SEEDING ──────────────────────────────────────────────────────
@@ -5320,6 +5369,20 @@
             const entryFee = contract ? (contract.entryFee || s.fee) : s.fee;
             state.money -= entryFee;
             addLog(state, `🎟️ Entry fee @ ${race.track}: -${fmtMoney(entryFee)}`);
+
+            // Sponsor per-race payments
+            let sponsorRaceIncome = 0;
+            state.sponsors.forEach(function (sp) {
+                if (!sp.valuePerRace) {
+                    const sr = getSeries(sp.seriesId);
+                    sp.valuePerRace = Math.floor(sp.valuePerSeason / Math.max(sr ? sr.races : 10, 1));
+                }
+                const payment = Math.floor(sp.valuePerRace * (sp.happiness / 100) * randF(0.85, 1.15));
+                state.money += payment;
+                state.totalPrizeMoney += payment;
+                sponsorRaceIncome += payment;
+            });
+            if (sponsorRaceIncome > 0) addLog(state, `💼 Sponsor payments: +${fmtMoney(sponsorRaceIncome)}`);
 
             // Prize money — apply team's prize share split (indie keeps 100%)
             const prizeShare = (contract && !contract.indie && contract.prizeShare) ? contract.prizeShare : 1.0;
@@ -6117,13 +6180,19 @@
                     if (age < 25 && d.skill < 85) d.skill = Math.min(85, d.skill + rand(0, 1));
                 }
 
-                // Promotion/demotion
+                // Promotion/demotion — weighted by rep, results, consistency, and skill
                 const nextSeries = SERIES.find(ns => ns.tier === s.tier + 1);
                 const prevSeries = SERIES.find(ps => ps.tier === s.tier - 1);
-                if (nextSeries && d.rep >= nextSeries.reqRep && d.fans >= nextSeries.reqFans && skillRoll > 65 && d.skill >= (40 + (nextSeries.tier * 5)) && Math.random() < 0.3) {
-
+                // Consistency score: based on aiStats smoothness and optimism (lower spread = more consistent)
+                const consistencyScore = d.aiStats ? ((d.aiStats.smoothness || 50) + (100 - (d.aiStats.pittingRisk || 50))) / 2 : 50;
+                // Composite promotion score — needs strong results AND rep AND consistency
+                const promotionScore = (skillRoll * 0.5) + (d.rep / Math.max(nextSeries ? nextSeries.reqRep : 100, 1) * 30) + (consistencyScore * 0.2);
+                const demotionScore  = (skillRoll * 0.5) + (d.rep / Math.max(s.reqRep || 1, 1) * 30) + (consistencyScore * 0.2);
+                const promoteChance  = promotionScore > 85 ? 0.35 : promotionScore > 75 ? 0.20 : promotionScore > 65 ? 0.10 : 0.03;
+                const demoteChance   = demotionScore  < 30 ? 0.30 : demotionScore  < 45 ? 0.15 : 0.04;
+                if (nextSeries && d.rep >= nextSeries.reqRep && d.fans >= nextSeries.reqFans && skillRoll > 60 && d.skill >= (40 + (nextSeries.tier * 5)) && Math.random() < promoteChance) {
                     promotions.push({ driver: d, from: s.id, to: nextSeries.id });
-                } else if (prevSeries && d.rep < s.reqRep * 0.6 && skillRoll < 40 && Math.random() < 0.2) {
+                } else if (prevSeries && d.rep < s.reqRep * 0.6 && skillRoll < 45 && Math.random() < demoteChance) {
                     demotions.push({ driver: d, from: s.id, to: prevSeries.id });
                 }
             });
@@ -6685,10 +6754,13 @@
             const aiNews = simulateAISeasons(state);
             state._lastSeasonAiNews = aiNews || { promotions: [], demotions: [] };
             // Car number conflict resolution for national series
+            // Only notify player if the conflict is in a series they race in
+            const playerSeriesIds = new Set((state.contracts || []).map(function (c) { return c.seriesId; }));
             SERIES.filter(function (s) { return s.tier >= 4; }).forEach(function (s) {
                 const conflicts = resolveCarNumberConflicts(s.id);
                 conflicts.forEach(function (c) {
                     addLog(state, '🔢 Car number conflict: ' + c.driver + ' lost #' + c.hadNumber + ' to ' + c.keeperName + ' — assign new number');
+                    if (!playerSeriesIds.has(s.id)) return; // silent for series player isn't in
                     state.dramaQueue.push({
                         id: 'carnumber_' + uid(),
                         title: '🔢 Car Number Conflict — ' + c.driver,
@@ -9985,11 +10057,17 @@
 
         // ─── SPONSOR ACTIONS ─────────────────────────────────────────────────────────
         function doSignSponsor(sp) {
+            // Convert season value to per-race payment stored on the sponsor object
+            const s = getSeries(sp.seriesId);
+            const races = s ? s.races : 10;
+            sp.valuePerRace = sp.valuePerRace || Math.floor(sp.valuePerSeason / Math.max(races, 1));
             G.sponsors.push(sp);
             G.sponsorOffers = G.sponsorOffers.filter(s => s.id !== sp.id);
-            G.money += sp.valuePerSeason;
-            G.totalPrizeMoney += sp.valuePerSeason;
-            addLog(G, `🤝 Signed ${sp.brand} (${sp.type}) — ${fmtMoney(sp.valuePerSeason)}/season for ${sp.seasonsLeft} season(s).`);
+            // Small signing advance — 1 race worth, not the whole season
+            const advance = sp.valuePerRace;
+            G.money += advance;
+            G.totalPrizeMoney += advance;
+            addLog(G, `🤝 Signed ${sp.brand} (${sp.type}) — ${fmtMoney(sp.valuePerRace)}/race · ${fmtMoney(sp.valuePerSeason)}/season · ${sp.seasonsLeft} season(s). Advance: ${fmtMoney(advance)}.`);
             saveGame(); render();
         }
 
