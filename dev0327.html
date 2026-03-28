@@ -1072,13 +1072,13 @@
 
         // ─── SERIES LADDER ───────────────────────────────────────────────────────────
         const SERIES = [
-            { id: 'mini_stock', name: 'Mini Stock Series', short: 'Mini Stock', tier: 1, races: 10, pay: 120, winBonus: 600, reqRep: 0, reqFans: 0, color: '#8B5CF6', maxTerm: 1, maxTm: 1, fee: 120, desc: 'Four cylinders, 200 horses, zero dignity. Everyone starts here.' },
-            { id: 'street_stock', name: 'Street Stock Series', short: 'Street Stock', tier: 2, races: 12, pay: 280, winBonus: 1200, reqRep: 35, reqFans: 200, color: '#3B82F6', maxTerm: 1, maxTm: 1, fee: 250, desc: 'A step up. Same chaos, slightly more horsepower.' },
-            { id: 'late_model_stock', name: 'Late Model Stock Tour', short: 'Late Model', tier: 3, races: 16, pay: 1800, winBonus: 7000, reqRep: 80, reqFans: 800, color: '#10B981', maxTerm: 1, maxTm: 2, fee: 1000, desc: '500hp V8, real money, real sponsor pressure.' },
+            { id: 'mini_stock', name: 'Mini Stock Series', short: 'Mini Stock', tier: 1, races: 16, pay: 120, winBonus: 600, reqRep: 0, reqFans: 0, color: '#8B5CF6', maxTerm: 1, maxTm: 1, fee: 120, desc: 'Four cylinders, 200 horses, zero dignity. Everyone starts here.' },
+            { id: 'street_stock', name: 'Street Stock Series', short: 'Street Stock', tier: 2, races: 18, pay: 280, winBonus: 1200, reqRep: 35, reqFans: 200, color: '#3B82F6', maxTerm: 1, maxTm: 1, fee: 250, desc: 'A step up. Same chaos, slightly more horsepower.' },
+            { id: 'late_model_stock', name: 'Late Model Stock Tour', short: 'Late Model', tier: 3, races: 22, pay: 1800, winBonus: 7000, reqRep: 80, reqFans: 800, color: '#10B981', maxTerm: 1, maxTm: 2, fee: 1000, desc: '500hp V8, real money, real sponsor pressure.' },
             { id: 'arca_menards', name: 'ARCA Menards Series', short: 'ARCA', tier: 4, races: 20, pay: 12000, winBonus: 35000, reqRep: 130, reqFans: 3000, color: '#F59E0B', maxTerm: 2, maxTm: 2, fee: 4000, desc: 'National TV. NASCAR scouts in the grandstands.' },
             { id: 'nascar_trucks', name: 'NASCAR Craftsman Truck Series', short: 'Trucks', tier: 5, races: 23, pay: 25000, winBonus: 90000, reqRep: 180, reqFans: 12000, color: '#EF4444', maxTerm: 2, maxTm: 3, fee: 15000, desc: "NASCAR proper. Don't blow it on a lapped car." },
             { id: 'nascar_xfinity', name: 'NASCAR Xfinity Series', short: 'Xfinity', tier: 6, races: 33, pay: 75000, winBonus: 250000, reqRep: 240, reqFans: 55000, color: '#06B6D4', maxTerm: 3, maxTm: 3, fee: 35000, desc: 'One rung from the Cup. Every lap is an audition.' },
-            { id: 'super_late_model', name: 'Super Late Model Tour', short: 'Super Late', tier: 2, races: 14, pay: 800, winBonus: 4000, reqRep: 50, reqFans: 350, color: '#F97316', maxTerm: 1, maxTm: 2, fee: 400, desc: 'Full-fendered asphalt rockets. Faster than street stock, a stepping stone to the big money.' },
+            { id: 'super_late_model', name: 'Super Late Model Tour', short: 'Super Late', tier: 2, races: 18, pay: 800, winBonus: 4000, reqRep: 50, reqFans: 350, color: '#F97316', maxTerm: 1, maxTm: 2, fee: 400, desc: 'Full-fendered asphalt rockets. Faster than street stock, a stepping stone to the big money.' },
             { id: 'nascar_cup', name: 'NASCAR Cup Series', short: 'Cup Series', tier: 7, races: 36, pay: 200000, winBonus: 1000000, reqRep: 320, reqFans: 200000, color: '#EC4899', maxTerm: 3, maxTm: 3, fee: 80000, desc: "The pinnacle. Don't fuck it up." },
         ];
         function getSeries(id) { return SERIES.find(s => s.id === id); }
@@ -1193,7 +1193,9 @@
             { id: 'le_mans_am', name: 'Le Mans Am Class Entry', track: 'Circuit de la Sarthe', location: 'Le Mans, France', travelCost: 7000, entryCost: 12000, fanGain: 5000, prize: 8000, reqRep: 100, reqFans: 20000, sponsorChance: 0.25, carType: 'GT3', multiClass: true, desc: 'Le Mans. Multiple classes on track. Massive worldwide exposure.' },
             { id: 'spa_invitational', name: 'Spa Invitational GT', track: 'Circuit de Spa-Francorchamps', location: 'Spa, Belgium', travelCost: 6500, entryCost: 7000, fanGain: 2500, prize: 6000, reqRep: 90, reqFans: 15000, sponsorChance: 0.18, carType: 'GT4', multiClass: true, desc: "Eau Rouge. Raidillon. Your sponsor's European dreams come true." },
             { id: 'suzuka_challenge', name: 'Suzuka International Challenge', track: 'Suzuka Circuit', location: 'Suzuka, Japan', travelCost: 8000, entryCost: 6000, fanGain: 2000, prize: 5000, reqRep: 85, reqFans: 12000, sponsorChance: 0.15, carType: 'Touring Car', multiClass: false, desc: 'Japan. The figure-8 circuit. Your American fans will be confused.' },
-            { id: 'slinger_fig8', name: 'Slinger Figure-8 Open', track: 'Slinger Speedway', location: 'Slinger, WI', travelCost: 0, entryCost: 150, fanGain: 200, prize: 300, reqRep: 0, reqFans: 0, sponsorChance: 0, carType: 'Mini Stock', multiClass: false, fig8: true, desc: 'Pure chaos. The intersection awaits. No rivalries. No regrets.' },
+                        { id: 'slinger_fig8', name: 'Slinger Figure-8 Open', track: 'Slinger Speedway', location: 'Slinger, WI', travelCost: 0, entryCost: 150, fanGain: 200, prize: 300, reqRep: 0, reqFans: 0, sponsorChance: 0, carType: 'Mini Stock', multiClass: false, fig8: true, desc: 'Pure chaos. The intersection awaits. No rivalries. No regrets.' },
+            { id: 'oxford_250', name: 'Oxford 250', track: 'Oxford Plains Speedway', location: 'Oxford, ME', travelCost: 0, entryCost: 800, fanGain: 600, prize: 2500, reqRep: 15, reqFans: 0, sponsorChance: 0.08, carType: 'Mini Stock / Street Stock', multiClass: false, invite: true, inviteTier: [1, 2], desc: 'The Oxford 250 is one of the most prestigious short-track events in New England. Sponsor-covered entry or buy-in. Points count if you\'re contracted to the series; otherwise it\'s glory, money, and bragging rights.' },
+            { id: 'slinger_nationals', name: 'Slinger Nationals 200', track: 'Slinger Speedway', location: 'Slinger, WI', travelCost: 200, entryCost: 600, fanGain: 800, prize: 4000, reqRep: 20, reqFans: 0, sponsorChance: 0.10, carType: 'Super Late Model', multiClass: false, invite: true, inviteTier: [2, 3], desc: 'The Slinger Nationals draws the best short-track talent in the Midwest. Sponsor can cover entry. A win here travels. Points count if you\'re already running the series.' },
             { id: 'mini_exhibition', name: 'Mini Stock Local Night', track: 'South Boston Speedway', location: 'South Boston, VA', travelCost: 0, entryCost: 250, fanGain: 150, prize: 500, reqRep: 0, reqFans: 0, sponsorChance: 0, carType: 'Mini Stock', multiClass: false, desc: 'A local night race. Low stakes, good practice.' },
             { id: 'street_exhibition', name: 'Street Stock Grudge Night', track: 'Slinger Speedway', location: 'Slinger, WI', travelCost: 0, entryCost: 400, fanGain: 250, prize: 800, reqRep: 0, reqFans: 0, sponsorChance: 0, carType: 'Street Stock', multiClass: false, desc: 'Grudge night at Slinger. Everyone has a score to settle.' },
         ];
@@ -2128,6 +2130,147 @@
 
             addLog(state, `👀 Trade rumor: ${team} (${targetSeries.short}) asking about ${state.driverName}`);
         }
+                        function maybeFirePostRaceInspection(state, seriesId, result) {
+            // ~6% chance per race of a post-race technical issue affecting one car
+            if (Math.random() > 0.06) return;
+            if (result.dnf || result.dq) return; // already a bad night
+            const order = result.finishOrder || [];
+            if (order.length < 3) return;
+
+            // Target: winner or top 3 (most inspected), player occasionally caught too
+            const dqPool = order.slice(0, Math.min(5, order.length));
+            const target = dqPool[rand(0, dqPool.length - 1)];
+            if (!target || !target.name) return;
+
+            const isPlayer = target.isPlayer || /\byou\b/i.test(target.name) ||
+                target.name.toLowerCase() === state.driverName.toLowerCase();
+
+            const infractions = [
+                'fuel sample failed post-race inspection',
+                'front splitter found to be out of spec',
+                'carburetor exceeded allowable CFM rating',
+                'ride height violation discovered post-race',
+                'weight was short after the race',
+                'ballast mounting did not comply with the rulebook',
+                'engine failed to pass the post-race teardown',
+                'tire compound not on the approved list',
+            ];
+            const infraction = infractions[rand(0, infractions.length - 1)];
+            const pos = order.indexOf(target) + 1;
+
+            if (isPlayer) {
+                // Player DQ'd — serious
+                state.dramaQueue.push({
+                    id: 'inspect_dq_player_' + uid(),
+                    title: '🚫 Post-Race DQ — Technical Infraction',
+                    effect: 'rep_hit', value: -4, fans: -150,
+                    desc: `Post-race inspection at ${(state.schedules[seriesId] || [])[0] ? '' : ''}the track came back with a finding: ${infraction}. Your P${pos} result has been disqualified. Points and prize money are forfeited. Rep -4.`,
+                    valence: 'bad',
+                });
+                // Strip points and prize from this race
+                const pts = result.points || 0;
+                state.championshipPoints[seriesId] = Math.max(0, (state.championshipPoints[seriesId] || 0) - pts);
+                const prizeShare = 1.0; // already paid, reversed
+                state.money = Math.max(0, state.money - Math.floor((result.prize || 0) * prizeShare));
+                state.reputation = Math.max(0, state.reputation - 4);
+                state.fans = Math.max(0, state.fans - 150);
+                addLog(state, `🚫 Player DQ'd post-race: ${infraction}`);
+            } else {
+                // Another driver DQ'd — interesting paddock news
+                const isRival = (state.rivals || []).some(function(r) {
+                    return r.name.toLowerCase() === target.name.toLowerCase() &&
+                        ['rival', 'frenemy'].includes(r.relationship || '');
+                });
+                // If it's the winner, promote the player one spot in the field standings
+                if (pos === 1 && !isPlayer) {
+                    const playerIdx = order.findIndex(function(e) {
+                        return e.isPlayer || /\byou\b/i.test(e.name) ||
+                            e.name.toLowerCase() === state.driverName.toLowerCase();
+                    });
+                    if (playerIdx === 1) {
+                        // Player was P2, now inherits win — add bonus points/prize
+                        state.championshipPoints[seriesId] = (state.championshipPoints[seriesId] || 0) + 3;
+                        state.wins++;
+                        addLog(state, `🏆 ${target.name} DQ'd from P1 — ${state.driverName} inherits the win. +3 pts.`);
+                    }
+                }
+                // Update standings — remove DQ'd driver's points for this race
+                if (state.seriesFields[seriesId] && state.seriesFields[seriesId][target.name]) {
+                    const fieldPts = IRACING_PTS[order.indexOf(target)] || 1;
+                    state.seriesFields[seriesId][target.name].points = Math.max(0,
+                        (state.seriesFields[seriesId][target.name].points || 0) - fieldPts
+                    );
+                    if (pos === 1) state.seriesFields[seriesId][target.name].wins = Math.max(0,
+                        (state.seriesFields[seriesId][target.name].wins || 0) - 1
+                    );
+                }
+                state.dramaQueue.push({
+                    id: 'inspect_dq_ai_' + uid(),
+                    title: `${target.name} DQ'd — Tech Inspection`,
+                    effect: 'none',
+                    desc: `${target.name}'s P${pos} result was wiped out in post-race inspection: ${infraction}. The stewards made it official after the cars left the tech shed. Championship points adjusted.${isRival ? ' Your rival took the hit.' : ''}`,
+                    valence: isRival ? 'good' : 'neutral',
+                });
+            }
+        }
+
+        function maybeFireSpecialInvite(state) {
+            // ~15% chance per race, only fires once per event per season
+            if (Math.random() > 0.15) return;
+            const inviteEvents = SPECIAL_EVENTS.filter(function(e) { return e.invite; });
+            if (!inviteEvents.length) return;
+
+            const playerTier = Math.max(1, ...(state.contracts || []).map(function(c) {
+                return (getSeries(c.seriesId) && getSeries(c.seriesId).tier) || 1;
+            }));
+
+            const eligible = inviteEvents.filter(function(e) {
+                const alreadyFired = (state.offTrackDone || []).includes('invite_' + e.id + '_s' + state.season);
+                const tierMatch = !e.inviteTier || e.inviteTier.includes(playerTier);
+                const repOk = state.reputation >= (e.reqRep || 0);
+                return !alreadyFired && tierMatch && repOk;
+            });
+            if (!eligible.length) return;
+
+            const evt = eligible[rand(0, eligible.length - 1)];
+            if (!state.offTrackDone) state.offTrackDone = [];
+            state.offTrackDone.push('invite_' + evt.id + '_s' + state.season);
+
+            // Check if a sponsor will cover entry
+            const hasSponsor = (state.sponsors || []).some(function(sp) { return sp.happiness >= 60; });
+            const sponsorCovers = hasSponsor && Math.random() < (evt.sponsorChance || 0.08);
+            const totalCost = sponsorCovers ? 0 : (evt.travelCost || 0) + evt.entryCost;
+            const sponsorName = sponsorCovers
+                ? ((state.sponsors || []).find(function(sp) { return sp.happiness >= 60; }) || {}).brand || 'your sponsor'
+                : null;
+
+            const playerInSeries = (state.contracts || []).some(function(c) {
+                return evt.inviteTier && evt.inviteTier.includes((getSeries(c.seriesId) && getSeries(c.seriesId).tier) || 0);
+            });
+
+            const costDesc = sponsorCovers
+                ? sponsorName + ' is covering the entry fee.'
+                : `Entry costs ${fmtMoney(totalCost)} out of pocket.`;
+
+            const pointsDesc = playerInSeries
+                ? 'Points count — you\'re already racing this tier.'
+                : 'No championship points, but the prize money and fans are real.';
+
+            state.dramaQueue.push({
+                id: 'invite_' + evt.id + '_' + uid(),
+                title: '📬 Invitation — ' + evt.name,
+                effect: 'none',
+                desc: `An invite came through for the ${evt.name} at ${evt.location}. ${evt.desc} ${costDesc} ${pointsDesc}`,
+                valence: 'good',
+                _isInvite: true,
+                _inviteEvtId: evt.id,
+                _inviteCost: totalCost,
+                _inviteSponsorCovers: sponsorCovers,
+                _inviteSponsorName: sponsorName,
+                _invitePointsCount: playerInSeries,
+            });
+        }
+
         function maybeFireSponsorActivation(state) {
             if (!(state.sponsors || []).length) return;
             if (Math.random() > 0.18) return; // ~18% chance per race
@@ -3534,14 +3677,18 @@ const AI_FIRST_FEMALE = [
         }
 
         // ─── SCHEDULE GENERATION ─────────────────────────────────────────────────────
-        function generateSchedule(seriesId, trackPools) {
+                function generateSchedule(seriesId, trackPools) {
             const s = getSeries(seriesId);
             const tier = s ? s.tier : 1;
 
+            const _tp = (typeof G !== 'undefined' && G && G.trackPools) ? G.trackPools : (trackPools || {});
+            const userFree = (_tp.free && _tp.free.length > 0) ? _tp.free : null;
+            const userPaid = (_tp.paid && _tp.paid.length > 0) ? _tp.paid : null;
+
             let pool;
-            if (tier <= 2) pool = SERIES_TRACKS.local;
+            if (tier <= 2) pool = userFree || SERIES_TRACKS.local;
             else if (tier === 3) pool = SERIES_TRACKS.regional;
-            else if (tier <= 5) pool = SERIES_TRACKS.national;
+            else if (tier <= 5) pool = userPaid || SERIES_TRACKS.national;
             else pool = SERIES_TRACKS.cup;
 
             const rest = pool.filter(function (t) { return !t.fig8; });
@@ -3864,6 +4011,36 @@ const AI_FIRST_FEMALE = [
                         h('div', { style: { fontSize: '13px', color: '#64748B', marginBottom: '8px' } }, 'How do you respond to ' + (d._calloutDriver || 'them') + '?'),
                         h('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } }, ...btns)
                     ));
+                                } else if (d._isInvite) {
+                    const canAfford = G.money >= (d._inviteCost || 0);
+                    banner.appendChild(h('div', { style: { display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' } },
+                        mkBtn('Decline', 'btn btn-sm btn-ghost', function() {
+                            var idx = G.dramaQueue.findIndex(function(x) { return x.id === d.id; });
+                            if (idx >= 0) G.dramaQueue.splice(idx, 1);
+                            addLog(G, '📬 Declined invite: ' + d.title);
+                            saveGame(); render();
+                        }),
+                        mkBtn(
+                            d._inviteSponsorCovers ? '🏎️ Accept — Sponsor Covers Entry' : canAfford ? ('🏎️ Accept — ' + fmtMoney(d._inviteCost || 0)) : ('Need ' + fmtMoney((d._inviteCost || 0) - G.money) + ' more'),
+                            'btn btn-sm btn-primary',
+                            function() {
+                                var evt = SPECIAL_EVENTS.find(function(e) { return e.id === d._inviteEvtId; });
+                                if (!evt) return;
+                                if (!d._inviteSponsorCovers && G.money < (d._inviteCost || 0)) return;
+                                var idx = G.dramaQueue.findIndex(function(x) { return x.id === d.id; });
+                                if (idx >= 0) G.dramaQueue.splice(idx, 1);
+                                if (d._inviteSponsorCovers && d._inviteSponsorName) {
+                                    var sp = (G.sponsors || []).find(function(s) { return s.brand === d._inviteSponsorName; });
+                                    if (sp) sp.happiness = Math.min(100, sp.happiness + 8);
+                                    addLog(G, '🤝 ' + d._inviteSponsorName + ' covered entry for ' + evt.name);
+                                }
+                                var totalCost = d._inviteSponsorCovers ? 0 : (d._inviteCost || 0);
+                                saveGame();
+                                openSpecialInviteModal(evt, totalCost, d._invitePointsCount);
+                            },
+                            !d._inviteSponsorCovers && !canAfford
+                        ),
+                    ));
                 } else {
                     banner.appendChild(h('div', { style: { textAlign: 'right' } },
                         mkBtn('Dismiss', 'btn btn-sm btn-primary', function () {
@@ -3873,7 +4050,7 @@ const AI_FIRST_FEMALE = [
                     ));
                 }
                 f.appendChild(banner);
-            });
+});
             return f;
         }
         // ─── ROSTER ──────────────────────────────────────────────────────────────────
@@ -4336,11 +4513,14 @@ const AI_FIRST_FEMALE = [
                     } while (taken.has(num) && tries < 300);
                     return num;
                 })(),
-                _carNumberSeniority: 0,
+                                _carNumberSeniority: 0,
+                attendanceRate: Math.random() < 0.75
+                    ? randF(0.80, 0.95)
+                    : randF(0.50, 0.75),
             };
         }
-        function resolveCarNumberConflicts(seriesId) {
-            const drivers = (G.drivers || []).filter(function (d) {
+        function resolveCarNumberConflicts
+        const drivers = (G.drivers || []).filter(function (d) {
                 return d.active && d.currentSeriesId === seriesId && d.carNumber;
             });
             const byNumber = {};
@@ -5530,9 +5710,10 @@ const AI_FIRST_FEMALE = [
                 return;
             }
 
-            race.result = result;
-            // Premier event modifiers — double points, prize already set from race modal
-            if (race.isPremier && !result.dnf && !result.dq) {
+                        race.result = result;
+            result._submitTime = Date.now();
+            // Premier event modifiers
+       if (race.isPremier && !result.dnf && !result.dq) {
                 result.points = (result.points || 0) * 2;
                 state.dramaQueue.push({
                     id: 'premier_' + uid(),
@@ -5983,7 +6164,9 @@ const AI_FIRST_FEMALE = [
             maybeFireRivalWin(state, seriesId, result);
             maybeFireFanMail(state);
             maybeFireSponsorActivation(state);
-            maybeFireTradeRumor(state);
+                        maybeFireTradeRumor(state);
+            maybeFireSpecialInvite(state);
+            maybeFirePostRaceInspection(state, seriesId, result);
 
             // Injury rolls — player and AI
             if (!result._injuryRace) {
@@ -6349,8 +6532,10 @@ const AI_FIRST_FEMALE = [
                 d.fans = clamp(d.fans + fanChange, 0, 2000000);
                 d.wins += seasonWins;
                 d.top5s += seasonTop5;
-                d.starts += s.races;
-                d.seasonPoints = rand(50, 500);
+                                const rate = (d.attendanceRate !== undefined) ? d.attendanceRate : 0.85;
+                const racesActuallyRun = Math.round(s.races * rate * randF(0.9, 1.0));
+                d.starts += racesActuallyRun;
+                d.seasonPoints = rand(30, Math.max(60, Math.round(400 * rate)));
                 d.careerHistory.push({ season: state.season, seriesId: d.currentSeriesId, rep: d.rep, wins: seasonWins, pos: estPos });
                 if (d.careerHistory.length > 20) d.careerHistory = d.careerHistory.slice(-20);
                 // Age and skill progression
@@ -8066,7 +8251,75 @@ const AI_FIRST_FEMALE = [
             const f = document.createDocumentFragment();
             f.appendChild(h('div', { className: 'page-title' }, 'Race Schedule'));
 
-            f.appendChild(h('div', { className: 'page-sub' }, 'Click any completed race for details. Use ↑↓ to reorder upcoming rounds — scheduling conflict, whatever you need.'));
+                        const _lastCompletedSeries = (function() {
+                let best = null;
+                G.contracts.forEach(function(c) {
+                    const sch = G.schedules[c.seriesId] || [];
+                    for (let i = sch.length - 1; i >= 0; i--) {
+                        if (sch[i].result && !sch[i].result.skipped) {
+                            if (!best || (sch[i].result._submitTime || 0) > (best.race.result._submitTime || 0)) {
+                                best = { seriesId: c.seriesId, raceIdx: i, race: sch[i], s: getSeries(c.seriesId) };
+                            }
+                        }
+                    }
+                });
+                return best;
+            })();
+
+            f.appendChild(h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' } },
+                h('div', { className: 'page-sub', style: { margin: 0 } }, 'Click any completed race for details. Use ↑↓ to reorder upcoming rounds.'),
+                _lastCompletedSeries ? mkBtn('↩ Undo Last Result', 'btn btn-sm btn-warn', function() {
+                    const lc = _lastCompletedSeries;
+                    openModal(h('div', null,
+                        h('div', { className: 'modal-eyebrow' }, 'Undo Last Result'),
+                        h('div', { className: 'modal-title' }, lc.race.track),
+                        h('div', { className: 'modal-sub' }, (lc.s && lc.s.short) + ' R' + lc.race.round + ' — ' + (lc.race.result.dnf ? 'DNF' : 'P' + lc.race.result.position + '/' + lc.race.result.fieldSize)),
+                        h('div', { style: { fontSize: '14px', color: '#94A3B8', marginBottom: '16px', lineHeight: '1.6' } },
+                            'Reverses all stat changes from this result — points, prize, standings, rep, fans, week counter. The race returns to unsubmitted.'
+                        ),
+                        h('div', { className: 'modal-actions' },
+                            mkBtn('Cancel', 'btn btn-ghost', closeModal),
+                            mkBtn('Undo It', 'btn btn-danger', function() {
+                                const old = lc.race.result;
+                                const sid = lc.seriesId;
+                                const contract = G.contracts.find(c => c.seriesId === sid);
+                                const prizeShare = (contract && !contract.indie && contract.prizeShare) ? contract.prizeShare : 1.0;
+                                G.championshipPoints[sid] = Math.max(0, (G.championshipPoints[sid] || 0) - (old.points || 0));
+                                const driverPrize = Math.floor((old.prize || 0) * prizeShare);
+                                G.money -= driverPrize;
+                                G.totalPrizeMoney = Math.max(0, (G.totalPrizeMoney || 0) - driverPrize);
+                                G.starts = Math.max(0, G.starts - 1);
+                                G.week = Math.max(1, G.week - 1);
+                                if (!old.dnf && !old.dq) {
+                                    if (old.position === 1) G.wins = Math.max(0, G.wins - 1);
+                                    if (old.position <= 5) G.top5s = Math.max(0, G.top5s - 1);
+                                }
+                                if (old.pole && !(lc.race.qualifying && lc.race.qualifying.pole)) G.poles = Math.max(0, G.poles - 1);
+                                const myLo = G.driverName.toLowerCase();
+                                if (G.seriesFields[sid]) {
+                                    (old.finishOrder || []).forEach(function(entry, idx) {
+                                        if (!entry.name || /\byou\b/i.test(entry.name) || entry.name.toLowerCase() === myLo || entry.isPlayer) return;
+                                        const clean = entry.name.trim();
+                                        if (!clean || !G.seriesFields[sid][clean]) return;
+                                        G.seriesFields[sid][clean].points = Math.max(0, (G.seriesFields[sid][clean].points || 0) - (IRACING_PTS[idx] || 1));
+                                        G.seriesFields[sid][clean].starts = Math.max(0, (G.seriesFields[sid][clean].starts || 0) - 1);
+                                        if (idx === 0) G.seriesFields[sid][clean].wins = Math.max(0, (G.seriesFields[sid][clean].wins || 0) - 1);
+                                        if (idx < 5) G.seriesFields[sid][clean].top5s = Math.max(0, (G.seriesFields[sid][clean].top5s || 0) - 1);
+                                    });
+                                }
+                                G.raceHistory = (G.raceHistory || []).filter(r =>
+                                    !(r.season === G.season && r.seriesId === sid && r.track === lc.race.track)
+                                );
+                                lc.race.result = null;
+                                if (contract && contract.racesCompleted > 0) contract.racesCompleted--;
+                                addLog(G, '↩ Undid result: ' + (lc.s && lc.s.short) + ' R' + lc.race.round + ' @ ' + lc.race.track);
+                                saveGame(); closeModal(); render();
+                            }),
+                        ),
+                    ));
+                }) : null,
+            ));
+
             if (!G.contracts.length) {
                 f.appendChild(h('div', { className: 'card', style: { textAlign: 'center', padding: '24px', color: '#94A3B8' } }, 'No active contracts.'));
             }
@@ -10857,6 +11110,23 @@ const AI_FIRST_FEMALE = [
             });
         }
 
+                function openSpecialInviteModal(evt, totalCost, pointsCount) {
+            // Same as openSpecialModal but cost is pre-calculated and points flag passed through
+            if (G.money < totalCost) { alert(`Need ${fmtMoney(totalCost - G.money)} more.`); return; }
+            buildRaceModal({
+                eyebrow: `📬 ${evt.carType}${evt.multiClass ? ' · Multi-class' : ''} — Invitation`,
+                title: evt.name,
+                sub: `${evt.location} · ${totalCost > 0 ? fmtMoney(totalCost) + ' entry' : 'Entry covered'}${pointsCount ? ' · Points count' : ' · Exhibition — no championship points'}`,
+                seriesId: 'mini_stock', raceIdx: -1,
+                isFig8: !!evt.fig8, isSpecial: true, specialEvt: evt, multiClass: evt.multiClass,
+                onSubmit: (result) => {
+                    result._pointsOverride = pointsCount; // pass through to processSpecialResult
+                    processSpecialResult(G, evt.id, result, totalCost);
+                    saveGame(); render();
+                }
+            });
+        }
+
         function openSpecialModal(evtId) {
             const evt = SPECIAL_EVENTS.find(e => e.id === evtId);
             if (!evt) return;
@@ -10874,6 +11144,44 @@ const AI_FIRST_FEMALE = [
                     saveGame(); render();
                 }
             });
+        }
+
+                // ─── FUZZY NAME MATCHING ──────────────────────────────────────────────────────
+        function levenshtein(a, b) {
+            const m = a.length, n = b.length;
+            const dp = Array.from({ length: m + 1 }, function(_, i) {
+                return Array.from({ length: n + 1 }, function(_, j) { return i === 0 ? j : j === 0 ? i : 0; });
+            });
+            for (let i = 1; i <= m; i++)
+                for (let j = 1; j <= n; j++)
+                    dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]
+                        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+            return dp[m][n];
+        }
+
+        function fuzzyMatchRoster(parsedNames, seriesId) {
+            // Returns array of { submitted, suggestion, distance } for names that look like typos
+            const roster = (G.drivers || []).filter(function(d) {
+                return d.active && d.currentSeriesId === seriesId && d.source === 'known';
+            }).map(function(d) { return d.name; });
+            if (!roster.length) return [];
+            const warnings = [];
+            parsedNames.forEach(function(name) {
+                if (!name || name.length < 3) return;
+                const nameLo = name.toLowerCase();
+                // Exact match — fine
+                if (roster.some(function(r) { return r.toLowerCase() === nameLo; })) return;
+                // Find closest roster name within edit distance 2
+                let bestDist = 99, bestMatch = null;
+                roster.forEach(function(r) {
+                    const dist = levenshtein(nameLo, r.toLowerCase());
+                    if (dist < bestDist) { bestDist = dist; bestMatch = r; }
+                });
+                if (bestDist <= 2 && bestMatch) {
+                    warnings.push({ submitted: name, suggestion: bestMatch, distance: bestDist });
+                }
+            });
+            return warnings;
         }
 
         function buildRaceModal({ eyebrow, title, sub, seriesId, raceIdx, qualNote, crewPkg, expectedField, isFig8, isSpecial, specialEvt, multiClass, forcedDNFReason, prefillResult, prefillOrder, playerNameOverride, onSubmit }) {
@@ -11045,7 +11353,14 @@ const AI_FIRST_FEMALE = [
             }
 
             orderTa.addEventListener('input', autoDetectPosition);
-            orderTa.addEventListener('paste', () => setTimeout(() => { tryAutoParseIRacing(); autoDetectPosition(); }, 0));
+                        orderTa.addEventListener('paste', () => setTimeout(() => {
+                tryAutoParseIRacing();
+                autoDetectPosition();
+                const names = orderTa.value.split('\n').map(function(l) {
+                    return l.split(/\t/)[0].replace(/^\d+[\s.):-]+/, '').replace(/\b(DNF|DQ|DSQ|DNS)\b/gi, '').trim();
+                }).filter(Boolean);
+                runFuzzyCheck(names);
+            }, 0));
 
             // ── Incident drivers — chip typeahead ────────────────────────────────────
             // Chips track selected names; typeahead filters from race order + driver DB
@@ -11195,6 +11510,40 @@ const AI_FIRST_FEMALE = [
             fsIn.addEventListener('input', () => { if (!lastPlaceCb.checked) upd(); });
             [poleCb, lapsCb, mostCb, dnfCb].forEach(cb => cb.addEventListener('change', upd));
 
+                        // Fuzzy warning banner — shown below textarea when typos detected
+            const fuzzyWarnEl = h('div', {
+                style: {
+                    display: 'none', background: '#1a1000', border: '1px solid #F59E0B',
+                    borderRadius: '7px', padding: '10px 14px', marginTop: '8px', fontSize: '13px',
+                }
+            });
+
+            function runFuzzyCheck(names) {
+                if (isFig8 || isSpecial) return;
+                const warnings = fuzzyMatchRoster(names, seriesId);
+                fuzzyWarnEl.innerHTML = '';
+                if (!warnings.length) { fuzzyWarnEl.style.display = 'none'; return; }
+                fuzzyWarnEl.style.display = 'block';
+                fuzzyWarnEl.appendChild(h('div', {
+                    style: { fontWeight: 800, color: '#F59E0B', marginBottom: '8px' }
+                }, '⚠️ Possible typos detected — click to fix:'));
+                warnings.forEach(function(w) {
+                    const row = h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' } },
+                        h('span', { style: { color: '#EF4444', fontWeight: 700 } }, '"' + w.submitted + '"'),
+                        h('span', { style: { color: '#94A3B8' } }, '→'),
+                        h('span', { style: { color: '#10B981', fontWeight: 700 } }, '"' + w.suggestion + '"'),
+                        mkBtn('Fix', 'btn btn-xs btn-primary', function() {
+                            const re = new RegExp('\\b' + w.submitted.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g');
+                            orderTa.value = orderTa.value.replace(re, w.suggestion);
+                            runFuzzyCheck(orderTa.value.split('\n').map(function(l) {
+                                return l.split(/\t/)[0].replace(/^\d+[\s.):-]+/, '').replace(/\b(DNF|DQ|DSQ|DNS)\b/gi, '').trim();
+                            }).filter(Boolean));
+                        }),
+                    );
+                    fuzzyWarnEl.appendChild(row);
+                });
+            }
+
             // Parse & clean button
             const parseBtn = mkBtn('Parse & Clean', 'btn btn-sm btn-secondary', () => {
                 const raw = orderTa.value;
@@ -11211,8 +11560,11 @@ const AI_FIRST_FEMALE = [
                     fsIn.value = String(parsed.length);
                     if (lastPlaceCb && lastPlaceCb.checked) posIn.value = String(parsed.length);
                     autoDetectPosition();
+                    // Run fuzzy check on parsed names
+                    runFuzzyCheck(parsed.map(function(p) { return p.name; }));
                 }
             });
+
 
             openModal(h('div', null,
                 h('div', { className: 'modal-eyebrow' }, eyebrow),
@@ -11256,9 +11608,10 @@ const AI_FIRST_FEMALE = [
                         h('label', { className: 'modal-label', style: { margin: 0 } }, multiClass ? 'Finish Order (include car class in brackets)' : 'Finish Order — paste iRacing results'),
                         parseBtn,
                     ),
-                    orderTa,
-                    h('div', { style: { fontSize: '14px', color: '#94A3B8', marginTop: '4px' } }, 'Names are remembered in the driver database. Drivers within 0.05s of you (if times included) build close-racing history.'),
-                ),
+                                        orderTa,
+                    fuzzyWarnEl,
+                    h('div', { style: { fontSize: '14px', color: '#94A3B8', marginTop: '4px' } }, 'Names are remembered in the driver database.
+              ),
 
                 !isFig8 ? h('div', { className: 'modal-section' },
                     h('label', { className: 'modal-label' }, 'Incident Drivers (caused incidents with you)'),
@@ -11653,13 +12006,33 @@ const AI_FIRST_FEMALE = [
                     if (old.pole) oldFanGain += rand(30, 80);
                     G.fans = Math.max(0, G.fans - oldFanGain);
 
-                    // Career starts counter (was incremented on original submit — keep it, one race either way)
-                    // Week was advanced by processRaceResult — step it back so re-processing advances it again
+                                        // Undo starts counter — processRaceResult will re-increment it
+                    G.starts = Math.max(0, G.starts - 1);
+
+                    // Undo seriesFields (AI standings) for the old finish order
+                    // Without this, AI points double on every edit
+                    const myLowerEdit = G.driverName.toLowerCase();
+                    if (G.seriesFields[seriesId]) {
+                        (old.finishOrder || []).forEach(function(entry, idx) {
+                            if (!entry.name || /\byou\b/i.test(entry.name) || entry.name.toLowerCase() === myLowerEdit || entry.isPlayer) return;
+                            const clean = entry.name.trim();
+                            if (!clean || !G.seriesFields[seriesId][clean]) return;
+                            const pts = IRACING_PTS[idx] || 1;
+                            G.seriesFields[seriesId][clean].points = Math.max(0, (G.seriesFields[seriesId][clean].points || 0) - pts);
+                            G.seriesFields[seriesId][clean].starts = Math.max(0, (G.seriesFields[seriesId][clean].starts || 0) - 1);
+                            if (idx === 0) G.seriesFields[seriesId][clean].wins = Math.max(0, (G.seriesFields[seriesId][clean].wins || 0) - 1);
+                            if (idx < 5) G.seriesFields[seriesId][clean].top5s = Math.max(0, (G.seriesFields[seriesId][clean].top5s || 0) - 1);
+                        });
+                    }
+
+                    // Step week back — processRaceResult will re-advance it
+                    // Capture the current week BEFORE decrementing so the history filter hits the right entry
+                    const weekBeforeEdit = G.week;
                     G.week = Math.max(1, G.week - 1);
 
-                    // Remove the old raceHistory entry for this race
+                    // Remove the old raceHistory entry using the pre-decrement week
                     G.raceHistory = (G.raceHistory || []).filter(r =>
-                        !(r.season === G.season && r.seriesId === seriesId && r.track === race.track && r.week === G.week)
+                        !(r.season === G.season && r.seriesId === seriesId && r.track === race.track && r.week === weekBeforeEdit - 1)
                     );
 
                     // Clear the stored result so processRaceResult treats it as fresh
